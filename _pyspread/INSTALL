@@ -1,0 +1,23 @@
+
+
+Pyspread installation
+---------------------
+
+Become root, enter the pyspread directory and type: 
+
+ * python setup.py install
+
+
+Note: 
+In Windows, Python might be not in your PATH.
+Replace "python" by your Python executable
+
+
+Pyspread Removal
+----------------
+ 
+To uninstall from a linux system do following (e.g. for python2.5):
+ 
+ * sudo rm /usr/bin/pyspread.py
+ * sudo rm -R /usr/lib/python2.5/site-packages/pyspread
+

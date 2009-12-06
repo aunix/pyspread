@@ -1,0 +1,167 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright 2008 Martin Manns
+# Distributed under the terms of the GNU General Public License
+
+# --------------------------------------------------------------------
+# pyspread is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# pyspread is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with pyspread.  If not, see <http://www.gnu.org/licenses/>.
+# --------------------------------------------------------------------
+
+"""
+Cross-platform spreadsheet application.
+
+See __init__.py for extensive docstring.
+
+"""
+
+import sys
+import wx
+
+DEBUG = False
+
+# If pyspread is installed but run from a local dir
+# the local libs are preferred.
+
+sys.path.insert(0, "..") 
+
+
+class SplashScreen(wx.SplashScreen):
+    """Pyspread splash screen"""
+    
+    def __init__(self):
+        from _pyspread._interfaces import get_splash_image
+        
+        splash_image = get_splash_image()
+        bmp = splash_image.ConvertToBitmap()
+        
+        wx.SplashScreen.__init__(self, bmp,
+                                 wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT,
+                                 1000, None, -1)
+        
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
+        self.future_call = wx.FutureCall(500, self.ShowMain)
+
+
+    def OnClose(self, evt):
+        """Makes sure the default handler runs so this window gets destroyed"""
+        
+        evt.Skip()
+        self.Hide()
+        
+        # if the timer is still running then go ahead and show the
+        # main frame now
+        if self.future_call.IsRunning():
+            self.future_call.Stop()
+            self.ShowMain()
+
+
+    def ShowMain(self):
+        if self.future_call.IsRunning():
+            self.Raise()
+
+
+class MainApplication(wx.App):
+    """Main applicationn class for pyspread. 
+    
+    Spawns Splashscreen.
+    
+    """
+    
+    dimensions = (1, 1, 1) # Will be overridden anyways
+    options = {}
+    filename = None
+    
+    def OnInit(self):
+        """Init class that is automatically run on __init__"""
+        
+        # Create and show the splash screen.  It will then create and show
+        # the main frame when it is time to do so.
+        wx.SystemOptions.SetOptionInt("mac.window-plain-transition", 1)
+        
+        splash = SplashScreen()
+        splash.Show()
+
+        # Get command line options and arguments
+        self.get_cmd_args()
+
+        # Initialize the prerequisitions to construct the main window
+        wx.InitAllImageHandlers()
+
+        # Main window creation
+        from _pyspread._windows import MainWindow
+        
+        self.main_window = MainWindow(None, dimensions=self.dimensions)
+
+        # Load filename if provided
+        if self.filename is not None:
+            self.main_window.MainGrid.loadfile(self.filename)
+            
+        # Show application window
+        self.SetTopWindow(self.main_window)
+        self.main_window.Show()
+        
+        return True
+
+
+    def get_cmd_args(self):
+        """Returns command line arguments
+
+        Created attributes
+        ------------------
+        
+        options: dict
+        \tCommand line options
+        dimensions: Three tuple of Int
+        \tGrid dimensions, default value (1,1,1).
+        filename: String
+        \tFile name that is loaded on start
+
+        """
+
+        from _pyspread._interfaces import Commandlineparser
+
+        cmdp = Commandlineparser()
+        self.options, self.filename = cmdp.parse()
+
+        if self.filename is None:
+            self.dimensions = self.options.dimensions
+
+
+def __main__():
+    """Compatibility hack"""
+    
+    pass
+
+
+def main():
+    """Parses command line and starts pyspread"""
+
+    # Initialize main application
+    app = MainApplication(0)
+
+    app.MainLoop()
+
+
+if __name__ == "__main__":
+    if DEBUG:
+        import cProfile
+        cProfile.run('main()')
+    else:
+        try:
+            import psyco
+            psyco.full()
+        except ImportError:
+            pass
+        main()
