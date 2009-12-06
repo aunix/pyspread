@@ -1,0 +1,47 @@
+0.1
+---
++ (Find in results)
+
+
+0.0.12
+------
++ Floatable taskbars added
++ Strange arange reference behaviour fixed (BUG 2760121)
++ stt = sum(S[16:18,Y,0]) raises TypeError fixed (BUG 2579698)
++ Default text color switched from black to system default
++ Ok and Cancel Buttons and tab sequence switched for New sheet dialog
++ Regex search
++ Find toolbar
++ Style toolbar
++ Cell styles 
++ Frozen cells
++ Cell dc support for graphic printing in cells
++ ODF support as new default file format
++ networkx dependency removed
+
+
+0.0.11
+------
+
++ Recursion detection for slicing operations added
++ Dependency to networkx added
++ Command line options added
++ Command line help added
++ Unicode support added
++ Save As and Save functionality separated
+
++ Print without selection now prints visible screen (BUG 2366895)
++ Empty cells are now empty on print out (BUG 2366916)
++ Copy works again (BUG 2407435)
++ Internal variables stop showing up in macro dialog (BUG 2407828)
++ Copy result now works on Windows (BUG 2569877)
++ Replace now updates cells properly (BUG 2569880)
++ Resize function works now (BUG 2569895)
+
++ Moved main window class into _windows module
++ Moved Fortran type getflatpos getshapedpos into _arrayhelper.py
+
+
+
+0.0.10b
+-------

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Icon=/usr/share/pyspread/icons/pyspread.png
+Name=pyspread
+Comment=A Python based spreadsheet
+Exec=/usr/bin/pyspread
+Terminal=false
+Type=Application
+Categories=Math;Spreadsheet;Office
+StartupNotify=false

@@ -1,0 +1,24 @@
+Metadata-Version: 1.1
+Name: pyspread
+Version: 0.0.12a
+Summary: A spreadsheet that accepts a pure python expression in each cell.
+Home-page: http://pyspread.sourceforge.net
+Author: Martin Manns
+Author-email: mmanns@gmx.net
+License: GPL v3 :: GNU General Public License
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: MacOS X
+Classifier: Environment :: Win32 (MS Windows)
+Classifier: Environment :: X11 Applications :: GTK
+Classifier: Intended Audience :: End Users/Desktop
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 2.4
+Classifier: Programming Language :: Python :: 2.5
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Topic :: Office/Business :: Financial :: Spreadsheet
+Requires: numpy (>=1.1)
+Requires: wx (>=2.8.7)

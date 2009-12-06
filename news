@@ -1,0 +1,97 @@
+pyspread news
+=============
+
+
+pyspread file format switches to OpenDocument format (ODF) (2009-05-31)
+
+OpenDocument format (ODF) has been chosen to replace the old pys file format.
+
+This step became necessary, because the pys format stores only the code inside
+the grid. Since cell formatting (fonts, borders, backgrounds, etc.) has been
+introduced (currently in subversion, will be in 0.0.12), a new save file format
+was required. Furthermore, the old pys format has always been a security issue.
+Therefore, changing to a new format that is not backwards-compatible is the 
+obvious choice. Note that pys file loading and saving will still be available.
+
+OpenDocument format (ODF) has the benefit of being an accredited standard with
+an open license (free of cost). It has also been adopted by a variety of 
+well-known spreadsheets such as:
+
+    * OpenOffice.org - Calc,
+    * Microsoft Office - Excel (2007 with SP2 or via plugin).
+    * Gnumeric and
+    * KOffice.org - KSpread,
+
+ODF integration is going to be a step-by-step approach. In a first step 
+(scheduled for 0.0.12), pyspread in-cell Python code will appear as 
+non-functional Python code strings in the other spreadsheets and the cell 
+content in other spreadsheets will be treated as Python code. In a second 
+step, the ODF data types are correctly converted into appropriate Python data 
+types. Conversion of simple formulas may be realized later on. 
+
+pyspread 0.0.11 released (2009-04-04)
+A new release of pyspread has been released.
+
+New features:
+
+    * Recursion detection for slicing operations added
+    * Dependency to networkx added
+    * Command line options added
+    * Command line help added
+    * Unicode support added
+    * Save As and Save functionality separated
+
+Bug fixes:
+
+    * Internal variables stop showing up in macro dialog (BUG 2407828)
+    * Copy result now works on Windows (BUG 2569877)
+    * Replace now updates cells properly (BUG 2569880)
+    * Resize function works now (BUG 2569895)
+
+Known issues: (updated 2009-05-31)
+
+    * On Windows, Python 2.6 causes trouble with wxPython 2.9.8.2. Please use 
+      Python 2.5
+    * On Windows, some dialogs have to be closed twice.
+    * Recursion detection dows not work on nested structures, i.e. when S[2,2,2]
+      is referred to from inside a container object, pyspread will not realize 
+      a cycle. Therefore, a "Maximum recursion depth" error is reported (fixed 
+      in svn.)
+
+pyspread 0.0.10b released (2008-12-12)
+A new bugfix of pyspread has been released.
+
+Changes:
+
+    * easy_install works now (2036736)
+    * Printing now does not display 0 on empty cells (2366916)
+    * Copy works again (2407435)
+    * Close button added in About dialog (2306988)
+    * Grid shows code in statusbar instead of tooltips
+    * Debian package now contains man page
+    * Debian package now links to site-packages
+
+pyspread 0.0.10a (2008-11-27)
+A new bugfix release 0.0.10a has been added.
+
+Changes:
+
+    * Debian deb package added
+    * Tooltips added that display the cell code
+    * Icon and library path de-coupled
+    * Bug in setup.py fixed
+
+pyspread wiki added (2008-11-21)
+The manual and tutorial for pyspread has been put into the sourceforge wiki.
+http://pyspread.wiki.sourceforge.net
+
+pyspread 0.0.10 released (2008-11-15)
+Pyspread 0.0.10 has finally been released.
+
+Changes:
+
+    * Code completely re-structured
+    * Unit tests for main grid functionality
+    * Speed-up by caching of cell results
+    * Change of spread method syntax
+    * Various bug fixes
