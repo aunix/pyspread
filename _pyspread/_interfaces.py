@@ -754,3 +754,5 @@ class UserString(unicode):
     """Unicode wrapper class that can hold attributes"""
     
     pass
+
+# end of class UserString

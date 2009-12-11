@@ -42,7 +42,7 @@ import types
 import wx
 import wx.aui
 import wx.grid
-import wx.lib.printout as printout
+import _pyspread.printout as printout
 
 import _pyspread._grid as _grid
 
@@ -474,14 +474,31 @@ class MainWindow(wx.Frame):
                                 for y in xrange(slice_y.start, slice_y.stop)]
         #print selection
         rowslice, colslice = self.MainGrid.get_selected_rows_cols(selection)
-        data = self.MainGrid.getselectiondata(self.MainGrid.pysgrid, \
-                                              rowslice, colslice, \
-                                              omittedfield_repr=' ')
-        prt = printout.PrintTable(self)
-        prt.data = data
-        prt.Preview()
-        goto_button = self.FindWindowById(wx.ID_PREVIEW_GOTO)
-        goto_button.Hide()
+        tab = self.MainGrid.current_table
+        
+        printData = wx.PrintData()
+        printData.SetPaperId(wx.PAPER_A4)
+        printData.SetPrintMode(wx.PRINT_MODE_PRINTER)
+        
+        data = wx.PrintDialogData(printData)
+        
+        canvas = printout.MyCanvas(self, self.MainGrid, 
+                                   rowslice, colslice, tab)
+        
+        po = printout.MyPrintout(canvas)
+        po2 = printout.MyPrintout(canvas)
+        self.preview = wx.PrintPreview(po, po2, data)
+
+        if not self.preview.Ok():
+            return
+
+        pfrm = wx.PreviewFrame(self.preview, None, "This is a print preview")
+
+        pfrm.Initialize()
+        pfrm.Show(True)
+
+#        goto_button = self.FindWindowById(wx.ID_PREVIEW_GOTO)
+#        goto_button.Hide()
     
     def OnExit(self, event):
         """Exit program"""
