@@ -1267,7 +1267,9 @@ class MainGrid(wx.grid.Grid,
         self.zoom = 1.0
         
         super(MainGrid, self).__init__(*args, **kwds)
-        self.SetDefaultRenderer(TextRenderer(self))
+        
+        self.text_renderer = TextRenderer(self)
+        self.SetDefaultRenderer(self.text_renderer)
         
         self.table = MainGridTable(self)
         self.SetTable(self.table, True)

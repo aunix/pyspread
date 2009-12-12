@@ -27,7 +27,8 @@ class MyCanvas(wx.ScrolledWindow):
         """Redirected Draw function from Maingrid"""
         
         attr = wx.grid.GridCellAttr()
-        draw_func = self.grid.GetDefaultRenderer().Draw
+        draw_func = self.grid.text_renderer.Draw
+        self.grid.text_renderer.redraw_imminent = True
         
         return draw_func(self.grid, attr, dc, rect, row, col, False)
 
