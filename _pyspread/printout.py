@@ -15,6 +15,7 @@ class MyCanvas(wx.ScrolledWindow):
         
         self.rowslice = rowslice
         self.colslice = colslice
+        
         self.tab = tab
 
         self.SetBackgroundColour("WHITE")
@@ -28,7 +29,6 @@ class MyCanvas(wx.ScrolledWindow):
         
         attr = wx.grid.GridCellAttr()
         draw_func = self.grid.text_renderer.Draw
-        self.grid.text_renderer.redraw_imminent = True
         
         return draw_func(self.grid, attr, dc, rect, row, col, False)
 
@@ -41,11 +41,12 @@ class MyCanvas(wx.ScrolledWindow):
                            float(self.rowslice.stop - self.rowslice.start)))
         
         dc.BeginDrawing()
-        
+        self.grid.text_renderer.redraw_imminent = True
         for row in xrange(self.rowslice.stop, self.rowslice.start, -1):
             for col in xrange(self.colslice.stop, self.colslice.start, -1):
                 rect = wx.Rect(rect_w * row, rect_h * col, rect_w, rect_h)
                 self.draw_func(dc, rect, row, col)
+                self.grid.text_renderer.redraw_imminent = True
         
         dc.EndDrawing()
 

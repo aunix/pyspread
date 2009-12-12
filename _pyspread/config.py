@@ -57,6 +57,12 @@ System info
 dpi = map(lambda (pixels, length_mm): pixels * 25.6 / length_mm, 
           zip(wx.GetDisplaySize(), wx.GetDisplaySizeMM()))
 
+"""
+Grid lines
+==========
+"""
+
+GRID_LINE_PEN = wx.Pen("Gray80", 1)
 
 """
 CSV
@@ -138,7 +144,7 @@ Default cell font size
 DEFAULT_FONT_SIZE = 10
 FONT_SIZES = range(3, 14) + range(16, 32, 2) + range(36, 99, 4)
 
-##app = wx.App()
+selected_cell_brush = wx.Brush(wx.Colour(127, 127, 255), wx.SOLID)
 
 default_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
 
@@ -453,3 +459,4 @@ brush_styles = { \
     "": wx.HORIZONTAL_HATCH,
     "": wx.VERTICAL_HATCH,
 }
+
