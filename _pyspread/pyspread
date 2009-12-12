@@ -26,18 +26,19 @@ See __init__.py for extensive docstring.
 
 """
 
-import sys
-import wx
+from sys import path
+from wx import App, SplashScreen, SPLASH_CENTRE_ON_SCREEN, SPLASH_TIMEOUT
+from wx import SystemOptions, EVT_CLOSE, FutureCall, InitAllImageHandlers
 
 DEBUG = False
 
 # If pyspread is installed but run from a local dir
 # the local libs are preferred.
 
-sys.path.insert(0, "..") 
+path.insert(0, "..") 
 
 
-class SplashScreen(wx.SplashScreen):
+class PyspreadSplashScreen(SplashScreen):
     """Pyspread splash screen"""
     
     def __init__(self):
@@ -46,12 +47,11 @@ class SplashScreen(wx.SplashScreen):
         splash_image = get_splash_image()
         bmp = splash_image.ConvertToBitmap()
         
-        wx.SplashScreen.__init__(self, bmp,
-                                 wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT,
-                                 1000, None, -1)
+        SplashScreen.__init__(self, bmp,
+            SPLASH_CENTRE_ON_SCREEN | SPLASH_TIMEOUT, 1000, None, -1)
         
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.future_call = wx.FutureCall(500, self.ShowMain)
+        self.Bind(EVT_CLOSE, self.OnClose)
+        self.future_call = FutureCall(500, self.ShowMain)
 
 
     def OnClose(self, evt):
@@ -72,7 +72,7 @@ class SplashScreen(wx.SplashScreen):
             self.Raise()
 
 
-class MainApplication(wx.App):
+class MainApplication(App):
     """Main applicationn class for pyspread. 
     
     Spawns Splashscreen.
@@ -88,16 +88,16 @@ class MainApplication(wx.App):
         
         # Create and show the splash screen.  It will then create and show
         # the main frame when it is time to do so.
-        wx.SystemOptions.SetOptionInt("mac.window-plain-transition", 1)
+        SystemOptions.SetOptionInt("mac.window-plain-transition", 1)
         
-        splash = SplashScreen()
+        splash = PyspreadSplashScreen()
         splash.Show()
 
         # Get command line options and arguments
         self.get_cmd_args()
 
         # Initialize the prerequisitions to construct the main window
-        wx.InitAllImageHandlers()
+        InitAllImageHandlers()
 
         # Main window creation
         from _pyspread._windows import MainWindow
