@@ -149,7 +149,11 @@ class MainMenu(_filledMenu):
             [item, ["OnFileExport", "&Export", 
                 "Export a file (Supported formats: None"]], \
             ["Separator"], \
-            [item, ["OnFilePrint", "&Print\tCtrl+p", 
+            [item, ["OnPageSetup", "Page setup", 
+                "Setup page for printing"]], \
+            [item, ["OnFilePrintPreview", "Page preview", 
+                "Setup page for printing"]], \
+            [item, ["OnFilePrint", "&Print...\tCtrl+p", 
                 "Print current spreadsheet"]], \
             ["Separator"], \
             [item, ["OnExit", "E&xit\tCtrl+q", "Exit Program"]]] \

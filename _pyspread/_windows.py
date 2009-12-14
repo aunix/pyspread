@@ -110,6 +110,9 @@ class MainWindow(wx.Frame):
 
         self.grid_scroll.SetScrollbars(unit, unit, width/unit, height/unit)
         
+        # Print data
+        self.print_dialog_data = wx.PrintDialogData()
+        
         # Main grid
         self.MainGrid = _grid.MainGrid(self, -1, size=(1, 1), dim=dim, \
             set_statustext=self.main_window_statusbar.SetStatusText, 
@@ -464,7 +467,27 @@ class MainWindow(wx.Frame):
             dlg.ShowModal()
             dlg.Destroy()
     
-    def OnFilePrint(self, event):
+    def OnPageSetup(self, event):
+        """Opens page setup dialog"""
+        
+        data = wx.PageSetupDialogData()
+        data.SetMarginTopLeft( (15, 15) )
+        data.SetMarginBottomRight( (15, 15) )
+        #data.SetDefaultMinMargins(True)
+        #data.SetPaperId(wx.PAPER_LETTER)
+
+        dlg = wx.PageSetupDialog(self, data)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            data = dlg.GetPageSetupData()
+            tl = data.GetMarginTopLeft()
+            br = data.GetMarginBottomRight()
+            print 'Margins are: %s %s\n' % (str(tl), str(br))
+
+        dlg.Destroy()
+    
+    
+    def OnFilePrintPreview(self, event):
         """Prints the current selection or current screen if no selection"""
         
         selection = self.MainGrid.get_selection()
@@ -476,11 +499,7 @@ class MainWindow(wx.Frame):
         rowslice, colslice = self.MainGrid.get_selected_rows_cols(selection)
         tab = self.MainGrid.current_table
         
-        printData = wx.PrintData()
-        printData.SetPaperId(wx.PAPER_A4)
-        printData.SetPrintMode(wx.PRINT_MODE_PRINTER)
-        
-        data = wx.PrintDialogData(printData)
+        data = self.print_dialog_data
         
         canvas = printout.MyCanvas(self, self.MainGrid, 
                                    rowslice, colslice, tab)
@@ -499,6 +518,33 @@ class MainWindow(wx.Frame):
 
 #        goto_button = self.FindWindowById(wx.ID_PREVIEW_GOTO)
 #        goto_button.Hide()
+    
+    def _print_dialog(self, event):
+        """Opens the printer setup dialog"""
+        
+        data = wx.PrintDialogData()
+
+        data.EnableSelection(True)
+        data.EnablePrintToFile(True)
+        data.EnablePageNumbers(True)
+        data.SetMinPage(1)
+        data.SetMaxPage(1)
+        data.SetAllPages(True)
+
+        dlg = wx.PrintDialog(self, data)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            data = dlg.GetPrintDialogData()
+            print dir(data)
+            self.print_dialog_data = data
+    
+    def OnFilePrint(self, event):
+        """Prints sheet"""
+    
+        self._print_dialog(event)
+        
+        # Main printing stuff
+
     
     def OnExit(self, event):
         """Exit program"""

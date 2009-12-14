@@ -28,7 +28,7 @@ setup(name='pyspread',
       recommends=['lxml (>=2.2.1)'],
       scripts=['_pyspread/pyspread'],
       packages=['_pyspread'],
-      package_data={'pyspread': ['icons/*.png', 'icons/actions/*.png', \
+      package_data={'_pyspread': ['icons/*.png', 'icons/actions/*.png', \
                          'icons/toggles/*.png', 
                          'examples/*', 'odf/*', 'ooopy/*', \
                          'doc/manual.html', 'README', 'COPYING']},
