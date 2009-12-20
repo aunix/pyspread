@@ -399,17 +399,21 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         for check_col in xrange(col, -1, -1):
             if grid.IsVisible(row, check_col, wholeCellVisible=False):
-                cell_rect = grid.CellToRect(0, check_col)
-                col_x = cell_rect.x + cell_rect.width - 1
-                grid_lines.append((col_x, scroll_y, 
-                                   col_x, scroll_y + grid_rect.height))
+                left_cell_rect = grid.CellToRect(0, check_col)
+                right_cell_rect = grid.CellToRect(row, check_col)
+                
+                col_x = left_cell_rect.x + left_cell_rect.width - 1
+                grid_lines.append((col_x, left_cell_rect.y, 
+                    col_x, right_cell_rect.y + right_cell_rect.height))
 
         for check_row in xrange(row, -1, -1):
             if grid.IsVisible(check_row, col, wholeCellVisible=False):
-                cell_rect = grid.CellToRect(check_row, 0)
-                col_y = cell_rect.y + cell_rect.height - 1
-                grid_lines.append((scroll_x, col_y,
-                                   scroll_x + grid_rect.width, col_y))
+                top_cell_rect = grid.CellToRect(check_row, 0)
+                bottom_cell_rect = grid.CellToRect(check_row, col)
+                
+                col_y = top_cell_rect.y + top_cell_rect.height - 1
+                grid_lines.append((top_cell_rect.x, col_y,
+                    bottom_cell_rect.x + bottom_cell_rect.width, col_y))
         
         dc.DrawLineList(grid_lines, GRID_LINE_PEN)
     

@@ -12,6 +12,8 @@ class MyCanvas(wx.ScrolledWindow):
         self.curLine = []
         
         self.grid = grid
+        self.grid_attr = wx.grid.GridCellAttr()
+        self._draw_func = self.grid.text_renderer.Draw
         
         self.rowslice = rowslice
         self.colslice = colslice
@@ -27,26 +29,24 @@ class MyCanvas(wx.ScrolledWindow):
     def draw_func(self, dc, rect, row, col):
         """Redirected Draw function from Maingrid"""
         
-        attr = wx.grid.GridCellAttr()
-        draw_func = self.grid.text_renderer.Draw
+        #print row, col, rect.x, rect.y
         
-        return draw_func(self.grid, attr, dc, rect, row, col, False)
+        return self._draw_func(self.grid, self.grid_attr, dc, 
+                               rect, row, col, False)
 
     def DoDrawing(self, dc):
         """Main drawing method"""
         
-        rect_w = int(round((self.width - self.x) / \
-                           float(self.colslice.stop - self.colslice.start)))
-        rect_h = int(round((self.height - self.y) / \
-                           float(self.rowslice.stop - self.rowslice.start)))
-        
         dc.BeginDrawing()
+        
         self.grid.text_renderer.redraw_imminent = True
+        
         for row in xrange(self.rowslice.stop, self.rowslice.start, -1):
             for col in xrange(self.colslice.stop, self.colslice.start, -1):
-                rect = wx.Rect(rect_w * row, rect_h * col, rect_w, rect_h)
+                rect = self.grid.CellToRect(row, col)
                 self.draw_func(dc, rect, row, col)
-                self.grid.text_renderer.redraw_imminent = True
+                
+                self.grid.text_renderer.redraw_imminent = False
         
         dc.EndDrawing()
 
