@@ -3,8 +3,14 @@ pyspread todo
 
 0.1
 ---
+
+0.0.12b
+-------
 + Revamp print framework
-+ Add find in results
++ Trust system for loading and saving (GPG-based signatures)
++ Help framework
++ New About dialog
++ Fix lost white rectangle bug (done)
 
 0.0.12a
 -------

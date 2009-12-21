@@ -274,11 +274,17 @@ class PyspreadGrid(object):
         slicetype = types.SliceType
         if all(type(keyele) != slicetype for keyele in key):
             # Only one cell is called
-            result = self._get_single_item(key)
+            try:
+                result = self._get_single_item(key)
+            except Error, err:
+                result = err
             
         else:
             # Multiple cells in one dimension are called
-            result = self._get_ndim_itemlist(key)
+            try:
+                result = self._get_ndim_itemlist(key)
+            except Error, err:
+                result = err
         
         if key == self._tabukey:
             self._tabukey = None

@@ -641,20 +641,19 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             visible_rows = self.get_visible_rows(grid, row, col)
             visible_cols = self.get_visible_cols(grid, row, col)
             
-            self.cell_attr_cache = \
-                self.get_visible_cell_attr_cache(visible_rows, visible_cols)
+            new = self.get_visible_cell_attr_cache(visible_rows, visible_cols)
+            self.cell_attr_cache.update(new)
+            
             try:
                 textfont = self.cell_attr_cache[(row, col)]["textfont"]
             except KeyError:
                 # We are drawing soemthing invisible! (e.g. printing)
-                # Therefore, cache everything
+                # Therefore, cache the invisible cell
                 
-                visible_rows = range(self.table.pysgrid.shape[0] - 1, 0, -1)
-                visible_cols = range(self.table.pysgrid.shape[1] - 1, 0, -1)
+                cell_content = self.get_visible_cell_attr_cache([row], [col])
                 
-                self.cell_attr_cache = \
-                    self.get_visible_cell_attr_cache(visible_rows, visible_cols)
-                
+                self.cell_attr_cache.update(cell_content)
+                    
                 textfont = self.cell_attr_cache[(row, col)]["textfont"]
                 
         # Check if the dc is drawn manually be a return func
