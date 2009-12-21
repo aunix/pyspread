@@ -4,7 +4,7 @@ class MyCanvas(wx.ScrolledWindow):
     def __init__(self, parent, grid, rowslice, colslice, tab,
                  id = -1, size = wx.DefaultSize):
         wx.ScrolledWindow.__init__(self, parent, id, (0, 0), size=size, style=wx.SUNKEN_BORDER)
-
+        
         self.lines = []
         self.width  = 1000
         self.height = 1000
@@ -25,6 +25,8 @@ class MyCanvas(wx.ScrolledWindow):
 
         self.SetVirtualSize((self.width, self.height))
         self.SetScrollRate(20,20)
+        
+        self.Show(False)
     
     def draw_func(self, dc, rect, row, col):
         """Redirected Draw function from Maingrid"""
