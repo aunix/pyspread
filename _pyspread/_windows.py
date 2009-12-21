@@ -71,12 +71,15 @@ class MainWindow(wx.Frame):
             dim = kwds.pop("dimensions")
         except KeyError:
             dim = (1000, 100, 1)
+        
         self.wildcard = "Pyspread file (*.pys)|*.pys|" \
                         "All files (*.*)|*.*"
         self.wildcard_interfaces = {0: PysInterfaces, 
                                     1: PysInterfaces}
+        
         # Default interface
-        self.wildcard_interface = self.wildcard_interfaces[0] 
+        self.wildcard_interface = self.wildcard_interfaces[0]
+        
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
         
@@ -99,17 +102,6 @@ class MainWindow(wx.Frame):
         
         self.attributes_toolbar = AttributesToolbar(self, -1)
         
-        # Scrolled Window for Main Grid
-        
-        self.grid_scroll = wx.ScrolledWindow(self, -1)
-        self.grid_panel = wx.Panel(self.grid_scroll, -1)
-        self.grid_sizer = wx.FlexGridSizer(1, 1, 0, 0)  # rows, cols, hgap, vgap
-        
-        unit =  1
-        width, height = self.grid_panel.GetSizeTuple()
-
-        self.grid_scroll.SetScrollbars(unit, unit, width/unit, height/unit)
-        
         # Print data
         self.print_dialog_data = wx.PrintDialogData()
         
@@ -118,14 +110,6 @@ class MainWindow(wx.Frame):
             set_statustext=self.main_window_statusbar.SetStatusText, 
             cbox_z = self.cbox_z)
             
-        self.grid_sizer.Add(self.MainGrid)
-        self.grid_panel.SetSizer(self.grid_sizer)
-        
-        self.grid_panel.SetAutoLayout(True)
-        self.grid_panel.Layout()
-        self.grid_panel.Fit()
-
-        
         self._set_properties()
         self._do_layout()
         
@@ -152,7 +136,12 @@ class MainWindow(wx.Frame):
         _icon.CopyFromBitmap(wx.Bitmap(ICONPREFIX+'icons/pyspread.png', \
                              wx.BITMAP_TYPE_ANY))
         self.SetIcon(_icon)
-        self.SetSize((1000, 700))
+        
+        self.SetInitialSize((1000, 700))
+        self.Maximize()
+        
+        # Status bar
+        
         self.main_window_statusbar.SetStatusWidths([-1])
         
         # Scale for Custom Renderer drawn content (needs TableBase!!)
@@ -166,8 +155,6 @@ class MainWindow(wx.Frame):
         self.main_window_toolbar.SetToolBitmapSize(icon_size)
         self.main_window_toolbar.SetMargins((1, 1))
         self.main_window_toolbar.Realize()
-        
-        self.MainGrid.create_rowcol()
     
     def _do_layout(self):
         """Adds widgets to the wx.aui manager and controls the layout"""
@@ -526,7 +513,7 @@ class MainWindow(wx.Frame):
 
         data.EnableSelection(True)
         data.EnablePrintToFile(True)
-        data.EnablePageNumbers(True)
+        data.EnablePageNumbers(False)
         data.SetMinPage(1)
         data.SetMaxPage(1)
         data.SetAllPages(True)

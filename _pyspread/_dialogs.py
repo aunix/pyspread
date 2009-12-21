@@ -56,7 +56,7 @@ from _pyspread._datastructures import Macros
 from _pyspread.config import VERSION, ICONPREFIX
 
 class ChoiceRenderer(wx.grid.PyGridCellRenderer):
-    """Image Renderer
+    """Renders choice dialog box for grid
     
     Places an image in a cell based on the row index.
     There are N choices and the choice is made by  choice[row%N]

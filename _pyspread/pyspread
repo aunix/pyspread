@@ -73,11 +73,7 @@ class PyspreadSplashScreen(SplashScreen):
 
 
 class MainApplication(App):
-    """Main applicationn class for pyspread. 
-    
-    Spawns Splashscreen.
-    
-    """
+    """Main applicationn class for pyspread."""
     
     dimensions = (1, 1, 1) # Will be overridden anyways
     options = {}
@@ -90,8 +86,8 @@ class MainApplication(App):
         # the main frame when it is time to do so.
         SystemOptions.SetOptionInt("mac.window-plain-transition", 1)
         
-        splash = PyspreadSplashScreen()
-        splash.Show()
+        #splash = PyspreadSplashScreen()
+        #splash.Show()
 
         # Get command line options and arguments
         self.get_cmd_args()

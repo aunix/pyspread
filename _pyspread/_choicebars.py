@@ -69,6 +69,15 @@ class _filledMenu(wx.Menu):
 
     menudata = []
 
+    def __init__(self, *args, **kwargs):
+        self.parent = kwargs.pop('parent')
+        try:
+            self.menubar = kwargs.pop('menubar')
+        except KeyError:
+            self.menubar = self.parent
+        wx.Menu.__init__(self, *args, **kwargs)
+        self._add_submenu(self, self.menudata)
+
     def _add_submenu(self, parent, data):
         """Adds items in data as a submenu to parent"""
 
@@ -98,16 +107,6 @@ class _filledMenu(wx.Menu):
                 parent.AppendSeparator()
             else:
                 raise TypeError, "Menu item unknown"
-
-
-    def __init__(self, *args, **kwargs):
-        self.parent = kwargs.pop('parent')
-        try:
-            self.menubar = kwargs.pop('menubar')
-        except KeyError:
-            self.menubar = self.parent
-        wx.Menu.__init__(self, *args, **kwargs)
-        self._add_submenu(self, self.menudata)
 
 # end of class _filledMenu
 
