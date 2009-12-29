@@ -10,6 +10,7 @@ _pyspread/_grid.py
 _pyspread/_datastructures.py
 _pyspread/_arrayhelper.py
 _pyspread/__init__.py
+_pyspread/_printout.py
 _pyspread/test/vartypes.py
 _pyspread/test/test_datastructures.py
 _pyspread/test/test_interfaces.py
@@ -22,9 +23,9 @@ news
 todo
 MANIFEST
 COPYING
-_pyspread/README
+README
 _pyspread/COPYING
-_pyspread/INSTALL
+INSTALL
 setup.py
 _pyspread/icons/pyspread.png
 _pyspread/icons/splash_image.png

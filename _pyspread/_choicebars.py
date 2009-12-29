@@ -205,7 +205,10 @@ class MainMenu(_filledMenu):
             [item, ["OnMacroListSave", "&Save macro list\tShift+Alt+m", 
                         "Save macro list"]]]], \
         [wx.Menu, "&Help", [\
-            [item, ["OnTutorial", "&Tutorial", "Launches pyspread tutorial"]],
+            [item, ["OnManual", "&Manual", "Launch manual"]],
+            [item, ["OnTutorial", "&Tutorial", "Launch tutorial"]],
+            [item, ["OnFAQ", "&FAQ", "Launch frequently asked questions"]],
+            ["Separator"], \
             [item, ["OnAbout", "&About", "About this program"]],
             ] \
         ] \

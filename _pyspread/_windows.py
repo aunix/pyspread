@@ -559,8 +559,8 @@ class MainWindow(wx.Frame):
         self.MainGrid.pysgrid.unredo.mark()
         event.Skip()
     
-    def OnTutorial(self, event):
-        """Launches pyspread tutorial"""
+    def _launch_help(self, filename):
+        """Generix help launcher"""
         
         # Set up window
         
@@ -571,7 +571,7 @@ class MainWindow(wx.Frame):
         
         # Get tutorial data
         
-        tutorial_file = open("doc/tutorial.html", "r")
+        tutorial_file = open(filename, "r")
         tutorial_html = tutorial_file.read()
         tutorial_file.close()
         
@@ -579,6 +579,21 @@ class MainWindow(wx.Frame):
         
         tutorial.SetPage(tutorial_html)
         tutorial_window.Show()
+    
+    def OnManual(self, event):
+        """Launches pyspread manual"""
+        
+        self._launch_help("doc/manual.html")
+    
+    def OnTutorial(self, event):
+        """Launches pyspread tutorial"""
+        
+        self._launch_help("doc/tutorial.html")
+        
+    def OnFAQ(self, event):
+        """Launches pyspread FAQ"""
+        
+        self._launch_help("doc/faq.html")
     
     def OnAbout(self, event):
         """Launches about dialog"""

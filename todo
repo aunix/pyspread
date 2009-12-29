@@ -1,8 +1,16 @@
 pyspread todo
 =============
 
-0.1
----
+0.0.14
+------
++ Signature based save load cycle
+
+0.0.13
+------
++ Print framework that supports colors and drawn elements (done)
++ Folder renaming to fix installation errors on some distributions (done)
++ Remove splash screen (done)
++ Some drawing speed-ups (done)
 
 0.0.12b
 -------

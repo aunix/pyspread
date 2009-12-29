@@ -1,6 +1,11 @@
-0.1
----
-+ (Find in results)
+0.0.13
+------
++ Print framework that supports colors and drawn elements
++ Splash screen removed
++ Some drawing speed-ups
++ Small white rectangle in upper left corner removed (BUG 2918360)
++ setup.py does not copy directories fixed (BUG 2913911)
++ Folder renaming to fix installation errors (BUG 2909017)
 
 
 0.0.12
