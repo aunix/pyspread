@@ -42,7 +42,8 @@ import types
 import wx
 import wx.aui
 import wx.grid
-import _pyspread.printout as printout
+import wx.html
+import _pyspread._printout as printout
 
 import _pyspread._grid as _grid
 
@@ -557,6 +558,27 @@ class MainWindow(wx.Frame):
         self.MainGrid.paste()
         self.MainGrid.pysgrid.unredo.mark()
         event.Skip()
+    
+    def OnTutorial(self, event):
+        """Launches pyspread tutorial"""
+        
+        # Set up window
+        
+        tutorial_window = wx.Frame(self, -1, "Pyspread tutorial", 
+                                   wx.DefaultPosition, wx.Size(600, 500))
+        tutorial = wx.html.HtmlWindow(tutorial_window, -1, 
+                            wx.DefaultPosition, wx.Size(600, 500))
+        
+        # Get tutorial data
+        
+        tutorial_file = open("doc/tutorial.html", "r")
+        tutorial_html = tutorial_file.read()
+        tutorial_file.close()
+        
+        # Show tutorial window
+        
+        tutorial.SetPage(tutorial_html)
+        tutorial_window.Show()
     
     def OnAbout(self, event):
         """Launches about dialog"""
