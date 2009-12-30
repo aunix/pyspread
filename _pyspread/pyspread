@@ -37,41 +37,6 @@ DEBUG = False
 
 path.insert(0, "..") 
 
-
-class PyspreadSplashScreen(SplashScreen):
-    """Pyspread splash screen"""
-    
-    def __init__(self):
-        from _pyspread._interfaces import get_splash_image
-        
-        splash_image = get_splash_image()
-        bmp = splash_image.ConvertToBitmap()
-        
-        SplashScreen.__init__(self, bmp,
-            SPLASH_CENTRE_ON_SCREEN | SPLASH_TIMEOUT, 1000, None, -1)
-        
-        self.Bind(EVT_CLOSE, self.OnClose)
-        self.future_call = FutureCall(500, self.ShowMain)
-
-
-    def OnClose(self, evt):
-        """Makes sure the default handler runs so this window gets destroyed"""
-        
-        evt.Skip()
-        self.Hide()
-        
-        # if the timer is still running then go ahead and show the
-        # main frame now
-        if self.future_call.IsRunning():
-            self.future_call.Stop()
-            self.ShowMain()
-
-
-    def ShowMain(self):
-        if self.future_call.IsRunning():
-            self.Raise()
-
-
 class MainApplication(App):
     """Main applicationn class for pyspread."""
     
@@ -82,13 +47,6 @@ class MainApplication(App):
     def OnInit(self):
         """Init class that is automatically run on __init__"""
         
-        # Create and show the splash screen.  It will then create and show
-        # the main frame when it is time to do so.
-        SystemOptions.SetOptionInt("mac.window-plain-transition", 1)
-        
-        #splash = PyspreadSplashScreen()
-        #splash.Show()
-
         # Get command line options and arguments
         self.get_cmd_args()
 
@@ -99,7 +57,15 @@ class MainApplication(App):
         from _pyspread._windows import MainWindow
         
         self.main_window = MainWindow(None, dimensions=self.dimensions)
-
+        
+        # Create GPG key if not present
+        
+        from _interfaces import is_pyme_present
+        
+        if is_pyme_present():
+            from _interfaces import genkey
+            genkey()
+        
         # Load filename if provided
         if self.filename is not None:
             self.main_window.MainGrid.loadfile(self.filename)

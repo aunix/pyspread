@@ -48,14 +48,14 @@ import _pyspread._printout as printout
 import _pyspread._grid as _grid
 
 from _pyspread._choicebars import MainMenu, MainToolbar, \
-                                 FindToolbar, AttributesToolbar
+            FindToolbar, AttributesToolbar
 from _pyspread._dialogs import MacroDialog, CsvImportDialog, CsvExportDialog, \
-                       DimensionsEntryDialog, AboutDialog
+            DimensionsEntryDialog, AboutDialog
 from _pyspread._interfaces import CsvInterfaces, PysInterfaces, \
-                       string_match, bzip_dump
+            string_match, bzip_dump, is_pyme_present, genkey, sign, verify
 
 from _pyspread.config import ICONPREFIX, icon_size, KEYFUNCTIONS, \
-                            DEFAULT_FONT_SIZE, odftags
+            DEFAULT_FONT_SIZE, odftags
 
 
 class MainWindow(wx.Frame):
@@ -77,6 +77,9 @@ class MainWindow(wx.Frame):
                         "All files (*.*)|*.*"
         self.wildcard_interfaces = {0: PysInterfaces, 
                                     1: PysInterfaces}
+        
+        # Code execution flag
+        self.code_execution = True
         
         # Default interface
         self.wildcard_interface = self.wildcard_interfaces[0]
@@ -320,6 +323,15 @@ class MainWindow(wx.Frame):
         dlg.Hide()
         dlg.Destroy()
     
+    def sign_file(self):
+        """Signs file if possible"""
+
+        if is_pyme_present() and self.code_execution:
+            signature = sign(self.filepath)
+            signfile = open(self.filepath + '.sig','wb')
+            signfile.write(signature)
+            signfile.close()
+    
     def OnFileSave(self, event):
         """Saves an existing file"""
         
@@ -327,6 +339,10 @@ class MainWindow(wx.Frame):
             self.OnFileSaveAs(event)
         else:
             self.MainGrid.savefile(self.filepath, self.wildcard_interface)
+            self.sign_file()
+
+
+
     
     def OnFileSaveAs(self, event):
         """Opens the file dialog and saves the file to the chosen location"""
@@ -341,6 +357,7 @@ class MainWindow(wx.Frame):
             self.wildcard_interface = self.wildcard_interfaces[wildcard_no]()
             
             self.MainGrid.savefile(self.filepath, self.wildcard_interface)
+            self.sign_file()
         
         dlg.Hide()
         dlg.Destroy()
@@ -462,33 +479,11 @@ class MainWindow(wx.Frame):
                 style=wx.ID_OK)
             dlg.ShowModal()
             dlg.Destroy()
-    
-#    def OnFilePageSetup(self, event):
-#        """Opens page setup dialog
-#        
-#        Source
-#        ------
-#        http://aspn.activestate.com/ASPN/Mail/Message/wxpython-users/3471083
-#        
-#        """
-#        
-#        data = wx.PageSetupDialogData()
-#        
-#        #referencing wx.PrintData
-#        data.SetPrintData(self.print_data)
-#        data.SetDefaultMinMargins(True)
-#        data.SetMarginTopLeft(self.print_data_margins[0])
-#        data.SetMarginBottomRight(self.print_data_margins[1])
-#        
-#        dlg = wx.PageSetupDialog(self, data)
-#        
-#        if dlg.ShowModal() == wx.ID_OK:
-#            data = dlg.GetPageSetupData()
-#            self.print_data = wx.PrintData(data.GetPrintData())
-#            self.print_data.SetPaperId(data.GetPaperId())
-#            self.print_data_margins = (data.GetMarginTopLeft(),
-#                                       data.GetMarginBottomRight())
-#        dlg.Destroy()
+
+    def OnFileApprove(self, event):
+        """Signs the current file"""
+        
+        pass
     
     def OnFilePrint(self, event):
         """Displays print dialog"""

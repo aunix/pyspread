@@ -33,6 +33,11 @@ Provides:
  * fill_numpyarray: Fills the target array
  * fill_wxgrid: Fills the target grid
  
+ * is_pyme_present: Checks if pyme is installed
+ * genkey: Generates gpg key
+ * sign: Returns detached signature for file
+ * verify: verifies stream against signature
+ 
  * make_string
  * make_unicode
  * make_slice
@@ -61,8 +66,16 @@ import re
 import sys
 import types
 import cStringIO as StringIO
+
 import wx
 import numpy
+
+try:
+    from pyme import core, callbacks, constants, pygpgme
+    from pyme.constants.sig import mode
+    from pyme.constants import protocol
+except ImportError:
+    pass
 
 from _pyspread.config import VERSION, SNIFF_SIZE, default_dimensions, dpi, \
                              splash_image_path
@@ -77,7 +90,8 @@ class SafeUnpickler(object):
         '__builtin__': set(['object']),
         'numpy': set(['ndarray', 'dtype']),
         'numpy.core.multiarray': set(['_reconstruct']),
-        'pyspread._interfaces': set(['UserString']),
+        '_pyspread._interfaces': set(['UserString']),
+        'pyspread._interfaces': set(['UserString']), # compatibility < 0.0.13
     }
  
     @classmethod
@@ -227,6 +241,113 @@ def fill_wxgrid(target, src_it, digest_types, key=(0, 0)):
             except Exception, err:
                 digest_res = str(err)
             target.SetCellValue(row, col, digest_res)
+
+# GPG handling functions
+
+def is_pyme_present():
+    """Returns True if pyme can be imported else false"""
+    
+    try:
+        from pyme import core
+        return True
+    except ImportError:
+        return False
+
+def _passphrase_callback(hint='', desc='', prev_bad=''): 
+    """Callback function needed by pyme"""
+    
+    from config import GPG_KEY_PASSPHRASE
+    return GPG_KEY_PASSPHRASE
+
+def genkey():
+    """Creates a new standard GPG key"""
+    
+    # Initialize our context.
+    core.check_version(None)
+
+    c = core.Context()
+    c.set_armor(1)
+    #c.set_progress_cb(callbacks.progress_stdout, None)
+    
+    # Check if standard key is already present
+    keyname = 'pyspread'
+    c.op_keylist_start(keyname, 0)
+    key = c.op_keylist_next()
+    if key is None:
+        # Key not present --> Create new one
+        from config import GPG_KEY_PARMS
+        print "Generating new GPG key 'pyspread'. This may take some time..."
+        c.op_genkey(GPG_KEY_PARMS, None, None)
+        print c.op_genkey_result().fpr
+
+
+
+def sign(filename):
+    """Returns detached signature for file"""
+    
+    from config import GPG_KEY_UID
+    
+    plaintext = core.Data(file=str(filename))
+    
+    ciphertext = core.Data()
+    
+    ctx = core.Context()
+
+    ctx.set_armor(1)
+    ctx.set_passphrase_cb(_passphrase_callback)
+    
+    ctx.op_keylist_start(GPG_KEY_UID, 0)
+    sigkey = ctx.op_keylist_next()
+    # print sigkey.uids[0].uid
+    
+    ctx.signers_clear()
+    ctx.signers_add(sigkey)
+    
+    ctx.op_sign(plaintext, ciphertext, pygpgme.GPGME_SIG_MODE_DETACH)
+    
+    ciphertext.seek(0, 0)
+    signature = ciphertext.read()
+    
+    return signature
+
+def verify(sigfilename, filefilename=None):
+    """Verifies a signature, prints a lot of details."""
+    ## TODO
+    
+    c = core.Context()
+
+    # Create Data with signed text.
+    sig2 = core.Data(file=sigfilename)
+    if filefilename:
+        file2 = core.Data(file=filefilename)
+        plain2 = None
+    else:
+        file2 = None
+        plain2 = core.Data()
+
+    # Verify.
+    c.op_verify(sig2, file2, plain2)
+    result = c.op_verify_result()
+
+    # List results for all signatures. Status equal 0 means "Ok".
+    index = 0
+    for sign in result.signatures:
+        index += 1
+        print "signature", index, ":"
+        print "  summary:     %#0x" % (sign.summary)
+        print "  status:      %#0x" % (sign.status)
+        print "  validity:   ", sign.validity
+        print "  timestamp:  ", sign.timestamp
+        print "  fingerprint:", sign.fpr
+        print "  uid:        ", c.get_key(sign.fpr, 0).uids[0].uid
+
+    # Print "unsigned" text if inline signature
+    if plain2:
+        #Rewind since verify put plain2 at EOF.
+        plain2.seek(0,0)
+        print "\n", plain2.read()
+
+
 
 # Type conversion functions
 

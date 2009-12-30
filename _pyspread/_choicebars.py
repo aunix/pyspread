@@ -146,7 +146,10 @@ class MainMenu(_filledMenu):
             [item, ["OnFileImport", "&Import", "Import a file " + \
                 "(Supported formats: CSV, Tab separated text)"]], \
             [item, ["OnFileExport", "&Export", 
-                "Export a file (Supported formats: None"]], \
+                "Export a file (Supported formats: CSV)"]], \
+            ["Separator"], \
+            [item, ["OnFileApprove", "&Approve file", 
+                "Approve, unfreeze and sign the curretn file"]], \
             ["Separator"], \
 #            [item, ["OnFilePageSetup", "Page setup", 
 #                "Setup page for printing"]], \

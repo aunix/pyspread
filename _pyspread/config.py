@@ -10,7 +10,7 @@ Program info
 
 """
 
-VERSION = "0.0.13" # The current version of pyspread
+VERSION = "0.0.14" # The current version of pyspread
 
 
 """
@@ -44,6 +44,29 @@ Splash image
 """
 
 splash_image_path = ICONPREFIX + "icons/splash_image.png"
+
+"""
+GPG key parameters
+==================
+
+"""
+
+GPG_KEY_PARMS = \
+"""<GnupgKeyParms format="internal">
+    Key-Type: DSA
+    Key-Length: 2048
+    Subkey-Type: ELG-E
+    Subkey-Length: 2048
+    Name-Real: pyspread
+    Name-Comment: Pyspread savefile signature keys
+    Name-Email: pyspread@127.0.0.1
+    Passphrase: pyspread
+    Expire-Date: 0
+    </GnupgKeyParms>
+    """
+    
+GPG_KEY_UID = 'pyspread'
+GPG_KEY_PASSPHRASE = "pyspread" # Set this individually!
 
 """
 System info

@@ -4,7 +4,7 @@ from distutils.core import setup
 from distutils.sysconfig import get_python_lib
 
 setup(name='pyspread',
-      version='0.0.13',
+      version='0.0.14',
       description='A spreadsheet that accepts a pure python expression in each cell.',
       license='GPL v3 :: GNU General Public License',
       classifiers=[ 'Development Status :: 3 - Alpha',
