@@ -316,6 +316,9 @@ class MainWindow(wx.Frame):
             wildcard_no = dlg.GetFilterIndex()
             self.wildcard_interface = self.wildcard_interfaces[wildcard_no]()
             
+            ## Check if sig file exists and is valid
+            ## If not: enable safe mode
+            
             self.MainGrid.loadfile(self.filepath, self.wildcard_interface)
             
             self.MainGrid.OnCombo(event)
@@ -325,7 +328,7 @@ class MainWindow(wx.Frame):
     
     def sign_file(self):
         """Signs file if possible"""
-
+        
         if is_pyme_present() and self.code_execution:
             signature = sign(self.filepath)
             signfile = open(self.filepath + '.sig','wb')
@@ -340,9 +343,6 @@ class MainWindow(wx.Frame):
         else:
             self.MainGrid.savefile(self.filepath, self.wildcard_interface)
             self.sign_file()
-
-
-
     
     def OnFileSaveAs(self, event):
         """Opens the file dialog and saves the file to the chosen location"""

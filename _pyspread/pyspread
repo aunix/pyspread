@@ -26,9 +26,17 @@ See __init__.py for extensive docstring.
 
 """
 
+# Select wx version 2.8 if possible
+
+try:
+    import wxversion
+    wxversion.select('2.8')
+except ImportError:
+    pass
+
 from sys import path
-from wx import App, SplashScreen, SPLASH_CENTRE_ON_SCREEN, SPLASH_TIMEOUT
-from wx import SystemOptions, EVT_CLOSE, FutureCall, InitAllImageHandlers
+from wx import App
+from wx import InitAllImageHandlers
 
 DEBUG = False
 

@@ -276,14 +276,14 @@ class PyspreadGrid(object):
             # Only one cell is called
             try:
                 result = self._get_single_item(key)
-            except Error, err:
+            except Exception, err:
                 result = err
             
         else:
             # Multiple cells in one dimension are called
             try:
                 result = self._get_ndim_itemlist(key)
-            except Error, err:
+            except Exception, err:
                 result = err
         
         if key == self._tabukey:
