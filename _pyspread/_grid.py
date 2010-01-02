@@ -1512,7 +1512,7 @@ class MainGrid(wx.grid.Grid,
         
         # Evaluate everything in order to catch globals
         for key in list(set(zip(*numpy.nonzero(self.pysgrid.sgrid)))):
-            self.pysgrid._get_single_item(key)
+            self.pysgrid[key]
         self.pysgrid._resultcache = {}
         self.Update()
 

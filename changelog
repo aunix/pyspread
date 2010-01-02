@@ -1,3 +1,12 @@
+0.0.14
+------
++ Simplified Macro editor dialog
++ Improved cycle detection algorithm for grid
++ Globals now update immediately
++ Colour works now when loading pys files
++ wxPython v 2.8 is now preferred
++ Error handling bug removed
+
 0.0.13
 ------
 + Print framework that supports colors and drawn elements

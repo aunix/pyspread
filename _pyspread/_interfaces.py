@@ -91,6 +91,7 @@ class SafeUnpickler(object):
         'numpy': set(['ndarray', 'dtype']),
         'numpy.core.multiarray': set(['_reconstruct']),
         '_pyspread._interfaces': set(['UserString']),
+        'wx._gdi': set(['Colour']),
         'pyspread._interfaces': set(['UserString']), # compatibility < 0.0.13
     }
  

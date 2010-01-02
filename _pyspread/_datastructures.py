@@ -43,6 +43,11 @@ from _pyspread.config import default_cell_attributes
 
 S = None
 
+OPERATORS = ["+", "-", "*", "**", "/", "//",
+             "%", "<<", ">>", "&", "|", "^", "~",
+             "<", ">", "<=", ">=", "==", "!=", "<>",
+            ]
+
 class PyspreadGrid(object):
     """Central data object that provides two numpy based 3D object arrays.
 
@@ -66,11 +71,6 @@ class PyspreadGrid(object):
         \tMust all be positive
         
         """
-        
-        ### It seems now that the ideal solution for sgrid would be 
-        ### a sliceable sorted, ordered dict. The problem with this
-        ### is that pyspread makes some use of numpy functions that
-        ### must be replaced or made available for such a dict.
         
         global S
         S = self
@@ -102,6 +102,38 @@ class PyspreadGrid(object):
     
     shape = property(_getshape)
     
+    def _eval_cell(self, key):
+        """Evaluates one cell"""
+        
+        # Set up environment for evaluation
+        env = globals().copy()
+        env.update( {'X':key[0], 'Y':key[1], 'Z':key[2], 'S':self } )
+        
+        # Check if there is a global assignment
+        split_exp = self.sgrid[key].split("=")
+        
+        # If only 1 term in front of the "=" --> global
+        if len(split_exp) > 1 and \
+           len(split_exp[0].split()) == 1 and \
+           split_exp[1] != "" and \
+           (not max(op in split_exp[0] for op in OPERATORS)) and \
+           split_exp[0].count("(") == split_exp[0].count(")"):
+            glob_var = split_exp[0].strip()
+            expression = "=".join(split_exp[1:])
+        else:
+            glob_var = None
+            expression = self.sgrid[key]
+        
+        try:
+            result = eval( expression, env, {} )
+        except Exception, err:
+            result = err
+        
+        if glob_var is not None:
+            globals().update({glob_var: result})
+        
+        return result
+    
     def _get_single_item(self, key):
         """Returns results for one single item. 
         
@@ -114,57 +146,27 @@ class PyspreadGrid(object):
         if self.safe_mode:
             return self.sgrid[key]
         
-        # Detect cycles
-        if [key] == self._tabukey:
-            self._tabukey = key
-        elif key == self._tabukey:
-            raise KeyError, 'Infinite recursion detected.'
-        
-        # Cache retrieval for quicker access
-        if key in self._resultcache:
-            return self._resultcache[key]
-        
         # Frozen cell cache access
         if key in self.frozen_cells:
             return self.frozen_cells[key]
         
-        expression = self.sgrid[key]
-        
-        if expression == "" or type(expression) is types.IntType:
-            try:
-                self._resultcache.pop(key)
-            except KeyError:
-                pass
-            return None
-        
-        # Handle assignments
-        expression_split = expression.split("=", 1)
-        assignvar = expression_split[0]
-        
-        if len(expression_split) == 1  or \
-           expression_split[1] == ""  or \
-           expression_split[1][0] == "=" or \
-           assignvar.count("(") > assignvar.count(")") or \
-           assignvar.count("[") > assignvar.count("]") or \
-           assignvar.count("{") > assignvar.count("}"):
-            assignvar = None
+        if self._resultcache.has_key(key):
+            result = self._resultcache[key]
+        elif self.sgrid[key] in [0, None, ""]:
+            result = None
         else:
-            expression = expression_split[1]
-        
-        X, Y, Z = key
-        
-        try:
-            res = eval(expression)
-        except Exception, errormessage:
-            res = errormessage
-        
-        self._resultcache[key] = res
-        
-        if assignvar is not None:
-            self._assign_globally(assignvar, expression, key)
-        
-        return res
-    
+            self._resultcache[key] = \
+                KeyError("Circular dependency at %s" % str(key))
+            result = self._eval_cell(key)
+            self._resultcache[key] = result
+
+        # If value is an exception
+        if isinstance(result, Exception):
+            # we raise it, unwinding the expression evaluation in the caller
+            raise result
+        else: 
+            # else we return it, allowing eval to use the value 
+            return result
     
     def _get_list_keys(self, key, list_dim):
         """Returns a generator of all keys along dimension list_dim
@@ -671,17 +673,6 @@ class PyspreadGrid(object):
                             for cell in nonzero]
         return nonzero
     
-    def _assign_globally(self, assignvar, expression, key):
-        """Assigns the result of expression to the assignvar"""
-        
-        if assignvar in ['S', 'X', 'Y', 'Z']:
-            raise SyntaxError, "Cell name must not mask " \
-                               "the built-in globals S, X, Y, Z"
-        X, Y, Z = key
-        
-        exec("".join(["global ", assignvar])) in locals(), globals()
-        exec("=".join([assignvar, expression])) in locals(), globals()
-        
     def set_global_macros(self, macros=None):
         """ Sets macros to global scope """
         
