@@ -567,7 +567,6 @@ class MainWindow(wx.Frame):
             slice_x, slice_y = self.MainGrid.get_visiblecell_slice()[:2]
             selection = [(x, y) for x in xrange(slice_x.start, slice_x.stop-1)
                                 for y in xrange(slice_y.start, slice_y.stop-1)]
-
         
         rowslice, colslice = self.MainGrid.get_selected_rows_cols(selection)
         tab = self.MainGrid.current_table
@@ -584,8 +583,6 @@ class MainWindow(wx.Frame):
         
         __printout.Destroy()
         canvas.Destroy()
-##        goto_button = self.FindWindowById(wx.ID_PREVIEW_GOTO)
-##        goto_button.Hide()
     
     def OnExit(self, event):
         """Exit program"""
