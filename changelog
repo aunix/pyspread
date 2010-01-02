@@ -6,6 +6,7 @@
 + Colour works now when loading pys files
 + wxPython v 2.8 is now preferred
 + Error handling bug removed
++ Help files are now found after changing the path
 
 0.0.13
 ------

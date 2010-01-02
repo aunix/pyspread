@@ -77,6 +77,8 @@ class MainWindow(wx.Frame):
                         "All files (*.*)|*.*"
         self.wildcard_interfaces = {0: PysInterfaces, 
                                     1: PysInterfaces}
+        # Get path of module
+        self.module_path = os.getcwd() + "/" + os.path.dirname(__file__)
         
         # Code execution flag
         self.code_execution = True
@@ -629,7 +631,8 @@ class MainWindow(wx.Frame):
                             wx.DefaultPosition, wx.Size(600, 500))
         
         # Get tutorial data
-        
+        current_path = os.getcwd()
+        os.chdir(self.module_path)
         tutorial_file = open(filename, "r")
         tutorial_html = tutorial_file.read()
         tutorial_file.close()
@@ -638,6 +641,8 @@ class MainWindow(wx.Frame):
         
         tutorial.SetPage(tutorial_html)
         tutorial_window.Show()
+        
+        os.chdir(current_path)
     
     def OnManual(self, event):
         """Launches pyspread manual"""
