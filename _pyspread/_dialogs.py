@@ -50,7 +50,7 @@ import wx.grid
 import wx.lib.mixins.listctrl  as  listmix
 
 from _pyspread._grid import GridIndexMixin
-from _pyspread._widgets import SortedListCtrl, MacroEditPanel
+from _pyspread._widgets import SortedListCtrl, PythonSTC
 from _pyspread._interfaces import Digest, sniff, fill_wxgrid
 from _pyspread._datastructures import Macros
 from _pyspread.config import VERSION, ICONPREFIX
@@ -703,14 +703,25 @@ class MacroDialog(wx.Dialog, listmix.ColumnSorterMixin):
         wx.Dialog.__init__(self, *args, **kwds)
         
         self.window_1 = wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_BORDER)
-        self.panel_3 = wx.Panel(self.window_1, -1)
-        self.button_1 = wx.Button(self.panel_3, wx.ID_ADD, "")
-        self.button_2 = wx.Button(self.panel_3, wx.ID_APPLY, "")
-        self.button_3 = wx.Button(self.panel_3, wx.ID_REMOVE, "")
-        self.macro_list_ctrl = SortedListCtrl(self.panel_3, -1, \
+        self.left_panel = wx.Panel(self.window_1, -1)
+        self.right_panel = wx.Panel(self.window_1, -1)
+        self.button_1 = wx.Button(self.left_panel, wx.ID_ADD, "")
+        self.button_2 = wx.Button(self.left_panel, wx.ID_APPLY, "")
+        self.button_3 = wx.Button(self.left_panel, wx.ID_REMOVE, "")
+        self.macro_list_ctrl = SortedListCtrl(self.left_panel, -1, \
                 style=wx.LC_REPORT|wx.LC_SINGLE_SEL| \
                       wx.LC_SORT_ASCENDING|wx.SUNKEN_BORDER)
-        self.MacroEditPanel = MacroEditPanel(self.window_1, -1)
+                      
+        self.CodeTextCtrl = PythonSTC(self.right_panel, wx.NewId(), \
+          pos=wx.DefaultPosition, \
+          size=wx.DefaultSize, 
+          style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.EXPAND)
+        
+        self.CodeTextCtrl.SetToolTipString("Enter one python function here." + \
+                        "\nThe first line has to begin with def")
+        
+        self.ok_button = wx.Button(self.right_panel, wx.ID_OK)
+        self.cancel_button = wx.Button(self.right_panel, wx.ID_CANCEL)
         
         self._set_properties()
         self._do_layout()
@@ -733,7 +744,6 @@ class MacroDialog(wx.Dialog, listmix.ColumnSorterMixin):
         self.button_1.SetToolTipString("Add new macro")
         self.button_2.SetToolTipString("Apply changes to current macro")
         self.button_3.SetToolTipString("Remove current macro")
-        self.MacroEditPanel.SetMinSize((-1, -1))
     
     def _do_layout(self):
         """Layout sizers"""
@@ -741,6 +751,10 @@ class MacroDialog(wx.Dialog, listmix.ColumnSorterMixin):
         sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_3 = wx.FlexGridSizer(2, 1, 5, 0)
         grid_sizer_4 = wx.FlexGridSizer(1, 3, 0, 5)
+        code_sizer = wx.FlexGridSizer(2, 1, 5, 0)
+        button_sizer = wx.FlexGridSizer(1, 2, 0, 5)
+        button_sizer.Add(self.ok_button)
+        button_sizer.Add(self.cancel_button)
         grid_sizer_4.Add(self.button_1, 0, wx.ALL|wx.EXPAND, 3)
         grid_sizer_4.Add(self.button_2, 0, wx.ALL|wx.EXPAND, 3)
         grid_sizer_4.Add(self.button_3, 0, wx.ALL|wx.EXPAND, 3)
@@ -749,10 +763,15 @@ class MacroDialog(wx.Dialog, listmix.ColumnSorterMixin):
         grid_sizer_4.AddGrowableCol(2)
         grid_sizer_3.Add(grid_sizer_4, 1, wx.TOP|wx.EXPAND, 5)
         grid_sizer_3.Add(self.macro_list_ctrl, 1, wx.EXPAND, 0)
-        self.panel_3.SetSizer(grid_sizer_3)
+        self.left_panel.SetSizer(grid_sizer_3)
         grid_sizer_3.AddGrowableRow(1)
         grid_sizer_3.AddGrowableCol(0)
-        self.window_1.SplitVertically(self.panel_3, self.MacroEditPanel, 500)
+        code_sizer.Add(self.CodeTextCtrl, 0, wx.ALL|wx.EXPAND, 0)
+        code_sizer.Add(button_sizer, 0, wx.ALL|wx.EXPAND, 0)
+        code_sizer.AddGrowableRow(0)
+        code_sizer.AddGrowableCol(0)
+        self.right_panel.SetSizer(code_sizer)
+        self.window_1.SplitVertically(self.left_panel, self.right_panel, 500)
         sizer_1.Add(self.window_1, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         self.Layout()
@@ -777,7 +796,7 @@ class MacroDialog(wx.Dialog, listmix.ColumnSorterMixin):
         #print current_listitem
         try:
             return self.macros[current_listitem.GetText()]
-        except KeyError:
+        except (KeyError, AttributeError):
             return None
     
     def GetMacroString(self):
@@ -793,9 +812,11 @@ class MacroDialog(wx.Dialog, listmix.ColumnSorterMixin):
         """
         
         macro = self.GetCurrentMacro()
+        if macro is None:
+            return None
         functionname = macro.__name__
-        varentries = [var.GetValue() for var in self.MacroEditPanel.varentries]
-        varlist = varentries[:macro.func_code.co_argcount]
+        varentries = []
+        varlist = varentries[:]
         return functionname + "(" + ", ".join(varlist) + ")"
     
     def UpdateMacroList(self, func=None):
@@ -819,7 +840,7 @@ class MacroDialog(wx.Dialog, listmix.ColumnSorterMixin):
     def OnAddMacro(self, event):
         """Stores an added macro and adds it to the list"""
         
-        code = self.MacroEditPanel.CodeTextCtrl.GetText()
+        code = self.CodeTextCtrl.GetText()
         func = self.macros.add(code)
         if func != 0:
             self.UpdateMacroList(func)
@@ -828,7 +849,7 @@ class MacroDialog(wx.Dialog, listmix.ColumnSorterMixin):
     def OnApplyChange(self, event):
         """Applies change in function to macro dict"""
         
-        code = self.MacroEditPanel.CodeTextCtrl.GetText()
+        code = self.CodeTextCtrl.GetText()
         func = self.macros.get_macro(code)
         
         macro_list_ctrl = self.macro_list_ctrl
@@ -859,21 +880,13 @@ class MacroDialog(wx.Dialog, listmix.ColumnSorterMixin):
         """Updates the right hand side panels"""
         
         current_macro = self.GetCurrentMacro(event)
-        me_panel = self.MacroEditPanel
         
         if current_macro is None:
             event.Skip()
             return 0
         
         code = current_macro.func_dict['macrocode']
-        me_panel.CodeTextCtrl.SetText(code)
-        
-        try:
-            me_panel.docstringTextCtrl.SetValue(current_macro.__doc__)
-        except TypeError:
-            me_panel.docstringTextCtrl.SetValue("")
-            
-        me_panel.update_macroform(me_panel.pane_macroform, current_macro)
+        self.CodeTextCtrl.SetText(code)
         
         event.Skip()
 

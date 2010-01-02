@@ -76,6 +76,10 @@ class _filledMenu(wx.Menu):
         except KeyError:
             self.menubar = self.parent
         wx.Menu.__init__(self, *args, **kwargs)
+        
+        # Menu methodname - item storage
+        self.methodname_item = {}
+        
         self._add_submenu(self, self.menudata)
 
     def _add_submenu(self, parent, data):
@@ -94,17 +98,27 @@ class _filledMenu(wx.Menu):
                     parent.AppendMenu(wx.NewId(), menuname, menu)
             elif obj == wx.MenuItem:
                 methodname = item[1][0]
+                
                 method = self.parent.__getattribute__(methodname)
                 if len(item) == 3:
                     style = item[2]
                 else:
                     style = wx.ITEM_NORMAL
-                params = [parent, wx.NewId()] + item[1][1:] + [style]
+                
+                item_id = wx.NewId()
+                
+                params = [parent, item_id] + item[1][1:] + [style]
+                
                 menuitem = obj(*params)
                 parent.AppendItem(menuitem)
+                
+                self.methodname_item[methodname] = menuitem
+                
                 self.parent.Bind(wx.EVT_MENU, method, menuitem)
+                
             elif obj == "Separator":
                 parent.AppendSeparator()
+                
             else:
                 raise TypeError, "Menu item unknown"
 
@@ -151,8 +165,6 @@ class MainMenu(_filledMenu):
             [item, ["OnFileApprove", "&Approve file", 
                 "Approve, unfreeze and sign the curretn file"]], \
             ["Separator"], \
-#            [item, ["OnFilePageSetup", "Page setup", 
-#                "Setup page for printing"]], \
             [item, ["OnFilePrint", "&Print...\tCtrl+p", 
                 "Print current spreadsheet"]], \
             ["Separator"], \

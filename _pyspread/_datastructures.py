@@ -295,8 +295,10 @@ class PyspreadGrid(object):
         self._resultcache = {}
         
         _old_content = self.sgrid[pos]
-        
-        if _old_content == 0:
+        try:
+            if _old_content == 0:
+                _old_content = u""
+        except ValueError:
             _old_content = u""
         
         if _old_content != value:

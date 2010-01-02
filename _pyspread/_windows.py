@@ -106,11 +106,16 @@ class MainWindow(wx.Frame):
         
         self.attributes_toolbar = AttributesToolbar(self, -1)
         
-        # Print data
+        # Safe mode is disabled by default (will be enabled by OnFileOpen)
+        self.safe_mode = False
         
+        # Disable menu item for leaving save mode
+        file_approve_menuitem = self.main_menu.methodname_item["OnFileApprove"]
+        file_approve_menuitem.Enable(False)
+        
+        # Print data
         # wx.PrintData properties setup from 
         # http://aspn.activestate.com/ASPN/Mail/Message/wxpython-users/3471083
-        
         self.print_data = wx.PrintData()
         self.print_data.SetPaperId(wx.PAPER_A4)
         self.print_data.SetPrintMode(wx.PRINT_MODE_PRINTER)
@@ -304,6 +309,21 @@ class MainWindow(wx.Frame):
         
         self.MainGrid.pysgrid.unredo.reset()
     
+    def validate_signature(self, filename):
+        """Returns True if a valid signature is present for filename"""
+        
+        sigfilename = filename + '.sig'
+        
+        try:
+            dummy = open(sigfilename)
+            dummy.close()
+        except IOError:
+            # Signature file does not exist
+            return False
+        
+        # Check if the sig is valid for the sigfile
+        return verify(sigfilename, filename)
+    
     def OnFileOpen(self, event):
         """Opens file dialog and loads file"""
         
@@ -316,8 +336,20 @@ class MainWindow(wx.Frame):
             wildcard_no = dlg.GetFilterIndex()
             self.wildcard_interface = self.wildcard_interfaces[wildcard_no]()
             
-            ## Check if sig file exists and is valid
-            ## If not: enable safe mode
+            # Set safe mode if signature missing of invalid
+            if self.validate_signature(self.filepath):
+                self.safe_mode = False
+                self.main_window_statusbar.SetStatusText( \
+                    "Valid signature found. File is trusted.")
+            else:
+                self.safe_mode = True
+                self.main_window_statusbar.SetStatusText( \
+                    "File is not properly signed. Safe mode activated. " + \
+                    "Select File -> Approve to leave safe mode.")
+                # Disable menu item for leaving save mode
+                file_approve_menuitem = \
+                    self.main_menu.methodname_item["OnFileApprove"]
+                file_approve_menuitem.Enable(True)
             
             self.MainGrid.loadfile(self.filepath, self.wildcard_interface)
             
@@ -342,7 +374,12 @@ class MainWindow(wx.Frame):
             self.OnFileSaveAs(event)
         else:
             self.MainGrid.savefile(self.filepath, self.wildcard_interface)
-            self.sign_file()
+            if self.safe_mode:
+                self.main_window_statusbar.SetStatusText("Untrusted file saved")
+            else:
+                self.sign_file()
+                self.main_window_statusbar.SetStatusText( \
+                    "File saved and sigend")
     
     def OnFileSaveAs(self, event):
         """Opens the file dialog and saves the file to the chosen location"""
@@ -357,7 +394,12 @@ class MainWindow(wx.Frame):
             self.wildcard_interface = self.wildcard_interfaces[wildcard_no]()
             
             self.MainGrid.savefile(self.filepath, self.wildcard_interface)
-            self.sign_file()
+            if self.safe_mode:
+                self.main_window_statusbar.SetStatusText("Untrusted file saved")
+            else:
+                self.sign_file()
+                self.main_window_statusbar.SetStatusText( \
+                    "File saved and sigend")
         
         dlg.Hide()
         dlg.Destroy()
@@ -481,9 +523,34 @@ class MainWindow(wx.Frame):
             dlg.Destroy()
 
     def OnFileApprove(self, event):
-        """Signs the current file"""
+        """Signs the current file and leaves safe mode"""
         
-        pass
+        if not self.safe_mode:
+            return None
+        
+        # The file can damage the system --> Ask again
+        import wx.lib.agw.genericmessagedialog as GMD
+        from config import file_approval_warning as warning
+        
+        dlg = GMD.GenericMessageDialog(self, warning, "Security warning",
+            wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING)
+        if dlg.ShowModal() == wx.ID_YES:
+            proceed = True
+        else:
+            proceed = False
+        dlg.Destroy()
+
+        if proceed:
+            # Leave safe mode
+            self.safe_mode = False
+            
+            # Sign file
+            self.sign_file()
+            self.main_window_statusbar.SetStatusText("File saved and sigend")
+            
+            # Hide Menu item
+            menuitem = event.GetEventObject().FindItemById(event.Id)
+            menuitem.Enable(False)
     
     def OnFilePrint(self, event):
         """Displays print dialog"""
@@ -701,8 +768,9 @@ class MainWindow(wx.Frame):
                 self.MainGrid.entry_line.SetValue(macrostring)
             except TypeError:
                 self.MainGrid.entry_line.SetValue("")
-            self.MainGrid.pysgrid[targetcell] = macrostring
-            self.MainGrid.ForceRefresh()
+            if macrostring is not None:
+                self.MainGrid.pysgrid[targetcell] = macrostring
+                self.MainGrid.ForceRefresh()
         self.MainGrid.pysgrid.macros = dlg.macros
         self.MainGrid.pysgrid.set_global_macros(self.MainGrid.pysgrid.macros)
         dlg.Destroy()

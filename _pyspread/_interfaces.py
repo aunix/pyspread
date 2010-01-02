@@ -259,6 +259,18 @@ def _passphrase_callback(hint='', desc='', prev_bad=''):
     from config import GPG_KEY_PASSPHRASE
     return GPG_KEY_PASSPHRASE
 
+def _get_file_data(filename):
+    """Returns pyme.core.Data object of file."""
+    
+    # Required because of unicode bug in pyme
+    
+    infile = open(filename, "rb")
+    infile_content = infile.read()
+    infile.close()
+    
+    return core.Data(string=infile_content)
+
+
 def genkey():
     """Creates a new standard GPG key"""
     
@@ -287,7 +299,7 @@ def sign(filename):
     
     from config import GPG_KEY_UID
     
-    plaintext = core.Data(file=str(filename))
+    plaintext = _get_file_data(filename)
     
     ciphertext = core.Data()
     
@@ -311,43 +323,36 @@ def sign(filename):
     return signature
 
 def verify(sigfilename, filefilename=None):
-    """Verifies a signature, prints a lot of details."""
-    ## TODO
+    """Verifies a signature, returns True if successful else False."""
     
     c = core.Context()
 
     # Create Data with signed text.
-    sig2 = core.Data(file=sigfilename)
+    __signature = _get_file_data(sigfilename)
+    
     if filefilename:
-        file2 = core.Data(file=filefilename)
-        plain2 = None
+        __file = _get_file_data(filefilename)
+        __plain = None
     else:
-        file2 = None
-        plain2 = core.Data()
+        __file = None
+        __plain = core.Data()
 
     # Verify.
-    c.op_verify(sig2, file2, plain2)
+    try:
+        c.op_verify(__signature, __file, __plain)
+    except pyme.errors.GPGMEError:
+        return False
+    
     result = c.op_verify_result()
-
+    
     # List results for all signatures. Status equal 0 means "Ok".
-    index = 0
+    validation_sucess = False
+    
     for sign in result.signatures:
-        index += 1
-        print "signature", index, ":"
-        print "  summary:     %#0x" % (sign.summary)
-        print "  status:      %#0x" % (sign.status)
-        print "  validity:   ", sign.validity
-        print "  timestamp:  ", sign.timestamp
-        print "  fingerprint:", sign.fpr
-        print "  uid:        ", c.get_key(sign.fpr, 0).uids[0].uid
-
-    # Print "unsigned" text if inline signature
-    if plain2:
-        #Rewind since verify put plain2 at EOF.
-        plain2.seek(0,0)
-        print "\n", plain2.read()
-
-
+        if (not sign.status) and sign.validity:
+            validation_sucess = True
+    
+    return validation_sucess
 
 # Type conversion functions
 

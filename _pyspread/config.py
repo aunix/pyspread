@@ -483,3 +483,14 @@ brush_styles = { \
     "": wx.VERTICAL_HATCH,
 }
 
+file_approval_warning = \
+u"""You are going to approve and trust a file that
+you have received from an untrusted source.\n
+After proceeding, the file is executed.
+It can harm your system as any program can.
+Unless you took precautions, it can delete your
+files or send them away over the Internet.\n
+CHECK EACH CELL BEFORE PROCEEDING.
+Do not forget cells outside the visible range.
+You have been warned. \n
+Proceed and sign this file as trusted?"""
