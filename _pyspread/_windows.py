@@ -106,9 +106,6 @@ class MainWindow(wx.Frame):
         
         self.attributes_toolbar = AttributesToolbar(self, -1)
         
-        # Safe mode is disabled by default (will be enabled by OnFileOpen)
-        self.safe_mode = False
-        
         # Disable menu item for leaving save mode
         file_approve_menuitem = self.main_menu.methodname_item["OnFileApprove"]
         file_approve_menuitem.Enable(False)
@@ -338,11 +335,11 @@ class MainWindow(wx.Frame):
             
             # Set safe mode if signature missing of invalid
             if self.validate_signature(self.filepath):
-                self.safe_mode = False
+                self.MainGrid.pysgrid.safe_mode = False
                 self.main_window_statusbar.SetStatusText( \
                     "Valid signature found. File is trusted.")
             else:
-                self.safe_mode = True
+                self.MainGrid.pysgrid.safe_mode = True
                 self.main_window_statusbar.SetStatusText( \
                     "File is not properly signed. Safe mode activated. " + \
                     "Select File -> Approve to leave safe mode.")
@@ -374,7 +371,7 @@ class MainWindow(wx.Frame):
             self.OnFileSaveAs(event)
         else:
             self.MainGrid.savefile(self.filepath, self.wildcard_interface)
-            if self.safe_mode:
+            if self.MainGrid.pysgrid.safe_mode:
                 self.main_window_statusbar.SetStatusText("Untrusted file saved")
             else:
                 self.sign_file()
@@ -394,7 +391,7 @@ class MainWindow(wx.Frame):
             self.wildcard_interface = self.wildcard_interfaces[wildcard_no]()
             
             self.MainGrid.savefile(self.filepath, self.wildcard_interface)
-            if self.safe_mode:
+            if self.MainGrid.pysgrid.safe_mode:
                 self.main_window_statusbar.SetStatusText("Untrusted file saved")
             else:
                 self.sign_file()
@@ -525,7 +522,7 @@ class MainWindow(wx.Frame):
     def OnFileApprove(self, event):
         """Signs the current file and leaves safe mode"""
         
-        if not self.safe_mode:
+        if not self.MainGrid.pysgrid.safe_mode:
             return None
         
         # The file can damage the system --> Ask again
@@ -542,7 +539,7 @@ class MainWindow(wx.Frame):
 
         if proceed:
             # Leave safe mode
-            self.safe_mode = False
+            self.MainGrid.pysgrid.safe_mode = False
             
             # Sign file
             self.sign_file()
@@ -551,6 +548,9 @@ class MainWindow(wx.Frame):
             # Hide Menu item
             menuitem = event.GetEventObject().FindItemById(event.Id)
             menuitem.Enable(False)
+            
+            # Refresh grid
+            self.MainGrid.ForceRefresh()
     
     def OnFilePrint(self, event):
         """Displays print dialog"""
