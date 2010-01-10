@@ -188,12 +188,13 @@ class MainGridTable(wx.grid.PyGridTableBase):
 # end of class MainGridTable
 
 class TextCellEditor(wx.grid.PyGridCellEditor):
+    """Custom cell editor
+    
+    All the methods that can be overridden are present. The ones that 
+    must be overridden are marked with "*Must Override*" in the docstring.
+    
     """
-    This is a sample GridCellEditor that shows you how to make your own custom
-    grid editors.  All the methods that can be overridden are shown here.  The
-    ones that must be overridden are marked with "*Must Override*" in the
-    docstring.
-    """
+    
     def __init__(self):
         wx.grid.PyGridCellEditor.__init__(self)
 
@@ -282,7 +283,6 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
             self._tc.SetInsertionPointEnd()
         else:
             evt.Skip()
-
 
     def StartingClick(self):
         """
@@ -819,6 +819,7 @@ class GridSelectionMixin(object):
     ---------------
     get_selected_rows_cols
     get_selection
+    get_selection_code
     get_currentcell
     get_visiblecell_slice
     getselectiondata
@@ -878,6 +879,39 @@ class GridSelectionMixin(object):
             selection = [(self.get_currentcell())]
         selection = sorted(list(set(selection)))
         return selection
+    
+    def get_selection_code(self):
+        """Returns code for accessing the current selection from a cell"""
+
+        selection = self.get_selection()
+        
+        # If only one cell is selected return the representation
+        
+        if len(selection) == 1:
+            return "S[%d, %d, %d]" % \
+                (selection[0][0], selection[0][1], self.current_table)
+
+        # Check if selection is rectangular
+        min_x = min(x for x,y in selection)
+        max_x = max(x for x,y in selection) + 1
+        min_y = min(y for x,y in selection)
+        max_y = max(y for x,y in selection) + 1
+
+        rect = [(x, y) for x in xrange(min_x, max_x) \
+                       for y in xrange(min_y, max_y)]
+
+        if set(selection) == set(rect):
+            # If a rectangular set is selected return slice
+            
+            code = "S[%d:%d, %d:%d, %d]" % (min_x, max_x, 
+                    min_y, max_y, self.current_table)
+        else:
+            # If a non-rectangular set is selected return list comprehension
+            code = "[S[x, y, " + repr(self.current_table) + \
+                   "] for x, y in " + repr(selection) + "]"
+        
+        return code
+
     
     def get_currentcell(self):
         """Get cursor position"""
@@ -1821,9 +1855,19 @@ class EntryLine(wx.TextCtrl):
         event.Skip()
         
     def EvtChar(self, event):
-        """Key event method forces grid update on <Enter> key"""
+        """Key event method
+        
+         * Forces grid update on <Enter> key
+         * Handles insertion of cell access code
+        
+        """
         
         if event.GetKeyCode() == 13:
             self.parent.MainGrid.ForceRefresh()
             self.parent.MainGrid.SetFocus()
+            
+        elif event.GetKeyCode() == wx.WXK_INSERT and \
+             event.ControlDown():
+            self.WriteText(self.parent.MainGrid.get_selection_code())
+        
         event.Skip()

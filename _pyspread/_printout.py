@@ -6,8 +6,8 @@ class MyCanvas(wx.ScrolledWindow):
         wx.ScrolledWindow.__init__(self, parent, id, (0, 0), size=size, style=wx.SUNKEN_BORDER)
         
         self.lines = []
-        self.width  = 1000
-        self.height = 1000
+        self.width  = 1280
+        self.height = 1024
         self.x = self.y = 0
         self.curLine = []
         

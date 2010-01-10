@@ -125,7 +125,7 @@ class PyspreadGrid(object):
             expression = self.sgrid[key]
         
         try:
-            result = eval( expression, env, {} )
+            result = eval(expression, env, {})
         except Exception, err:
             result = err
         

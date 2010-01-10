@@ -1,5 +1,9 @@
 0.0.14
 ------
++ Safe mode for inspecting foreign files
++ GPG signatures for own files
++ Help framework
++ Insertion of cell access code via <Ctrl> + <Insert>
 + Simplified Macro editor dialog
 + Improved cycle detection algorithm for grid
 + Globals now update immediately
@@ -7,6 +11,7 @@
 + wxPython v 2.8 is now preferred
 + Error handling bug removed
 + Help files are now found after changing the path
+
 
 0.0.13
 ------
