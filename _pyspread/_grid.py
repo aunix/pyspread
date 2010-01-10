@@ -195,7 +195,8 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
     
     """
     
-    def __init__(self):
+    def __init__(self, parent):
+        self.parent = parent
         wx.grid.PyGridCellEditor.__init__(self)
 
     def Create(self, parent, id, evtHandler):
@@ -203,7 +204,8 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
         Called to create the control, which must derive from wx.Control.
         *Must Override*
         """
-        self._tc = wx.TextCtrl(parent, id, "")
+        
+        self._tc = EntryLine(parent, id, "", grid=self.parent)
         self._tc.SetInsertionPoint(0)
         self.SetControl(self._tc)
         
@@ -297,7 +299,7 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
         Create a new object which is the copy of this one
         *Must Override*
         """
-        return TextCellEditor()
+        return TextCellEditor(parent=self)
 
 # end of class TextCellEditor
 
@@ -1390,7 +1392,7 @@ class MainGrid(wx.grid.Grid,
         if self.cbox_z is None:
             raise ValueError, "A Combobox for selecting tables is required"
         
-        self.entry_line = EntryLine(self.parent, -1, "")
+        self.entry_line = EntryLine(self.parent, -1, "", grid=self)
         self.pysgrid = PyspreadGrid(dim)
         self.contextmenu = ContextMenu(parent=self.parent)
         self.clipboard = Clipboard()
@@ -1621,7 +1623,7 @@ class MainGrid(wx.grid.Grid,
         row, col, tab = event.Row, event.Col, self.current_table
         self.key = row, col, tab
         
-        self.SetCellEditor(row, col, TextCellEditor()) 
+        self.SetCellEditor(row, col, TextCellEditor(parent=self)) 
         
         try: 
             currstr = self.table.GetSource(*self.key)
@@ -1838,6 +1840,11 @@ class EntryLine(wx.TextCtrl):
         
         self.parent = args[0]
         
+        try:
+            self.grid = kwargs.pop("grid")
+        except KeyError:
+            self.grid = self.parent.MainGrid
+        
         super(EntryLine, self).__init__(*args, **kwargs)
         
         self.Bind(wx.EVT_TEXT, self.OnText)
@@ -1846,11 +1853,11 @@ class EntryLine(wx.TextCtrl):
     def OnText(self, event):
         """Text event method evals the cell and updates the grid"""
         
-        key = self.parent.MainGrid.key
+        key = self.grid.key
         
-        self.parent.MainGrid.pysgrid[key] = event.GetString()
+        self.grid.pysgrid[key] = event.GetString()
         
-        self.parent.MainGrid.Update()
+        self.grid.Update()
         
         event.Skip()
         
@@ -1863,11 +1870,11 @@ class EntryLine(wx.TextCtrl):
         """
         
         if event.GetKeyCode() == 13:
-            self.parent.MainGrid.ForceRefresh()
-            self.parent.MainGrid.SetFocus()
+            self.grid.ForceRefresh()
+            self.grid.SetFocus()
             
         elif event.GetKeyCode() == wx.WXK_INSERT and \
              event.ControlDown():
-            self.WriteText(self.parent.MainGrid.get_selection_code())
+            self.WriteText(self.grid.get_selection_code())
         
         event.Skip()
