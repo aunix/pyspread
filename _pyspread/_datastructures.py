@@ -33,7 +33,7 @@ Provides
 import types
 import UserDict
 
-from itertools import imap, islice, tee
+from itertools import imap, islice, tee, izip
 
 import numpy
 
@@ -76,9 +76,9 @@ class PyspreadGrid(object):
         S = self
         
         try:
-            self.sgrid = numpy.zeros(dimensions, dtype="O")
+            self.sgrid = DictGrid(shape=dimensions)
         except (MemoryError, ValueError), error:
-            self.sgrid = numpy.zeros((1, 1, 1), dtype="O")
+            self.sgrid = DictGrid(shape=(1, 1, 1))
             self.sgrid[0, 0, 0] = "Matrix creation failed: " + error
         
         self.macros = Macros({}) # Macros from Macrolist
@@ -449,25 +449,29 @@ class PyspreadGrid(object):
         self.unredo.append(undo_operation, redo_operation)
         
         ins_points = list(insertionpoint)
-        axis = ins_points.index(max(ins_points))
-        if newcells is None and not nocells:
-            newshapeindices = list(self.sgrid.shape)
-            newshapeindices[axis] = notoinsert
-            newcells = numpy.zeros(newshapeindices, dtype="O")
+        ins_point = max(ins_points)
         
-        def _subarrays(array, newcells, key):
-            """Returns tuple of sub-arrays that can be concatenated"""
-            if nocells:
-                subarrays = (array[:key[0], :key[1], :key[2]], \
-                             array[key[0]:, key[1]:, key[2]:])
-            else:
-                subarrays = (array[:key[0], :key[1], :key[2]], \
-                             newcells, \
-                             array[key[0]:, key[1]:, key[2]:])
-            return filter(lambda x:list(x.flat) != [], subarrays)
-            
-        subarrays = _subarrays(self.sgrid, newcells, ins_points)
-        self.sgrid = numpy.concatenate(subarrays, axis=axis)
+        axis = ins_points.index(ins_point)
+        
+        key_update = {}
+        del_keys = []
+        sgrid = self.sgrid
+        
+        for key in sgrid:
+            if key[axis] >= ins_point:
+                new_key = list(key)
+                new_key[axis] += notoinsert
+                new_key = tuple(new_key)
+                key_update[new_key] = sgrid[key]
+                del_keys.append(key)
+        
+        for key in del_keys:
+            sgrid.pop(key)
+             
+        sgrid.update(key_update)
+        
+        # Restore deleted cells from unredo operation
+        sgrid.update(newcells)
         
     def remove(self, removalpoint, notoremove):
         """Remove rows, columns or tables
@@ -484,18 +488,40 @@ class PyspreadGrid(object):
         """
         
         self._resultcache = {}
-        rmp = list(removalpoint)
-        axis = rmp.index(max(rmp))
-        removedcellslice = [slice(rpele, rpele, 1) for rpele in rmp]
-        removedcellslice[axis] = slice(removedcellslice[axis].start, \
-                                 removedcellslice[axis].stop + notoremove, 1)
-        removedcells = self.sgrid[removedcellslice]
         
-        undo_operation = (self.insert, [removalpoint, notoremove, removedcells])
+        rmps = list(removalpoint)
+        rmp = max(rmps)
+        axis = rmps.index(rmp)
+        
+        key_update = {}
+        del_keys = []
+        del_key_storage = {}
+        sgrid = self.sgrid
+        
+        for key in sgrid:
+            if rmp <= key[axis] < rmp + notoremove:
+                # Delete cell
+                del_keys.append(key)
+                del_key_storage[key] = sgrid[key]
+                
+            elif rmp <= key[axis]:
+                # Move cell
+                new_key = list(key)
+                new_key[axis] -= notoremove
+                new_key = tuple(new_key)
+                key_update[new_key] = sgrid[key]
+                del_keys.append(key)
+        
+        for key in del_keys:
+            sgrid.pop(key)
+             
+        sgrid.update(key_update)
+        
+        undo_operation = (self.insert, 
+                          [removalpoint, notoremove, del_key_storage])
         redo_operation = (self.remove, [removalpoint, notoremove])
         self.unredo.append(undo_operation, redo_operation)
-        
-        self.sgrid = numpy.delete(self.sgrid, removedcellslice[axis], axis)
+    
     
     def _spread_0dim(self, value, pos, shape):
         """Spread single values"""
@@ -519,7 +545,7 @@ class PyspreadGrid(object):
         strings = self._get_value_strings(value)
         
         S.sgrid[posx: posx + shape[0], posy, posz] = strings
-        
+        ## TODO: Change to dict key update
         return len(strings)
     
     def _spread_2dim(self, value, pos, shape):
@@ -540,7 +566,7 @@ class PyspreadGrid(object):
         S.sgrid[posx: posx + shape[0], \
                 posy: posy + shape[1], \
                posz] = strings
-        
+        ## TODO: Change to dict key update        
         return len(strings)
         
     def _spread_3dim(self, value, pos, shape):
@@ -564,7 +590,8 @@ class PyspreadGrid(object):
         S.sgrid[posx: posx + shape[0], \
                 posy: posy + shape[1], \
                 posz: posz + shape[2]] = strings
-    
+        ## TODO: Change to dict key update
+        
     def _get_value_strings(self, value):
         """Returns numpy array of string representations of value elements"""
         
@@ -862,3 +889,58 @@ class UnRedo(object):
 
 # end of class UnRedo
 
+class DictGrid(UserDict.IterableUserDict):
+    def __init__(self, shape=(1000, 100, 10), default_value=None):
+        self.set_shape(shape)
+        self.default_value = default_value
+        
+        UserDict.UserDict.__init__(self)
+        
+    def __getitem__(self, key):
+        
+        get = UserDict.UserDict.__getitem__
+        
+        try:
+            return get(self, key)
+            
+        except KeyError:
+            return self.default_value
+            
+        except TypeError:
+            # We have a slice
+            pass
+        
+        
+        fetchlist = []
+        
+        for dim_key, index in izip(key, self.indices):
+            if type(dim_key) is types.SliceType:
+                fetchlist.append([i for i in index[dim_key]])
+            else:
+                fetchlist.append([dim_key])
+        
+        #print fetchlist
+        keys = [(x, y, z) for x in fetchlist[0] \
+                          for y in fetchlist[1] \
+                          for z in fetchlist[2]]
+        
+        result = []
+        
+        for k in keys:
+            try:
+                result.append(get(self, k))
+            except KeyError:
+                result.append(self.default_value)
+        
+        res_shape = tuple(m for m in map(len, fetchlist) if m > 1)
+        
+        try:
+            return numpy.array(result, dtype="O").reshape(res_shape)
+        except:
+            return numpy.array([], dtype="O")
+    
+    def set_shape(self, shape):
+        self.shape = shape
+        self.indices = [range(size) for size in self.shape]
+
+# end of class DictGrid

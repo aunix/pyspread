@@ -388,37 +388,39 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         return visible_cols
     
-    def draw_grid_lines(self, grid, attr, dc, rect, row, col):
-        """Draws the grid lines for all visible cells"""
-        
-
-        grid_lines = []
-        grid_rect = grid.GetScreenRect()
-        
-        scroll_units = grid.GetScrollPixelsPerUnit()
-        scroll_x = grid.GetScrollPos(wx.HORIZONTAL) * scroll_units[0]
-        scroll_y = grid.GetScrollPos(wx.VERTICAL) * scroll_units[1]
-        
-        for check_col in xrange(col, -1, -1):
-            if grid.IsVisible(row, check_col, wholeCellVisible=False):
-                left_cell_rect = grid.CellToRect(0, check_col)
-                right_cell_rect = grid.CellToRect(row, check_col)
-                
-                col_x = left_cell_rect.x + left_cell_rect.width - 1
-                grid_lines.append((col_x, left_cell_rect.y, 
-                    col_x, right_cell_rect.y + right_cell_rect.height))
-
-        for check_row in xrange(row, -1, -1):
-            if grid.IsVisible(check_row, col, wholeCellVisible=False):
-                top_cell_rect = grid.CellToRect(check_row, 0)
-                bottom_cell_rect = grid.CellToRect(check_row, col)
-                
-                col_y = top_cell_rect.y + top_cell_rect.height - 1
-                grid_lines.append((top_cell_rect.x, col_y,
-                    bottom_cell_rect.x + bottom_cell_rect.width, col_y))
-        
-        dc.DrawLineList(grid_lines, GRID_LINE_PEN)
-    
+#    def draw_grid_lines(self, grid, attr, dc, rect, row, col):
+#        """Draws the grid lines for all visible cells"""
+#        
+#
+#        grid_lines = []
+#        grid_rect = grid.GetScreenRect()
+#        
+#        scroll_units = grid.GetScrollPixelsPerUnit()
+#        scroll_x = grid.GetScrollPos(wx.HORIZONTAL) * scroll_units[0]
+#        scroll_y = grid.GetScrollPos(wx.VERTICAL) * scroll_units[1]
+#        
+#        for check_col in xrange(col, -1, -1):
+#            if grid.IsVisible(row, check_col, wholeCellVisible=False):
+#                left_cell_rect = grid.CellToRect(0, check_col)
+#                right_cell_rect = grid.CellToRect(row, check_col)
+#                
+#                col_x = left_cell_rect.x + left_cell_rect.width - 1
+#                grid_lines.append((col_x, left_cell_rect.y, 
+#                    col_x, right_cell_rect.y + right_cell_rect.height))
+#                break
+#
+#        for check_row in xrange(row, -1, -1):
+#            if grid.IsVisible(check_row, col, wholeCellVisible=False):
+#                top_cell_rect = grid.CellToRect(check_row, 0)
+#                bottom_cell_rect = grid.CellToRect(check_row, col)
+#                
+#                col_y = top_cell_rect.y + top_cell_rect.height - 1
+#                grid_lines.append((top_cell_rect.x, col_y,
+#                    bottom_cell_rect.x + bottom_cell_rect.width, col_y))
+#                break
+#        
+#        dc.DrawLineList(grid_lines, GRID_LINE_PEN)
+#    
     def get_visible_cell_attr_cache(self, visible_rows, visible_cols):
         """Returns cache of the visible cell attributes
         
@@ -623,7 +625,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
                 self.get_visible_cell_attr_cache(visible_rows, visible_cols)
             
             # Draw grid lines
-            self.draw_grid_lines(grid, attr, dc, rect, row, col)
+            #self.draw_grid_lines(grid, attr, dc, rect, row, col)
             
             # Draw grid background rects
             self.draw_visible_backgrounds(grid, attr, dc, rect, row, col)

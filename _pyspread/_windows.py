@@ -1058,7 +1058,7 @@ class MainWindow(wx.Frame):
             try:
                 sgrid[key].borderpen[0] = color.GetRGB()
             except KeyError:
-                sgrid[key].borderpen = default_cell_attributes["borderpen"]
+                sgrid[key].borderpen = default_cell_attributes["borderpen"]()
                 sgrid[key].borderpen[0] = color.GetRGB()
         
         self.MainGrid.ForceRefresh()
@@ -1087,7 +1087,7 @@ class MainWindow(wx.Frame):
                 sgrid[key].borderpen[1] = line_width
                 sgrid[key].borderpen[2] = int(penstyle)
             except KeyError:
-                sgrid[key].borderpen = default_cell_attributes["borderpen"]
+                sgrid[key].borderpen = default_cell_attributes["borderpen"]()
                 sgrid[key].borderpen[1] = line_width
                 sgrid[key].borderpen[2] = int(penstyle)
         
@@ -1108,7 +1108,7 @@ class MainWindow(wx.Frame):
             try:
                 sgrid[key].bgbrush[0] = int(bgcolor.GetRGB())
             except KeyError:
-                sgrid[key].bgbrush = default_cell_attributes["bgbrush"]
+                sgrid[key].bgbrush = default_cell_attributes["bgbrush"]()
                 sgrid[key].bgbrush[0] = int(bgcolor.GetRGB())
         
         self.MainGrid.ForceRefresh()
@@ -1157,7 +1157,7 @@ class MainWindow(wx.Frame):
             try:
                 old_font_string = sgrid[key].textfont
             except KeyError:
-                old_font_string = default_cell_attributes["textfont"]
+                old_font_string = default_cell_attributes["textfont"]()
             
             nativefontinfo = wx.NativeFontInfo()
             nativefontinfo.FromString(old_font_string)
@@ -1191,7 +1191,7 @@ class MainWindow(wx.Frame):
             try:
                 old_font_string = sgrid[key].textfont
             except KeyError:
-                old_font_string = default_cell_attributes["textfont"]
+                old_font_string = default_cell_attributes["textfont"]()
             
             textfont = wx.Font(10, wx.NORMAL, wx.NORMAL, 
                                wx.NORMAL, False, 'Arial')
@@ -1229,7 +1229,7 @@ class MainWindow(wx.Frame):
             try:
                 old_font_string = sgrid[key].textfont
             except KeyError:
-                old_font_string = default_cell_attributes["textfont"]
+                old_font_string = default_cell_attributes["textfont"]()
 
             nativefontinfo = wx.NativeFontInfo()
             nativefontinfo.FromString(old_font_string)
