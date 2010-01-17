@@ -25,8 +25,8 @@
 _interfaces
 ===========
 
-Provides:
----------
+Provides
+--------
  * SafeUnpickler: Basic security for loading pys files
 
  * sniff: Sniffs CSV dialect and header info

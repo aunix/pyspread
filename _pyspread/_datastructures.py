@@ -27,6 +27,7 @@ Provides
   1. Grid object class Grid
   2. Macro user dictionary class Macros
   3. Undo/Redo framework class UnRedo
+  4. Sliceable dict based grid class DictGrid
 
 """
 
