@@ -27,7 +27,7 @@ import wx
 
 app= wx.App()
 
-import pyspread._interfaces as _interfaces
+import _pyspread._interfaces as _interfaces
 import vartypes as v
 
 gmpy.rand('seed', 2)

@@ -26,7 +26,7 @@ import wx
 
 app = wx.App()
 
-import pyspread._datastructures as _datastructures
+import _pyspread._datastructures as _datastructures
 import vartypes as v
 
 gmpy.rand('seed', 2)

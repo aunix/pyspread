@@ -37,6 +37,7 @@ from itertools import imap, islice, tee, izip
 
 import numpy
 
+from irange import irange, slice_range
 from _pyspread._arrayhelper import getflatpos, getshapedpos
 from _pyspread._interfaces import string_match,  Digest, UserString
 from _pyspread.config import default_cell_attributes
@@ -202,13 +203,8 @@ class PyspreadGrid(object):
             key_slice_step = int(key_slice.step)
         except TypeError:
             key_slice_step = None
-            
-        # Note: islice does not support negative starts, stops or steps
-        if min(key_slice_start, key_slice_stop, key_slice_step) >= 0:
-            list_range = islice(xrange(self.shape[list_dim]), 
-                                key_slice_start, key_slice_stop, key_slice_step)
-        else:
-            list_range = range(self.shape[list_dim])[key_slice]
+        
+        list_range = slice_range(key_slice, self.shape[list_dim])
         
         def replace_dim(list_key, base_key=key, dim=list_dim):
             """Replaces element dim in base_key by list_key"""
@@ -941,6 +937,6 @@ class DictGrid(UserDict.IterableUserDict):
     
     def set_shape(self, shape):
         self.shape = shape
-        self.indices = [range(size) for size in self.shape]
+        self.indices = [irange(size) for size in self.shape]
 
 # end of class DictGrid

@@ -22,7 +22,7 @@ import wx
 
 app = wx.App()
 
-import pyspread._widgets as _widgets
+import _pyspread._widgets as _widgets
 
 class TestMainGridBase(object):
     """Unit test for MainGridBase"""

@@ -23,8 +23,8 @@ import numpy
 
 app = wx.App()
 
-import pyspread._datastructures as _datastructures
-import pyspread._arrayhelper as _arrayhelper
+import _pyspread._datastructures as _datastructures
+import _pyspread._arrayhelper as _arrayhelper
 
 class TestPyspreadGrid(object):
     """Unit test for array functions"""
