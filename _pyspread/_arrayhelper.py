@@ -52,7 +52,7 @@ def sorted_keys(keys, startkey, reverse=False):
     tuple_cmp = lambda t: t[::-1] < startkey[::-1]
 
     searchkeys = sorted(keys, key=tuple_key, reverse=reverse)
-    searchpos = len(ifilter(tuple_cmp, searchkeys))
+    searchpos = len(list(ifilter(tuple_cmp, searchkeys)))
 
     searchkeys = searchkeys[searchpos:] + searchkeys[:searchpos]
 

@@ -94,9 +94,10 @@ class TestPyspreadGrid(object):
         #Test X, Y, Z
         for i in xrange(10):
             self.grid[i, 0, 0] = str(i)
-        assert list(self.grid.sgrid[0:10, 0, 0]) == map(str, xrange(10))
+        assert [self.grid.sgrid[i, 0, 0] for i in xrange(10)] == \
+                    map(str, xrange(10))
         
-        assert list(self.grid[0:10, 0, 0]) == range(10)
+        assert [self.grid[i, 0, 0] for i in xrange(10)] == range(10)
         
         # Test cycle detection
         
@@ -137,6 +138,7 @@ class TestPyspreadGrid(object):
                 # gmpy bug: [mpz(2), None].count(None)
                 removalpoint = [None] * 3
                 removalpoint[currdim] = int(rem)
+                #print "Shape",self.grid.shape, removalpoint
                 self.grid.remove(removalpoint, norem)
                 # Only existent cells are removed
                 dim[currdim] -= max([0, min([dim[currdim] - rem, norem])])
@@ -237,7 +239,7 @@ class TestPyspreadGrid(object):
         self.grid[0, 1, 0] = '5'
         self.grid[1, 1, 0] = 'S[:10, 1, 0]'
         
-        assert self.grid[1, 1, 0][0] == 'Infinite recursion detected.'
+        assert self.grid[1, 1, 0][0] == 'Circular dependency at (1, 1, 0)'
     
     def test_insert(self):
         """Tests insert operation with single cell, slice, random cells"""
@@ -291,30 +293,13 @@ class TestPyspreadGrid(object):
     def test_findnextmatch(self):
         """Find method test"""
         
-        self.grid.sgrid[:100, 0, 0] = map(str, xrange(100))
+        for i in xrange(100):
+            self.grid.sgrid[i, 0, 0] = str(i)
         
         assert self.grid[3, 0, 0] == 3
         assert self.grid.findnextmatch((0, 0, 0), "3", "DOWN") == (3, 0, 0)
         assert self.grid.findnextmatch((0, 0, 0), "99", "DOWN") == (99, 0, 0)
     
-    def test_get_function_cell_indices(self):
-        """Tests function position retrieval"""
-        
-        self.grid.sgrid[:100, 0, 0] = map(str, xrange(100))
-        
-        indices = self.grid.get_function_cell_indices()
-        assert sorted(indices) == [(x, 0, 0) for x in xrange(100)]
-        
-        self.grid.sgrid[:10:2, 1, 0] = map(str, xrange(5))
-        
-        indices = self.grid.get_function_cell_indices()
-        assert sorted(indices) == sorted([(x, 0, 0) for x in xrange(100)] + \
-                                         [(x, 1, 0) for x in xrange(0, 10, 2)])
-        
-        gridslice = (slice(None, 100), slice(0, 1), slice(None))
-        indices = self.grid.get_function_cell_indices(gridslice=gridslice)
-        assert sorted(indices) == sorted((x, 0, 0) for x in xrange(100))
-
     def test_set_global_macros(self):
         """Tests global macro setting for accessability"""
         
@@ -333,11 +318,6 @@ class TestMacros(object):
         
         self.macros = _datastructures.Macros()
         self.funcstring = "def testmacro(x): return x+2"
-        
-    def test_get_macro(self):
-        """Can the basic macro be accessed?"""
-        
-        assert self.macros.get_macro(self.funcstring)(5) == 7
         
     def test_add(self):
         """Test adding additional macro"""
@@ -413,3 +393,51 @@ class TestUnRedo(object):
         self.unredo.append(self.step[:2], self.step[2:])
         assert len(self.unredo.undolist) == 1
         assert self.unredo.undolist[0] == self.step
+
+class TestDictGrid(object):
+    """Unit test for DictGrid"""
+    def setup_method(self, method):
+        """Setup for dummy undo steps"""
+        
+        self.dictgrid = _datastructures.DictGrid(shape = (1000,1000,1000))
+        self.dictgrid[(1, 2, 3)] = 1
+        self.dictgrid[(2, 2, 3)] = 2
+        self.dictgrid[(3, 2, 3)] = 3
+        self.dictgrid[(4, 2, 3)] = 4
+        self.dictgrid[1, 0, 3] = 23
+
+    def test_getitem(self):
+        assert self.dictgrid[1,2,3] == 1
+        
+        assert self.dictgrid[1:5, 2, 3].shape == numpy.array([1, 2, 3, 4]).shape
+        assert all(self.dictgrid[1:5, 2, 3] == [1, 2, 3, 4])
+
+        assert self.dictgrid[1:5:2, 2, 3].shape == numpy.array([1, 3]).shape
+        assert all(self.dictgrid[1:5:2, 2, 3] == numpy.array([1, 3]))
+
+        assert self.dictgrid[4::-1,2,3].shape == numpy.array([4, 3, 2, 1, None]).shape
+        assert all(self.dictgrid[4::-1,2,3] == [4, 3, 2, 1, None])
+
+        assert self.dictgrid[:,2,3].shape == numpy.array([None, 1, 2, 3, 4] + [None] * 995).shape
+        assert all(self.dictgrid[:,2,3] == [None, 1, 2, 3, 4] + [None] * 995)
+
+        assert self.dictgrid[1:5, :3, 3].shape == numpy.array([[23, None, 1],
+                                             [None, None, 2],
+                                             [None, None, 3],
+                                             [None, None, 4]]).shape
+        assert numpy.all(self.dictgrid[1:5, :3, 3] == numpy.array([[23, None, 1],
+                                             [None, None, 2],
+                                             [None, None, 3],
+                                             [None, None, 4]]))
+        assert len(self.dictgrid[2:4,2:4,2:4:-1]) == 0
+
+    
+    def test_set_shape(self):
+        self.dictgrid.set_shape((10000, 1000, 100))
+        
+        dict_indices = map(list, self.dictgrid.indices)
+        indices = [range(size) for size in (10000, 1000, 100)]
+        
+        assert dict_indices == indices
+            
+

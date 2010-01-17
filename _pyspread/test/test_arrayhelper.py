@@ -32,24 +32,16 @@ class TestPyspreadGrid(object):
     def setup_method(self, method):
         """Creates a basic grid"""
         
-        self.dim = 100, 10, 3
-        self.grid = _datastructures.PyspreadGrid(dimensions=self.dim)
+        pass
     
-    def test_getflatpos(self):
-        """Tests flattened position calculation in Fortran order"""
-        
-        testarray = numpy.zeros((10, 20))
-        assert _arrayhelper.getflatpos(testarray, (0, 0)) == 0
-        assert _arrayhelper.getflatpos(testarray, (3, 3)) == 33
-        assert _arrayhelper.getflatpos(testarray, (9, 19)) == 199
-        assert _arrayhelper.getflatpos(testarray, (10, 19)) == 200
-        assert _arrayhelper.getflatpos(testarray, (10**25, 0)) == 10**25
-    
-    def test_getshapedpos(self):
-        """Tests shaped position calculation in Fortran order"""
-        
-        testarray = numpy.zeros((10, 20))
-        assert _arrayhelper.getshapedpos(testarray, 0) == (0, 0)
-        assert _arrayhelper.getshapedpos(testarray, 1) == (1, 0)
-        assert _arrayhelper.getshapedpos(testarray, 11) == (1, 1)
-        assert _arrayhelper.getshapedpos(testarray, 199) == (9, 19)
+    def test_sorted_keys(self):
+        keys = [(1, 0, 0), (2, 0, 0), (0, 1, 0), (0, 99, 0), (0, 0, 0), 
+                (0, 0, 99), (1, 2, 3)]
+        assert \
+            list(_arrayhelper.sorted_keys(keys, (0, 1, 0))) == \
+             [(0, 1, 0), (0, 99, 0), (1, 2, 3), (0, 0, 99), (0, 0, 0), 
+              (1, 0, 0), (2, 0, 0)]
+        assert \
+            list(_arrayhelper.sorted_keys(keys, (0, 3, 0), reverse=True)) == \
+             [(2, 0, 0), (1, 0, 0), (0, 0, 0), (0, 0, 99), (1, 2, 3), 
+              (0, 99, 0), (0, 1, 0)]

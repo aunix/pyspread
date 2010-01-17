@@ -34,11 +34,11 @@ Provides
 import types
 import UserDict
 
-from itertools import imap, tee, izip, takewhile
+from itertools import imap, tee, izip
 
 import numpy
 
-from irange import irange, slice_range
+from _pyspread.irange import irange, slice_range
 from _pyspread._arrayhelper import sorted_keys
 from _pyspread._interfaces import string_match,  Digest, UserString
 from _pyspread.config import default_cell_attributes
@@ -188,21 +188,6 @@ class PyspreadGrid(object):
         # Iterated dim list
         key_slice = key[list_dim]
         
-        try:
-            key_slice_start = int(key_slice.start)
-        except TypeError:
-            key_slice_start = None
-            
-        try:
-            key_slice_stop = int(key_slice.stop)
-        except TypeError:
-            key_slice_stop = None
-            
-        try:
-            key_slice_step = int(key_slice.step)
-        except TypeError:
-            key_slice_step = None
-        
         list_range = slice_range(key_slice, self.shape[list_dim])
         
         def replace_dim(list_key, base_key=key, dim=list_dim):
@@ -275,6 +260,7 @@ class PyspreadGrid(object):
             self._tabukey = [key]
         
         slicetype = types.SliceType
+        
         if all(type(keyele) != slicetype for keyele in key):
             # Only one cell is called
             try:
@@ -460,7 +446,11 @@ class PyspreadGrid(object):
         
         for key in del_keys:
             sgrid.pop(key)
-             
+        
+        shape = list(sgrid.shape)
+        shape[axis] += notoinsert
+        sgrid.set_shape(shape)
+        
         sgrid.update(key_update)
         
         # Restore deleted cells from unredo operation
@@ -507,7 +497,12 @@ class PyspreadGrid(object):
         
         for key in del_keys:
             sgrid.pop(key)
-             
+        
+        shape = list(sgrid.shape)
+        shape[axis] -= min(notoremove, max(0, shape[axis] - rmp))
+        shape[axis] = max(1, shape[axis])
+        sgrid.set_shape(shape)
+        
         sgrid.update(key_update)
         
         undo_operation = (self.insert, 
@@ -556,23 +551,24 @@ class PyspreadGrid(object):
         
         elif valdim == 1:
             # Pad the array by 2 dimensions
-            for x, val in enumerate(value_strings):
-                target_pos = tuple(numpy.array([x, 0, 0]) + npos)
+            for row_no, val in enumerate(value_strings):
+                target_pos = tuple(numpy.array([row_no, 0, 0]) + npos)
                 insert_val(target_pos, val)
             
         elif valdim == 2:
             # Pad the array by 1 dimension
-            for x, row in enumerate(value_strings):
-                for y, val in enumerate(row):
-                    target_pos = tuple(numpy.array([x, y, 0]) + npos)
+            for row_no, row in enumerate(value_strings):
+                for col_no, val in enumerate(row):
+                    target_pos = tuple(numpy.array([row_no, col_no, 0]) + npos)
                     insert_val(target_pos, val)
         
         else:
             # Get item positions
-            for x, row in enumerate(value_strings):
-                for y, col in enumerate(row):
-                    for z, val in enumerate(col):
-                        target_pos = tuple(numpy.array([x, y, z]) + npos)
+            for row_no, row in enumerate(value_strings):
+                for col_no, col in enumerate(row):
+                    for tab_no, val in enumerate(col):
+                        target_pos = tuple(\
+                            numpy.array([row_no, col_no, tab_no]) + npos)
                         insert_val(target_pos, val)
         
         self.sgrid.update(value_dict)
@@ -603,29 +599,6 @@ class PyspreadGrid(object):
         for key in sorted_keys(self.sgrid.keys(), startkey, reverse=reverse):
             if string_match(self.sgrid[key], find_string, flags) is not None:
                 return key
-    
-    def get_function_cell_indices(self, gridslice = None):
-        """
-        Get indices for all sgrid cells != 0
-        
-        Parameters:
-        -----------
-        gridslice: 3-tuple of slices
-        \tThe slice of the grid that is searched. Defaults to whole grid.
-        
-        """
-        if gridslice is None:
-            gridslice = tuple([slice(None)]*len(self.sgrid.shape))
-        sgrid = self.sgrid[gridslice]
-        nonzero = list(set(zip(*numpy.nonzero(sgrid))))
-        gridslice = list(gridslice)
-        for i in xrange(len(self.sgrid.shape)):
-            if gridslice[i].start is None:
-                gridslice[i] = slice(0, gridslice[i].stop, gridslice[i].step)
-        nonzero = [tuple(cell[i] + gridslice[i].start \
-                        for i in xrange(len(self.sgrid.shape))) \
-                            for cell in nonzero]
-        return nonzero
     
     def set_global_macros(self, macros=None):
         """ Sets macros to global scope """
@@ -687,22 +660,24 @@ class Macros(UserDict.IterableUserDict):
     macro Python code in the 'macrocode' attribute of the funcdict.
 
     """
-    def get_macro(self, code):
-        """ Returns the function derived from the code string code. """
-        funcname = code.split("(")[0][3:].strip()
-        # Windows exec does not like Windows newline
-        code = code.replace('\r\n', '\n')
-        exec(code)
-        func = eval(funcname, globals(), locals())
-        func.func_dict['macrocode'] = code
-        return func
-        
+    
     def add(self, code):
         """ Adds a macro with the code string 'code' to the macro dict"""
-        func = self.get_macro(code)
+        
+        funcname = code.split("(")[0][3:].strip()
+        
+        # Windows exec does not like Windows newline
+        code = code.replace('\r\n', '\n')
+        
+        exec(code)
+        
+        func = eval(funcname, globals(), locals())
+        func.func_dict['macrocode'] = code
+        
         if func.__name__ in self:
             return 0
         self[func.__name__] = func
+        
         return func
         
 # end of class Macros
@@ -826,7 +801,7 @@ class DictGrid(UserDict.IterableUserDict):
         self.set_shape(shape)
         self.default_value = default_value
         
-        UserDict.UserDict.__init__(self)
+        UserDict.IterableUserDict.__init__(self)
         
     def __getitem__(self, key):
         
@@ -862,7 +837,7 @@ class DictGrid(UserDict.IterableUserDict):
             except KeyError:
                 result.append(self.default_value)
         
-        res_shape = tuple(m for m in map(len, fetchlist) if m > 1)
+        res_shape = tuple(m for m in imap(len, fetchlist) if m > 1)
         
         try:
             return numpy.array(result, dtype="O").reshape(res_shape)
@@ -873,6 +848,6 @@ class DictGrid(UserDict.IterableUserDict):
         """This method MUST be used in order to change the grid shape"""
         
         self.shape = shape
-        self.indices = [irange(size) for size in self.shape]
+        self.indices = [list(irange(size)) for size in self.shape]
 
 # end of class DictGrid
