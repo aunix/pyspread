@@ -22,43 +22,39 @@
 # --------------------------------------------------------------------
 
 """
-_array_helper
-=============
+_arrayhelper
+============
 
 Provides:
 ---------
-\tgetflatpos:   Gets Fortran style positions in flattened array
-\tgetshapedpos: Gets Fortran style position in shaped array
+sorted_keys:  Generator for sorting keys
 
 """
 
-from itertools import izip
-from operator import mul
+from itertools import ifilter
 
-def getflatpos(array, pos):
-    """Get index of a cell in a flattened numpy array in Fortran order."""
-    
-    ashape = array.shape
-    arange = xrange(1, len(ashape))
-    
-    cumgsr = [1]
-    cumgsr += [reduce(mul, ashape[:i]) for i in arange]
-    
-    return sum(p * e for p, e in izip(pos, cumgsr))
+def sorted_keys(keys, startkey, reverse=False):
+    """Generator that yields sorted keys starting with startkey
 
-def getshapedpos(array, pos):
-    """Get cell index from a flattened array index in Fortran order."""
-    
-    shape = array.shape
-    
-    def _rek(i, pos):
-        """Recursion that calculates one dimension per step"""
-        
-        try:
-            currpos = pos % shape[i]
-        except IndexError:
-            return []
-        
-        return [currpos] + _rek(i+1, pos // shape[i])
-        
-    return tuple(_rek(0, pos))
+    Parameters
+    ----------
+
+    keys: Iterable of tuple/list
+    \tKey sequence that is sorted
+    startkey: Tuple/list
+    \tFirst key to be yielded
+    reverse: Bool
+    \tSort direction reversed if True
+
+    """
+
+    tuple_key = lambda t: t[::-1]
+    tuple_cmp = lambda t: t[::-1] < startkey[::-1]
+
+    searchkeys = sorted(keys, key=tuple_key, reverse=reverse)
+    searchpos = len(ifilter(tuple_cmp, searchkeys))
+
+    searchkeys = searchkeys[searchpos:] + searchkeys[:searchpos]
+
+    for key in searchkeys:
+        yield key

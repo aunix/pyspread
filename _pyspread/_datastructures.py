@@ -34,12 +34,12 @@ Provides
 import types
 import UserDict
 
-from itertools import imap, islice, tee, izip
+from itertools import imap, tee, izip, takewhile
 
 import numpy
 
 from irange import irange, slice_range
-from _pyspread._arrayhelper import getflatpos, getshapedpos
+from _pyspread._arrayhelper import sorted_keys
 from _pyspread._interfaces import string_match,  Digest, UserString
 from _pyspread.config import default_cell_attributes
 
@@ -94,8 +94,6 @@ class PyspreadGrid(object):
         self._resultcache = {}
         
         self._tabukey = None # Cycle detection key
-        
-        self._unicode_digest = Digest(acceptable_types=[types.UnicodeType])
     
     def _getshape(self):
         """Returns the shape of the array sgrid"""
@@ -185,7 +183,7 @@ class PyspreadGrid(object):
         """
         
         assert len(key) == 3
-        assert type(key[list_dim]) is types.SliceType
+        assert isinstance(key[list_dim], slice)
         
         # Iterated dim list
         key_slice = key[list_dim]
@@ -255,19 +253,19 @@ class PyspreadGrid(object):
         for listkey in listkeys:
             list_range.append(ndim_method(listkey))
         try:
-            list_range = numpy.array(list_range)
+            array_range = numpy.array(list_range)
         except ValueError:
             return list_range
         
         try: 
-            list_range = list_range.transpose(1, 2, 0)
+            array_range = array_range.transpose(1, 2, 0)
         except ValueError:
             try:
-                list_range = list_range.transpose(1, 0)
+                array_range = array_range.transpose(1, 0)
             except ValueError:
-                list_range = list_range.transpose()
+                array_range = array_range.transpose()
         
-        return list_range
+        return array_range
     
     
     def __getitem__(self, key):
@@ -411,7 +409,7 @@ class PyspreadGrid(object):
         inranges = [] # List of bool to store results for each dimension
         
         for i, slc in enumerate(slc_tuple):
-            if type(slc) is types.SliceType:
+            if isinstance(slc, slice):
                 inranges.append(self.isinsclice(slc, i, pos[i]))
             else:
                 inranges.append(slc == pos[i])
@@ -419,7 +417,7 @@ class PyspreadGrid(object):
         return min(inranges)
     
     
-    def insert(self, insertionpoint, notoinsert, newcells=None, nocells=False):
+    def insert(self, insertionpoint, notoinsert, newcells=None):
         """Insert rows, columns or tables
         
         Parameters:
@@ -430,8 +428,6 @@ class PyspreadGrid(object):
         \tand describes the position of the insertion operation.
         notoinsert: int
         \tNo. cols/rows/tables that are to be inserted
-        nocells: bool, defaults to False
-        \tNo new cells are inserted even though no new cells are provided
         
         """
         
@@ -519,83 +515,14 @@ class PyspreadGrid(object):
         redo_operation = (self.remove, [removalpoint, notoremove])
         self.unredo.append(undo_operation, redo_operation)
     
-    
-    def _spread_0dim(self, value, pos, shape):
-        """Spread single values"""
-        
-        posx, posy, posz = pos
-        
-        S.sgrid[posx, posy, posz] = self._unicode_digest(value)
-        
-        return 1
-    
-    def _spread_1dim(self, value, pos, shape):
-        """Spread 1D values"""
-        
-        posx, posy, posz = pos
-        
-        rowsleft = self.sgrid[posx:, :, :].shape[0] - shape[0]
-        
-        if rowsleft < 0:
-            value = value[:shape[0] + rowsleft]
-        
-        strings = self._get_value_strings(value)
-        
-        S.sgrid[posx: posx + shape[0], posy, posz] = strings
-        ## TODO: Change to dict key update
-        return len(strings)
-    
-    def _spread_2dim(self, value, pos, shape):
-        """Spread 2D values"""
-        
-        posx, posy, posz = pos
-        
-        rowsleft = self.sgrid[posx:, :, :].shape[0] - shape[0]
-        colsleft = self.sgrid[:, posy:, :].shape[1] - shape[1]
-        
-        if rowsleft < 0:
-            value = value[:shape[0] + rowsleft, :]
-        if colsleft < 0:
-            value = value[:, :shape[1] + colsleft]
-        
-        strings = self._get_value_strings(value)
-        
-        S.sgrid[posx: posx + shape[0], \
-                posy: posy + shape[1], \
-               posz] = strings
-        ## TODO: Change to dict key update        
-        return len(strings)
-        
-    def _spread_3dim(self, value, pos, shape):
-        """Spread 3D values"""
-        
-        posx, posy, posz = pos
-        
-        rowsleft = self.sgrid[posx:, :, :].shape[0] - shape[0]
-        colsleft = self.sgrid[:, posy:, :].shape[1] - shape[1]
-        tablesleft = self.sgrid[:, :, posz:].shape[2] - shape[2]
-        
-        if rowsleft < 0:
-            value = value[:shape[0] + rowsleft, :, :]
-        if colsleft < 0:
-            value = value[:, :shape[1] + colsleft, :]
-        if tablesleft < 0:
-            value = value[:, :, :shape[2] + tablesleft]
-        
-        strings = self._get_value_strings(value)
-        
-        S.sgrid[posx: posx + shape[0], \
-                posy: posy + shape[1], \
-                posz: posz + shape[2]] = strings
-        ## TODO: Change to dict key update
-        
     def _get_value_strings(self, value):
         """Returns numpy array of string representations of value elements"""
         
-        flat_res = numpy.array(map(self._unicode_digest, value.flat))
+        unicode_digest = Digest(acceptable_types=[types.UnicodeType])
+        flat_res = numpy.array(map(unicode_digest, value.flat))
         return flat_res.reshape(value.shape)
     
-    def spread(self, value, pos):
+    def spread(self, val, pos):
         """Spread values into the grid with the top-left-upmost position pos
         
         Only rectangular matrices can be spread at this time
@@ -610,28 +537,49 @@ class PyspreadGrid(object):
         
         """
         
-        valdim = numpy.ndim(numpy.array(value))
+        value_dict = {}
         
-        if valdim < 0:
-            raise ValueError, "Dimension of " + unicode(value) + " negative"
+        def insert_val(key, val):
+            """Insert only values that are inside the grid"""
+            
+            if (0, 0, 0) <= key <= self.shape:
+                value_dict[key] = val
         
-        if valdim > 3:
-            raise ValueError, "Dimension of " + unicode(value) + " too high"
+        npos = numpy.array(pos)
+        value_strings = self._get_value_strings(numpy.array(val))
+        valdim = len(value_strings.shape)
         
-        value = numpy.array(value)
+        if valdim == 0:
+            # Single value
+            self.sgrid[pos] = unicode(value_strings)
+            return "Spread at " + str(pos)
         
-        shape = value.shape
+        elif valdim == 1:
+            # Pad the array by 2 dimensions
+            for x, val in enumerate(value_strings):
+                target_pos = tuple(numpy.array([x, 0, 0]) + npos)
+                insert_val(target_pos, val)
+            
+        elif valdim == 2:
+            # Pad the array by 1 dimension
+            for x, row in enumerate(value_strings):
+                for y, val in enumerate(row):
+                    target_pos = tuple(numpy.array([x, y, 0]) + npos)
+                    insert_val(target_pos, val)
         
-        spreadfuncs = [self._spread_0dim, \
-                       self._spread_1dim, 
-                       self._spread_2dim, 
-                       self._spread_3dim]
+        else:
+            # Get item positions
+            for x, row in enumerate(value_strings):
+                for y, col in enumerate(row):
+                    for z, val in enumerate(col):
+                        target_pos = tuple(numpy.array([x, y, z]) + npos)
+                        insert_val(target_pos, val)
         
-        result = spreadfuncs[valdim](value, pos, shape)
+        self.sgrid.update(value_dict)
         
-        return result
+        return "Spread at " + str(pos)
 
-    def findnextmatch(self, startpos, find_string, flags):
+    def findnextmatch(self, startkey, find_string, flags):
         """ Returns a tuple with the position of the next match of find_string
         
         Returns None if string not found.
@@ -645,34 +593,16 @@ class PyspreadGrid(object):
         
         """
         
-        # Index of current cell in flattened grid
-        flatgridpos = getflatpos(self.sgrid, startpos) 
-        #print flatgridpos
-        # Search in each cell until match
-        flatgrid = self.sgrid.flatten('F') # We need Fortran order here
-        # Start at flatgridpos
-        if "DOWN" in flags:
-            searchgrid = numpy.concatenate((flatgrid[flatgridpos:], \
-                                        flatgrid[:flatgridpos]))
-        elif "UP" in flags:
-            flatgridpos += 1
-            searchgrid = numpy.concatenate((flatgrid[flatgridpos:], \
-                                        flatgrid[:flatgridpos]))
-            searchgrid = searchgrid[::-1]
-        findpos = None
-        for key, datastring in enumerate(searchgrid):
-            if datastring != '' and \
-               string_match(datastring, find_string, flags) is not None:
-                if "DOWN" in flags:
-                    correctedpos =  flatgridpos + key
-                elif "UP" in flags:
-                    correctedpos =  flatgridpos - key - 1
-                else:
-                    raise AttributeError, "UP xor DOWN flag " + \
-                                          "not present in flags"
-                findpos = getshapedpos(self.sgrid, correctedpos)
-                break
-        return findpos
+        assert "UP" in flags or "DOWN" in flags
+        assert not ("UP" in flags and "DOWN" in flags)
+        
+        # List of keys in sgrid in search order
+        
+        reverse = "UP" in flags
+        
+        for key in sorted_keys(self.sgrid.keys(), startkey, reverse=reverse):
+            if string_match(self.sgrid[key], find_string, flags) is not None:
+                return key
     
     def get_function_cell_indices(self, gridslice = None):
         """
@@ -887,7 +817,12 @@ class UnRedo(object):
 # end of class UnRedo
 
 class DictGrid(UserDict.IterableUserDict):
+    """Dict absed numpy array drop-in replacement"""
+    
     def __init__(self, shape=(1000, 100, 10), default_value=None):
+        self.shape = shape
+        self.indices = []
+        
         self.set_shape(shape)
         self.default_value = default_value
         
@@ -907,11 +842,10 @@ class DictGrid(UserDict.IterableUserDict):
             # We have a slice
             pass
         
-        
         fetchlist = []
         
         for dim_key, index in izip(key, self.indices):
-            if type(dim_key) is types.SliceType:
+            if isinstance(dim_key, slice):
                 fetchlist.append([i for i in index[dim_key]])
             else:
                 fetchlist.append([dim_key])
@@ -920,7 +854,6 @@ class DictGrid(UserDict.IterableUserDict):
         keys = [(x, y, z) for x in fetchlist[0] \
                           for y in fetchlist[1] \
                           for z in fetchlist[2]]
-        
         result = []
         
         for k in keys:
@@ -933,10 +866,12 @@ class DictGrid(UserDict.IterableUserDict):
         
         try:
             return numpy.array(result, dtype="O").reshape(res_shape)
-        except:
+        except ValueError:
             return numpy.array([], dtype="O")
     
     def set_shape(self, shape):
+        """This method MUST be used in order to change the grid shape"""
+        
         self.shape = shape
         self.indices = [irange(size) for size in self.shape]
 

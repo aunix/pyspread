@@ -28,21 +28,13 @@ Arbitrary size range and slicing operations
 Provides
 --------
 
- * scount: count drop in
  * irange: xrange drop in
  * indices: slice.indices drop in
  * slice_range: use this instead of range(length)[slice]
 
 """
 
-from itertools import islice
-
-def scount(n=0, step=1):
-    """Count that supports a step attribute"""
-    
-    while True:
-        yield n
-        n += step
+from itertools import count, takewhile
 
 def irange(start, stop=None, step=1):
     """Range for long integers
@@ -77,15 +69,18 @@ def irange(start, stop=None, step=1):
     if step > 0:
         if stop < start:
             return (_ for _ in [])
-        return islice(scount(start, step), (stop-start+step-1) // step)
+        cond = lambda x: x < stop
         
     elif step < 0:
         if stop > start:
             return (_ for _ in [])
-        return islice(scount(start, step), (stop-start+step+1) // step)
+        cond = lambda x: x > stop
         
     else:
         raise ValueError, "irange() step argument must not be zero"
+    
+    return takewhile(cond, (start + i * step for i in count()))
+        
 
 def indices(slc, length):
     """Long integer dropin for slice method indices"""
