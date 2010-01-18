@@ -663,7 +663,6 @@ class MainWindow(wx.Frame):
         """Launches about dialog"""
         
         about_dialog = AboutDialog(self)
-        about_dialog.ShowModal()
     
     def OnInsertRows(self, event): # wxGlade: MainWindow.<event_handler>
         """Insert the maximum of 1 and the number of selected rows"""

@@ -1004,7 +1004,8 @@ class DimensionsEntryDialog(wx.Dialog):
 # end of class DimensionsEntryDialog
 
 
-class AboutDialog(wx.Dialog):
+class AboutDialog(object):
+
     """Displays information about pyspread"""
     def __init__(self, *args, **kwds):
         # First we create and fill the info object
@@ -1020,10 +1021,10 @@ class AboutDialog(wx.Dialog):
             350, wx.ClientDC(parent))
         info.WebSite = ("http://pyspread.sourceforge.net", 
                         "Pyspread Web site")
-        info.Developers = [ "Martin Manns" ]
-        info.DocWriters = [ "Martin Manns", "Bosko Markovic" ]
+        info.Developers = ["Martin Manns"]
+        info.DocWriters = ["Martin Manns", "Bosko Markovic"]
         
-        license_file = open("COPYING", "r")
+        license_file = open(parent.module_path + "/COPYING", "r")
         license_text = license_file.read()
         license_file.close()
         
