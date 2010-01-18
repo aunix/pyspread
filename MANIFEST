@@ -1,4 +1,3 @@
-pyspread.pth
 _pyspread/pyspread
 _pyspread/_choicebars.py
 _pyspread/_dialogs.py
@@ -9,6 +8,7 @@ _pyspread/_interfaces.py
 _pyspread/_grid.py
 _pyspread/_datastructures.py
 _pyspread/_arrayhelper.py
+_pyspread/irange.py
 _pyspread/__init__.py
 _pyspread/_printout.py
 _pyspread/test/vartypes.py
@@ -63,7 +63,7 @@ _pyspread/examples/__init__.py
 _pyspread/doc/manual.html
 _pyspread/doc/tutorial.html
 _pyspread/doc/faq.html
-_pyspread/doc/images/Tutorial1.html
-_pyspread/doc/images/Tutorial2.html
-_pyspread/doc/images/Tutorial3.html
-_pyspread/doc/images/Tutorial4.html
+_pyspread/doc/images/Tutorial1.png
+_pyspread/doc/images/Tutorial2.png
+_pyspread/doc/images/Tutorial3.png
+_pyspread/doc/images/Tutorial4.png

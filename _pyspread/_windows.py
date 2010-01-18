@@ -78,7 +78,7 @@ class MainWindow(wx.Frame):
         self.wildcard_interfaces = {0: PysInterfaces, 
                                     1: PysInterfaces}
         # Get path of module
-        self.module_path = os.getcwd() + "/" + os.path.dirname(__file__)
+        self.module_path = os.path.dirname(__file__)
         
         # Code execution flag
         self.code_execution = True

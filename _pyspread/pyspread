@@ -68,10 +68,10 @@ class MainApplication(App):
         
         # Create GPG key if not present
         
-        from _interfaces import is_pyme_present
+        from _pyspread._interfaces import is_pyme_present
         
         if is_pyme_present():
-            from _interfaces import genkey
+            from _pyspread._interfaces import genkey
             genkey()
         
         # Load filename if provided

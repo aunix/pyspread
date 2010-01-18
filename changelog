@@ -4,6 +4,7 @@
 + Safe mode for inspecting foreign files
 + GPG signatures for own files
 + Help framework
++ New About dialog
 + Insertion of cell access code via <Ctrl> + <Insert>
 + Simplified Macro editor dialog
 + Improved cycle detection algorithm for grid

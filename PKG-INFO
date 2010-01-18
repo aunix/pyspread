@@ -1,48 +1,24 @@
 Metadata-Version: 1.1
 Name: pyspread
-Version: 0.0.13
-Author: Martin Manns
-Author-email: mmanns at gmx net
-Home-page: http://pyspread.sourceforge.net
-Download-url: http://sourceforge.net/project/showfiles.php?group_id=224598
+Version: 0.0.14
 Summary: A spreadsheet that accepts a pure python expression in each cell.
+Home-page: http://pyspread.sourceforge.net
+Author: Martin Manns
+Author-email: mmanns@gmx.net
 License: GPL v3 :: GNU General Public License
-Description: Pyspread is a cross-platform Python spreadsheet application. It is based on and
-        written in the programming language Python.
-        
-        Instead of spreadsheet formulas, Python expressions are entered into the
-        spreadsheet cells. Each expression returns a Python object that can be accessed
-        from other cells. These objects can represent anything including lists or matrices.
-Keywords: Spreadsheet, Python spreadsheet
-Platform: Linux
-Windows
-BSD
-Solaris
-OS/X
-Requires: numpy (>=1.1)
-Requires: wx (>=2.8.7)
+Description: UNKNOWN
+Platform: UNKNOWN
 Classifier: Development Status :: 3 - Alpha
 Classifier: Environment :: MacOS X
 Classifier: Environment :: Win32 (MS Windows)
-Classifier: Environment :: X11 Applications
 Classifier: Environment :: X11 Applications :: GTK
-Classifier: Intended Audience :: Developers
-Classifier: Intended Audience :: Education
 Classifier: Intended Audience :: End Users/Desktop
-Classifier: Intended Audience :: Manufacturing
-Classifier: Intended Audience :: Other Audience
-Classifier: Intended Audience :: Science/Research
 Classifier: License :: OSI Approved :: GNU General Public License (GPL)
 Classifier: Natural Language :: English
-Classifier: Operating System :: MacOS :: MacOS X
-Classifier: Operating System :: Microsoft :: Windows
 Classifier: Operating System :: OS Independent
-Classifier: Operating System :: POSIX
 Classifier: Programming Language :: Python :: 2.4
 Classifier: Programming Language :: Python :: 2.5
 Classifier: Programming Language :: Python :: 2.6
-Classifier: Programming Language :: Python :: 2.7
 Classifier: Topic :: Office/Business :: Financial :: Spreadsheet
-Classifier: Topic :: Scientific/Engineering
-Classifier: Topic :: Software Development
-
+Requires: numpy (>=1.1)
+Requires: wx (>=2.8.7)

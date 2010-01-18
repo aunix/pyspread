@@ -48,6 +48,7 @@ import types
 import wx
 import wx.grid
 import wx.lib.mixins.listctrl  as  listmix
+from wx.lib.wordwrap import wordwrap
 
 from _pyspread._grid import GridIndexMixin
 from _pyspread._widgets import SortedListCtrl, PythonSTC
@@ -1006,17 +1007,30 @@ class DimensionsEntryDialog(wx.Dialog):
 class AboutDialog(wx.Dialog):
     """Displays information about pyspread"""
     def __init__(self, *args, **kwds):
-        kwds["style"] = wx.DEFAULT_DIALOG_STYLE
-        wx.Dialog.__init__(self, *args, **kwds)
-        self.logo_pyspread = wx.StaticBitmap(self, -1, \
-             wx.Bitmap(ICONPREFIX+'icons/pyspread.png', wx.BITMAP_TYPE_ANY))
-        self.about_label = wx.StaticText(self, -1, "", style=wx.ALIGN_CENTRE)
-        self.button_close = wx.Button(self, wx.ID_CLOSE, "")
+        # First we create and fill the info object
+        parent = args[0]
         
-        self._set_properties()
-        self._do_layout()
+        info = wx.AboutDialogInfo()
+        info.Name = "pyspread"
+        info.Version = VERSION
+        info.Copyright = "(C) Martin Manns 2008-2009"
+        info.Description = wordwrap( 
+            "A cross-platform Python spreadsheet application.\n"
+            "It is based on and written in the programming language Python.",
+            350, wx.ClientDC(parent))
+        info.WebSite = ("http://pyspread.sourceforge.net", 
+                        "Pyspread Web site")
+        info.Developers = [ "Martin Manns" ]
+        info.DocWriters = [ "Martin Manns", "Bosko Markovic" ]
         
-        self.Bind(wx.EVT_BUTTON, self.OnClose, self.button_close)
+        license_file = open("COPYING", "r")
+        license_text = license_file.read()
+        license_file.close()
+        
+        info.License = wordwrap(license_text, 500, wx.ClientDC(parent))
+        
+        # Then we call wx.AboutBox giving it that info object
+        wx.AboutBox(info)
     
     def _set_properties(self):
         """Setup title and label"""
