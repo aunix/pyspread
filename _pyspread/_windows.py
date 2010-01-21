@@ -243,7 +243,9 @@ class MainWindow(wx.Frame):
         
         for keystr, funcstr in KEYFUNCTIONS.iteritems():
             keys = keystr.split('+')
-            actkey = keys.pop() # Actual unmodified key in KEYFUNCTIONS
+            
+            # Actual unmodified key in KEYFUNCTIONS
+            actkey = keys.pop() 
             evtmeths = [kmm[modifier] for modifier in keys]
             evtmeths += [" == ".join(["event.GetKeyCode()", repr(ord(actkey))])]
             evtmeths_string = " and ".join(evtmeths)

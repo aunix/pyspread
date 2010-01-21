@@ -39,8 +39,7 @@ from itertools import imap, tee, izip
 import numpy
 
 from _pyspread.irange import irange, slice_range
-from _pyspread._arrayhelper import sorted_keys
-from _pyspread._interfaces import string_match,  Digest, UserString
+from _pyspread._interfaces import sorted_keys, string_match, Digest, UserString
 from _pyspread.config import default_cell_attributes
 
 S = None
@@ -295,8 +294,6 @@ class PyspreadGrid(object):
             redo_operation = (self.__setitem__, [pos, value])
         
             self.unredo.append(undo_operation, redo_operation)
-        
-            self.unredo.mark()
         
         # Test self.sgrid[pos] for already having attributes
         
@@ -620,7 +617,18 @@ class PyspreadGrid(object):
         sgrid = self.sgrid
         
         try:
-            getattr(sgrid[key], attribute)
+            sgrid_ele = sgrid[key]
+            
+        except KeyError:
+            # No element present
+            sgrid[key] = UserString(u"")
+            setattr(sgrid[key], attribute, 
+                    default_cell_attributes[attribute]())
+            
+            return None
+            
+        try:
+            getattr(sgrid_ele, attribute)
             has_textattributes = True
 
         except AttributeError:
@@ -628,14 +636,15 @@ class PyspreadGrid(object):
 
         if not has_textattributes:
             try:
-                setattr(sgrid[key], attribute, 
+                setattr(sgrid_ele, attribute, 
                         default_cell_attributes[attribute]())
 
             except AttributeError:
-                if sgrid[key] != 0:
-                    sgrid[key] = UserString(sgrid[key])
+                if sgrid_ele != 0:
+                    sgrid[key] = UserString(sgrid_ele)
                 else:
                     sgrid[key] = UserString(u"")
+                    
                 setattr(sgrid[key], attribute, 
                         default_cell_attributes[attribute]())
 

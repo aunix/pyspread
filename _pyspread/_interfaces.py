@@ -28,6 +28,8 @@ _interfaces
 Provides
 --------
  * SafeUnpickler: Basic security for loading pys files
+ 
+ * sorted_keys:  Generator for sorting keys
 
  * sniff: Sniffs CSV dialect and header info
  * fill_numpyarray: Fills the target array
@@ -47,7 +49,6 @@ Provides
  * make_object
  * make_repr
  
- * OdfInterfaces: ODF file operations
  * PysInterfaces: PYS file operations
  * CsvInterfaces: Connects array datastructure with csv import module
  * Clipboard: Clipboard access
@@ -60,6 +61,7 @@ Provides
 import bz2
 import cPickle as pickle
 import csv
+from itertools import ifilter
 import optparse
 import os
 import re
@@ -122,10 +124,31 @@ class SafeUnpickler(object):
         pickle_obj.find_global = cls.find_class
         return pickle_obj.load()
 
-def get_splash_image():
-    """Returns a wx.Image of the splashimage"""
-    
-    return wx.Image(splash_image_path)
+def sorted_keys(keys, startkey, reverse=False):
+    """Generator that yields sorted keys starting with startkey
+
+    Parameters
+    ----------
+
+    keys: Iterable of tuple/list
+    \tKey sequence that is sorted
+    startkey: Tuple/list
+    \tFirst key to be yielded
+    reverse: Bool
+    \tSort direction reversed if True
+
+    """
+
+    tuple_key = lambda t: t[::-1]
+    tuple_cmp = lambda t: t[::-1] < startkey[::-1]
+
+    searchkeys = sorted(keys, key=tuple_key, reverse=reverse)
+    searchpos = len(list(ifilter(tuple_cmp, searchkeys)))
+
+    searchkeys = searchkeys[searchpos:] + searchkeys[:searchpos]
+
+    for key in searchkeys:
+        yield key
 
 
 def sniff(csvfilepath):

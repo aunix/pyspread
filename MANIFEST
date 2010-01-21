@@ -7,7 +7,6 @@ _pyspread/config.py
 _pyspread/_interfaces.py
 _pyspread/_grid.py
 _pyspread/_datastructures.py
-_pyspread/_arrayhelper.py
 _pyspread/irange.py
 _pyspread/__init__.py
 _pyspread/_printout.py

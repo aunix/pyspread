@@ -68,6 +68,7 @@ from _pyspread._datastructures import PyspreadGrid
 from _pyspread._choicebars import ContextMenu
 from _pyspread._interfaces import Clipboard, Digest, PysInterfaces, \
                                  get_pen_from_data, get_brush_from_data
+from _pyspread.irange import irange
 
 class MainGridTable(wx.grid.PyGridTableBase):
     """Table base class that handles interaction between MainGrid and pysgrid"""
@@ -243,15 +244,14 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
         *Must Override*
         """
         changed = False
-
+        
         val = self._tc.GetValue()
         
         if val != self.startValue:
             changed = True
             grid.GetTable().SetValue(row, col, val) # update the table
-
         self.startValue = ''
-        self._tc.SetValue('')
+        
         return changed
 
     def Reset(self):
@@ -259,6 +259,8 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
         Reset the value in the control back to its starting value.
         *Must Override*
         """
+        self._tc.SetValue(self.startValue)
+        
         self._tc.SetValue(self.startValue)
         self._tc.SetInsertionPointEnd()
 
@@ -1764,20 +1766,45 @@ class MainGrid(wx.grid.Grid,
     
     def zoom_rows(self):
         """Zooms grid rows"""
-        
+        ## TODO: FASTER!!!!!!!1!11
         tabno = self.current_table
         tag = odftags["rowheight"]
         
-        for rowno in xrange(self.GetNumberRows()):
-            key = (rowno, 0, tabno)
+        sgrid = self.pysgrid.sgrid
+        
+        std_row_size = self.GetRowSize(0)
+        non_std_row_sizes = {}
+        
+        for key in sgrid:
+            row_size = std_row_size
             
-            try:
-                self.SetRowSize(rowno, \
-                    getattr(self.pysgrid.sgrid[key], tag) * self.zoom)
-            except (KeyError, AttributeError):
-                self.pysgrid.create_sgrid_attribute(key, tag)
-                setattr(self.pysgrid.sgrid[key], tag, \
-                    self.GetRowSize(rowno) / self.zoom)
+            if key[1] == 0:
+                try:
+                    row_size = getattr(sgrid[key], tag)
+                except (KeyError, AttributeError):
+                    pass
+                    
+                zoomed_row_size = row_size * self.zoom
+                
+                self.SetRowSize(key[0], zoomed_row_size)
+        
+#        for rowno in irange(self.GetNumberRows()):
+#            ##TODO: Only adjust visible rows, i.e. visible rows
+#            ##      +- *
+#            
+#            
+#            key = (rowno, 0, tabno)
+#            
+#            try:
+#                row_ele = sgrid[key]
+#                row_size = getattr(row_ele, tag)
+#                 
+#            except (KeyError, AttributeError):
+#                row_size = std_row_size
+#            
+#            zoomed_row_size = row_size * self.zoom
+#            
+#            self.SetRowSize(rowno, zoomed_row_size)
         
         self.SetRowLabelSize(self.row_label_size * self.zoom)
         
@@ -1787,7 +1814,7 @@ class MainGrid(wx.grid.Grid,
         tabno = self.current_table
         tag = odftags["colwidth"]
         
-        for colno in xrange(self.GetNumberCols()):
+        for colno in irange(self.GetNumberCols()):
             key = (0, colno, tabno)
             
             try:
@@ -1858,8 +1885,6 @@ class EntryLine(wx.TextCtrl):
         key = self.grid.key
         
         self.grid.pysgrid[key] = event.GetString()
-        
-        self.grid.Update()
         
         event.Skip()
         
