@@ -37,6 +37,7 @@ Provides:
 
 """
 
+from copy import copy
 from math import sin, cos, pi
 from itertools import izip
 import string
@@ -542,8 +543,13 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             # Create pens
             borderpen = cell_attr["borderpen"]
             borderwidth = borderpen.GetWidth()
-            borderpen.SetWidth(int(borderwidth * grid.zoom))
-            borderpens.append(borderpen)
+            bordercolor = borderpen.GetColour()
+            borderstyle = borderpen.GetStyle()
+            
+            zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
+            zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, borderstyle)
+            
+            borderpens.append(zoomed_pen)
             colstr = str(borderpen.GetColour())
             
             # Create brushes
@@ -572,7 +578,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         # wx.FONTFLAG_STRIKETHROUGH
 
-        strikethroughwidth = max(1, int(1.5 * grid.zoom))
+        strikethroughwidth = max(1, int(round(1.5 * grid.zoom)))
         dc.SetPen(wx.Pen(wx.BLACK, strikethroughwidth, wx.SOLID))
 
         x1 = string_x
@@ -641,7 +647,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
         try:
-            textfont = self.cell_attr_cache[(row, col)]["textfont"]
+            textfont = copy(self.cell_attr_cache[(row, col)]["textfont"])
         except KeyError:
             # Cache miss --> Update cache
             visible_rows = self.get_visible_rows(grid, row, col)
@@ -651,7 +657,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             self.cell_attr_cache.update(new)
             
             try:
-                textfont = self.cell_attr_cache[(row, col)]["textfont"]
+                textfont = copy(self.cell_attr_cache[(row, col)]["textfont"])
             except KeyError:
                 # We are drawing soemthing invisible! (e.g. printing)
                 # Therefore, cache the invisible cell
@@ -660,7 +666,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
                 
                 self.cell_attr_cache.update(cell_content)
                     
-                textfont = self.cell_attr_cache[(row, col)]["textfont"]
+                textfont = copy(self.cell_attr_cache[(row, col)]["textfont"])
                 
         # Check if the dc is drawn manually be a return func
         
@@ -697,7 +703,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         # Adjust font size to zoom
         
         font_size = textfont.GetPointSize()
-        textfont.SetPointSize(max(1, int(font_size * grid.zoom)))
+        textfont.SetPointSize(max(1, int(round(font_size * grid.zoom))))
         dc.SetFont(textfont)
         
         # Position string
@@ -1056,9 +1062,7 @@ class GridSelectionMixin(object):
         if selection is None:
             selection = self.get_selection()
         for cell in selection:
-            self.pysgrid.sgrid[cell[0], cell[1], self.current_table] = 0
-            self.pysgrid[cell[0], cell[1], self.current_table] = ''
-            self.SetCellValue(cell[0], cell[1], '')
+            self.pysgrid.sgrid.pop((cell[0], cell[1], self.current_table))
         self.pysgrid.unredo.mark()
         
 # end of class GridSelectionMixin
@@ -1287,10 +1291,10 @@ class GridManipulationMixin(object):
         
         current_table = self.current_table
         no_selected_tables = 1
-        operation = (self.cbox_z.Append, [unicode(self.pysgrid.sgrid.shape[2])])
-        undo_operation = (self.cbox_z.Delete, [self.pysgrid.sgrid.shape[2]-1])
+        operation = (self.cbox_z.Append, [unicode(self.pysgrid.shape[2])])
+        undo_operation = (self.cbox_z.Delete, [self.pysgrid.shape[2]-1])
         self.pysgrid.unredo.append(undo_operation, operation)
-        self.cbox_z.Append(unicode(self.pysgrid.sgrid.shape[2]))
+        self.cbox_z.Append(unicode(self.pysgrid.shape[2]))
         self.pysgrid.insert(insertionpoint=[None, None, current_table], \
                             notoinsert=no_selected_tables)
         self.pysgrid.unredo.mark()
@@ -1298,12 +1302,12 @@ class GridManipulationMixin(object):
     def delete_selected_rows(self):
         """Deletes the number of rows of the imminent selection at cursor."""
         
-        if self.pysgrid.sgrid.shape[0] > 0:
+        if self.pysgrid.shape[0] > 0:
             # Current deletion position and selected rows
             selectedrows = set(c[0] for c in self.get_selection())
             current_row = min(selectedrows)
             no_selected_rows = min(max(1, len(selectedrows)), \
-                               self.pysgrid.sgrid.shape[0] - 1)
+                               self.pysgrid.shape[0] - 1)
             # Delete rows
             self.pysgrid.remove(removalpoint=[current_row, None, None], \
                                 notoremove=no_selected_rows)
@@ -1314,12 +1318,12 @@ class GridManipulationMixin(object):
     def delete_selected_cols(self):
         """Deletes the number of cols of the imminent selection at cursor."""
         
-        if self.pysgrid.sgrid.shape[1] > 0:
+        if self.pysgrid.shape[1] > 0:
             # Current insertion position and selected columns
             selectedcols = set(c[1] for c in self.get_selection())
             current_col = min(selectedcols)
             no_selected_cols = min(max(1, len(selectedcols)), \
-                               self.pysgrid.sgrid.shape[1] - 1)
+                               self.pysgrid.shape[1] - 1)
             # Delete columns
             self.pysgrid.remove(removalpoint=[None, current_col, None], \
                                               notoremove=no_selected_cols)
@@ -1330,14 +1334,14 @@ class GridManipulationMixin(object):
     def delete_selected_tables(self):
         """Deletes the current table."""
         
-        if self.pysgrid.sgrid.shape[2] > 1:
+        if self.pysgrid.shape[2] > 1:
             current_table = self.current_table
             no_selected_tables = 1
-            operation = (self.cbox_z.Delete, [self.pysgrid.sgrid.shape[2] - 1])
+            operation = (self.cbox_z.Delete, [self.pysgrid.shape[2] - 1])
             undo_operation = (self.cbox_z.Append, \
-                              [unicode(self.pysgrid.sgrid.shape[2])])
+                              [unicode(self.pysgrid.shape[2])])
             self.pysgrid.unredo.append(undo_operation, operation)
-            self.cbox_z.Delete(self.pysgrid.sgrid.shape[2] - 1)
+            self.cbox_z.Delete(self.pysgrid.shape[2] - 1)
             self.pysgrid.remove(removalpoint=[None, None, current_table], \
                                 notoremove=no_selected_tables)
         self.pysgrid.unredo.mark()
@@ -1402,7 +1406,7 @@ class MainGrid(wx.grid.Grid,
         self.clipboard = Clipboard()
         
         self.cbox_z.AppendItems([unicode(dim) \
-                for dim in xrange(self.pysgrid.sgrid.shape[2])])
+                for dim in xrange(self.pysgrid.shape[2])])
         
         self.copy_selection = [] # Cells from last copy operation 
         self.current_table = 0
@@ -1427,6 +1431,9 @@ class MainGrid(wx.grid.Grid,
         
         self.col_label_size = self.GetColLabelSize()
         self.row_label_size = self.GetRowLabelSize()
+        
+        self.std_row_size = self.GetRowSize(0)
+        self.std_col_size = self.GetColSize(0)
         
         # Event bindings
         
@@ -1459,7 +1466,7 @@ class MainGrid(wx.grid.Grid,
         self.pysgrid.unredo.append(undo_operation, operation)
         
         try:
-            self.CreateGrid(*self.pysgrid.sgrid.shape[:2])
+            self.CreateGrid(*self.pysgrid.shape[:2])
         except:
             pass
 
@@ -1551,7 +1558,7 @@ class MainGrid(wx.grid.Grid,
         self.Update()
         
         # Evaluate everything in order to catch globals
-        for key in list(set(zip(*numpy.nonzero(self.pysgrid.sgrid)))):
+        for key in self.pysgrid.sgrid:
             self.pysgrid[key]
         self.pysgrid._resultcache = {}
         self.Update()
@@ -1697,7 +1704,7 @@ class MainGrid(wx.grid.Grid,
         except ValueError:
             newtable = 0
         
-        if newtable in xrange(self.pysgrid.sgrid.shape[2]):
+        if newtable in xrange(self.pysgrid.shape[2]):
             # Update the whole grid including the empty cells
             self.current_table = newtable
             
@@ -1724,11 +1731,15 @@ class MainGrid(wx.grid.Grid,
         rowno = event.GetRowOrCol()
         tabno = self.current_table
         
-        key = (rowno, 0, tabno)
         tag = odftags["rowheight"]
         
-        self.pysgrid.create_sgrid_attribute(key, tag)
-        setattr(self.pysgrid.sgrid[key], tag, self.GetRowSize(rowno)/self.zoom)
+        rowsize = self.GetRowSize(rowno) / self.zoom
+        
+        try:
+            self.pysgrid.sgrid["rows"][rowno][tag] = rowsize
+        except KeyError:
+            self.pysgrid.sgrid["rows"][rowno] = {}
+            self.pysgrid.sgrid["rows"][rowno][tag] = rowsize
         
         event.Skip()
         
@@ -1738,11 +1749,15 @@ class MainGrid(wx.grid.Grid,
         colno = event.GetRowOrCol()
         tabno = self.current_table
         
-        key = (0, colno, tabno)
         tag = odftags["colwidth"]
         
-        self.pysgrid.create_sgrid_attribute(key, tag)
-        setattr(self.pysgrid.sgrid[key], tag, self.GetColSize(colno)/self.zoom)
+        colsize = self.GetColSize(colno) / self.zoom
+        
+        try:
+            self.pysgrid.sgrid["cols"][colno][tag] = colsize
+        except KeyError:
+            self.pysgrid.sgrid["cols"][colno] = {}
+            self.pysgrid.sgrid["cols"][colno][tag] = colsize
         
         event.Skip()
     
@@ -1766,47 +1781,28 @@ class MainGrid(wx.grid.Grid,
     
     def zoom_rows(self):
         """Zooms grid rows"""
-        ## TODO: FASTER!!!!!!!1!11
+        
         tabno = self.current_table
         tag = odftags["rowheight"]
         
         sgrid = self.pysgrid.sgrid
         
-        std_row_size = self.GetRowSize(0)
-        non_std_row_sizes = {}
+        pos = self.CalcUnscrolledPosition(self.GetScrollX(0), 
+                                          self.GetScrollY(0))
         
-        for key in sgrid:
-            row_size = std_row_size
-            
-            if key[1] == 0:
-                try:
-                    row_size = getattr(sgrid[key], tag)
-                except (KeyError, AttributeError):
-                    pass
-                    
-                zoomed_row_size = row_size * self.zoom
-                
-                self.SetRowSize(key[0], zoomed_row_size)
-        
-#        for rowno in irange(self.GetNumberRows()):
-#            ##TODO: Only adjust visible rows, i.e. visible rows
-#            ##      +- *
-#            
-#            
-#            key = (rowno, 0, tabno)
-#            
-#            try:
-#                row_ele = sgrid[key]
-#                row_size = getattr(row_ele, tag)
-#                 
-#            except (KeyError, AttributeError):
-#                row_size = std_row_size
-#            
-#            zoomed_row_size = row_size * self.zoom
-#            
-#            self.SetRowSize(rowno, zoomed_row_size)
-        
+        self.SetDefaultRowSize(self.std_row_size * self.zoom, 
+                               resizeExistingRows=True)
         self.SetRowLabelSize(self.row_label_size * self.zoom)
+        
+        if "rows" not in sgrid:
+            return
+        
+        for rowno in sgrid["rows"]:
+            if tag in sgrid["rows"][rowno]:
+                zoomed_row_size = sgrid["rows"][rowno][tag] * self.zoom
+                self.SetRowSize(rowno, zoomed_row_size)
+        
+        self.MakeCellVisible(*pos)
         
     def zoom_cols(self):
         """Zooms grid columns"""
@@ -1814,24 +1810,31 @@ class MainGrid(wx.grid.Grid,
         tabno = self.current_table
         tag = odftags["colwidth"]
         
-        for colno in irange(self.GetNumberCols()):
-            key = (0, colno, tabno)
-            
-            try:
-                self.SetColSize(colno, getattr(self.pysgrid.sgrid[key], tag) * \
-                    self.zoom)
-            except (KeyError, AttributeError):
-                self.pysgrid.create_sgrid_attribute(key, tag)
-                setattr(self.pysgrid.sgrid[key], tag, \
-                    self.GetColSize(colno) / self.zoom)
+        sgrid = self.pysgrid.sgrid
         
+        pos = self.CalcUnscrolledPosition(self.GetScrollX(0), 
+                                          self.GetScrollY(0))
+        
+        self.SetDefaultColSize(self.std_col_size * self.zoom, 
+                               resizeExistingCols=True)
         self.SetColLabelSize(self.col_label_size * self.zoom)
-    
+        
+        if "cols" not in sgrid:
+            return
+        
+        for colno in sgrid["cols"]:
+            if tag in sgrid["cols"][colno]:
+                zoomed_col_size = sgrid["cols"][colno][tag] * self.zoom
+                self.SetColSize(colno, zoomed_col_size)
+        
+        self.MakeCellVisible(*pos)
+
     def zoom_labels(self):
         """Zooms grid labels"""
         
         labelfont = self.GetLabelFont()
-        labelfont.SetPointSize(max(1, int(DEFAULT_FONT_SIZE * self.zoom)))
+        labelfont.SetPointSize(max(1, 
+                            int(round(DEFAULT_FONT_SIZE * self.zoom))))
         self.SetLabelFont(labelfont)
         
     def OnMouseWheel(self, event):

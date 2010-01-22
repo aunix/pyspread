@@ -812,6 +812,10 @@ class DictGrid(UserDict.IterableUserDict):
         
         UserDict.IterableUserDict.__init__(self)
         
+        self["rows"] = {}
+        self["cols"] = {}
+        self["tabs"] = {}
+        
     def __getitem__(self, key):
         
         get = UserDict.UserDict.__getitem__
