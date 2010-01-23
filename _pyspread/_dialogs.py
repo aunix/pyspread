@@ -975,11 +975,16 @@ class DimensionsEntryDialog(wx.Dialog):
             self.dimensions[dimension] = 1
             self.textctrls[dimension].SetValue(str(1))
         
-        # If we are on a 32 bit platform, the number of cells must be 
-        # 2**28 or smaller because of the 2 GB limit
+        # If we are on a 32 bit platform, the number of
+        # cells must be 2**26 or smaller because of the 
+        # 2 GB limit
         
         if struct.calcsize("P") * 8 == 32: # 32 bit system
-            if reduce(lambda x, y: x*y, self.dimensions) > 2 ** 28:
+            if reduce(lambda x, y: x*y, self.dimensions) > 2 ** 26:
+                self.dimensions[dimension] = 1
+                self.textctrls[dimension].SetValue(str(1))
+        elif struct.calcsize("P") * 8 == 64: # 64 bit system
+            if any(dim > 80000000 for dim in self.dimensions):
                 self.dimensions[dimension] = 1
                 self.textctrls[dimension].SetValue(str(1))
         
@@ -1014,7 +1019,7 @@ class AboutDialog(object):
         info = wx.AboutDialogInfo()
         info.Name = "pyspread"
         info.Version = VERSION
-        info.Copyright = "(C) Martin Manns 2008-2009"
+        info.Copyright = "(C) Martin Manns 2008-2010"
         info.Description = wordwrap( 
             "A cross-platform Python spreadsheet application.\n"
             "It is based on and written in the programming language Python.",

@@ -253,6 +253,8 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
             grid.GetTable().SetValue(row, col, val) # update the table
         self.startValue = ''
         
+        self.parent.pysgrid.unredo.mark()
+        
         return changed
 
     def Reset(self):

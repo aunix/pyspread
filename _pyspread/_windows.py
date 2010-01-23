@@ -560,9 +560,9 @@ class MainWindow(wx.Frame):
         """Displays print dialog"""
         
         pdd = wx.PrintDialogData(self.print_data)
-        print self.print_data.GetOrientation() == wx.LANDSCAPE
+        #print self.print_data.GetOrientation() == wx.LANDSCAPE
         
-        print dir(pdd)
+        #print dir(pdd)
         
         printer = wx.Printer(pdd)
         
