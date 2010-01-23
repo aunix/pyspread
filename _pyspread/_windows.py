@@ -367,6 +367,13 @@ class MainWindow(wx.Frame):
             signfile = open(self.filepath + '.sig','wb')
             signfile.write(signature)
             signfile.close()
+        else:
+            dlg = wx.MessageDialog(self, 'Cannot sign file!',
+                                  'Cannot sign the file. '
+                                  'Maybe PyMe is not installed',
+                                  wx.CANCEL)
+            dlg.ShowModal()
+            dlg.Destroy()
     
     def OnFileSave(self, event):
         """Saves an existing file"""

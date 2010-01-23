@@ -175,8 +175,8 @@ default_cell_attributes = {
     "borderpen": lambda: [wx.Colour(200, 200, 200).GetRGB(), 1, int(wx.SOLID)],
     "bgbrush": lambda: [int(default_color.GetRGB()), int(wx.SOLID)],
     "textattributes": lambda: {},
-    "textfont": lambda: str(wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT).\
-                               GetNativeFontInfo()),
+    "textfont": lambda: unicode(wx.Font(faces['size'], wx.DEFAULT, wx.NORMAL, 
+                        wx.NORMAL, False, faces['helv']).GetNativeFontInfo()),
     "column-width": lambda: 150,
     "row-height": lambda: 25,
 }

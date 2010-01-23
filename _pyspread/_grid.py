@@ -393,39 +393,6 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         return visible_cols
     
-#    def draw_grid_lines(self, grid, attr, dc, rect, row, col):
-#        """Draws the grid lines for all visible cells"""
-#        
-#
-#        grid_lines = []
-#        grid_rect = grid.GetScreenRect()
-#        
-#        scroll_units = grid.GetScrollPixelsPerUnit()
-#        scroll_x = grid.GetScrollPos(wx.HORIZONTAL) * scroll_units[0]
-#        scroll_y = grid.GetScrollPos(wx.VERTICAL) * scroll_units[1]
-#        
-#        for check_col in xrange(col, -1, -1):
-#            if grid.IsVisible(row, check_col, wholeCellVisible=False):
-#                left_cell_rect = grid.CellToRect(0, check_col)
-#                right_cell_rect = grid.CellToRect(row, check_col)
-#                
-#                col_x = left_cell_rect.x + left_cell_rect.width - 1
-#                grid_lines.append((col_x, left_cell_rect.y, 
-#                    col_x, right_cell_rect.y + right_cell_rect.height))
-#                break
-#
-#        for check_row in xrange(row, -1, -1):
-#            if grid.IsVisible(check_row, col, wholeCellVisible=False):
-#                top_cell_rect = grid.CellToRect(check_row, 0)
-#                bottom_cell_rect = grid.CellToRect(check_row, col)
-#                
-#                col_y = top_cell_rect.y + top_cell_rect.height - 1
-#                grid_lines.append((top_cell_rect.x, col_y,
-#                    bottom_cell_rect.x + bottom_cell_rect.width, col_y))
-#                break
-#        
-#        dc.DrawLineList(grid_lines, GRID_LINE_PEN)
-#    
     def get_visible_cell_attr_cache(self, visible_rows, visible_cols):
         """Returns cache of the visible cell attributes
         
@@ -550,6 +517,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             
             zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
             zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, borderstyle)
+            zoomed_pen.SetJoin(wx.JOIN_MITER)
             
             borderpens.append(zoomed_pen)
             colstr = str(borderpen.GetColour())
@@ -648,8 +616,9 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             self.draw_selection_background(grid, dc, rect)
         
         textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
+        
         try:
-            textfont = copy(self.cell_attr_cache[(row, col)]["textfont"])
+            textfont = self.cell_attr_cache[(row, col)]["textfont"]
         except KeyError:
             # Cache miss --> Update cache
             visible_rows = self.get_visible_rows(grid, row, col)
@@ -659,17 +628,18 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             self.cell_attr_cache.update(new)
             
             try:
-                textfont = copy(self.cell_attr_cache[(row, col)]["textfont"])
+                textfont = self.cell_attr_cache[(row, col)]["textfont"]
             except KeyError:
-                # We are drawing soemthing invisible! (e.g. printing)
+                # We are drawing soemthing invisible! 
+                # (e.g. printing)
                 # Therefore, cache the invisible cell
                 
                 cell_content = self.get_visible_cell_attr_cache([row], [col])
                 
                 self.cell_attr_cache.update(cell_content)
                     
-                textfont = copy(self.cell_attr_cache[(row, col)]["textfont"])
-                
+                textfont = self.cell_attr_cache[(row, col)]["textfont"]
+        
         # Check if the dc is drawn manually be a return func
         
         res = grid.pysgrid[row, col, grid.current_table]
@@ -692,12 +662,8 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         try:
             underline_mode = textattributes[odftags["underline"]]
-            if underline_mode == "continuous":
-                textfont.SetUnderlined(True)
-            else:
-                textfont.SetUnderlined(False)
         except KeyError:
-            pass
+            underline_mode = None
         
         dc.SetBackgroundMode(wx.TRANSPARENT)
         dc.SetTextForeground(textcolor)
@@ -705,8 +671,12 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         # Adjust font size to zoom
         
         font_size = textfont.GetPointSize()
-        textfont.SetPointSize(max(1, int(round(font_size * grid.zoom))))
-        dc.SetFont(textfont)
+        zoomed_fontsize = max(1, int(round(font_size * grid.zoom)))
+        
+        zoomed_font = wx.Font(zoomed_fontsize, textfont.GetFamily(),
+            textfont.GetStyle(), textfont.GetWeight(), 
+            underline_mode == "continuous", textfont.GetFaceName())
+        dc.SetFont(zoomed_font)
         
         # Position string
         
@@ -769,11 +739,6 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         if strikethrough in ["solid"]:
             self._draw_strikethrough_line(grid, attr, dc, rect, angle,
                                           string_x, string_y, text_extent)
-            
-        #Restore zoomed properties
-        
-        textfont.SetPointSize(font_size)
-        #borderpen.SetWidth(borderwidth)
         
 # end of class TextRenderer
         
@@ -1000,6 +965,7 @@ class GridSelectionMixin(object):
                 try:
                     if (row + rowslice.start, col + colslice.start) \
                           not in selection:
+                        print repr(row, col)
                         data[row, col] = omittedfield_repr
                 except TypeError:
                     if selection is None:
@@ -1064,7 +1030,11 @@ class GridSelectionMixin(object):
         if selection is None:
             selection = self.get_selection()
         for cell in selection:
-            self.pysgrid.sgrid.pop((cell[0], cell[1], self.current_table))
+            try:
+                self.pysgrid.sgrid.pop((cell[0], cell[1], self.current_table))
+            except KeyError:
+                #Cell is not there
+                pass
         self.pysgrid.unredo.mark()
         
 # end of class GridSelectionMixin
@@ -1130,8 +1100,11 @@ class GridClipboardMixin(object):
         
         clipboard_data = [[]]
         for datarow in data:
-            for ele in datarow:
-                clipboard_data[-1].append(self.digest(ele))
+            if isinstance(datarow, unicode) or isinstance(datarow, basestring):
+                clipboard_data[-1].append(self.digest(datarow))
+            else:
+                for ele in datarow:
+                    clipboard_data[-1].append(self.digest(ele))
             clipboard_data.append([])
         
         return "\n".join("\t".join(line) for line in clipboard_data)
@@ -1738,10 +1711,14 @@ class MainGrid(wx.grid.Grid,
         rowsize = self.GetRowSize(rowno) / self.zoom
         
         try:
-            self.pysgrid.sgrid["rows"][rowno][tag] = rowsize
+            self.pysgrid.sgrid.rows[rowno][tag] = rowsize
         except KeyError:
-            self.pysgrid.sgrid["rows"][rowno] = {}
-            self.pysgrid.sgrid["rows"][rowno][tag] = rowsize
+            self.pysgrid.sgrid.rows[rowno] = {}
+            self.pysgrid.sgrid.rows[rowno][tag] = rowsize
+        except AttributeError:
+            self.pysgrid.sgrid.rows = {}
+            self.pysgrid.sgrid.rows[rowno] = {}
+            self.pysgrid.sgrid.rows[rowno][tag] = rowsize
         
         event.Skip()
         
@@ -1756,11 +1733,15 @@ class MainGrid(wx.grid.Grid,
         colsize = self.GetColSize(colno) / self.zoom
         
         try:
-            self.pysgrid.sgrid["cols"][colno][tag] = colsize
+            self.pysgrid.sgrid.cols[colno][tag] = colsize
         except KeyError:
-            self.pysgrid.sgrid["cols"][colno] = {}
-            self.pysgrid.sgrid["cols"][colno][tag] = colsize
-        
+            self.pysgrid.sgrid.cols[colno] = {}
+            self.pysgrid.sgrid.cols[colno][tag] = colsize
+        except AttributeError:
+            self.pysgrid.sgrid.cols = {}
+            self.pysgrid.sgrid.cols[colno] = {}
+            self.pysgrid.sgrid.cols[colno][tag] = colsize
+
         event.Skip()
     
     def OnLeftUp(self, event):
@@ -1796,12 +1777,12 @@ class MainGrid(wx.grid.Grid,
                                resizeExistingRows=True)
         self.SetRowLabelSize(self.row_label_size * self.zoom)
         
-        if "rows" not in sgrid:
+        if not hasattr(sgrid, "rows"):
             return
         
-        for rowno in sgrid["rows"]:
-            if tag in sgrid["rows"][rowno]:
-                zoomed_row_size = sgrid["rows"][rowno][tag] * self.zoom
+        for rowno in sgrid.rows:
+            if tag in sgrid.rows[rowno]:
+                zoomed_row_size = sgrid.rows[rowno][tag] * self.zoom
                 self.SetRowSize(rowno, zoomed_row_size)
         
         self.MakeCellVisible(*pos)
@@ -1821,12 +1802,12 @@ class MainGrid(wx.grid.Grid,
                                resizeExistingCols=True)
         self.SetColLabelSize(self.col_label_size * self.zoom)
         
-        if "cols" not in sgrid:
+        if not hasattr(sgrid, "cols"):
             return
         
-        for colno in sgrid["cols"]:
-            if tag in sgrid["cols"][colno]:
-                zoomed_col_size = sgrid["cols"][colno][tag] * self.zoom
+        for colno in sgrid.cols:
+            if tag in sgrid.cols[colno]:
+                zoomed_col_size = sgrid.cols[colno][tag] * self.zoom
                 self.SetColSize(colno, zoomed_col_size)
         
         self.MakeCellVisible(*pos)

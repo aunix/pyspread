@@ -454,7 +454,10 @@ def get_pen_from_data(pendata):
 
     pen_color = wx.Colour()
     pen_color.SetRGB(pendata[0])
-    return wx.Pen(pen_color, *pendata[1:])
+    pen = wx.Pen(pen_color, *pendata[1:])
+    pen.SetJoin(wx.JOIN_MITER)
+    
+    return pen
 
 def get_brush_from_data(brushdata):
     """Returns wx.Pen from pendata attribute list"""

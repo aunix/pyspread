@@ -274,7 +274,7 @@ class PyspreadGrid(object):
             except Exception, err:
                 result = err
         
-        if key == self._tabukey:
+        if key in self._tabukey:
             self._tabukey = None
         
         return result
@@ -434,9 +434,7 @@ class PyspreadGrid(object):
         sgrid = self.sgrid
         
         for key in sgrid:
-            if key in ["rows", "cols", "tabs"]:
-                pass
-            elif key[axis] >= ins_point:
+            if key[axis] >= ins_point:
                 new_key = list(key)
                 new_key[axis] += notoinsert
                 new_key = tuple(new_key)
@@ -481,10 +479,7 @@ class PyspreadGrid(object):
         sgrid = self.sgrid
         
         for key in sgrid:
-            if key in ["rows", "cols", "tabs"]:
-                pass
-                
-            elif rmp <= key[axis] < rmp + notoremove:
+            if rmp <= key[axis] < rmp + notoremove:
                 # Delete cell
                 del_keys.append(key)
                 del_key_storage[key] = sgrid[key]
@@ -818,9 +813,9 @@ class DictGrid(UserDict.IterableUserDict):
         
         UserDict.IterableUserDict.__init__(self)
         
-        self["rows"] = {}
-        self["cols"] = {}
-        self["tabs"] = {}
+        self.rows = {}
+        self.cols = {}
+        self.tabs = {}
         
     def __getitem__(self, key):
         

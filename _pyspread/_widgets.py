@@ -389,6 +389,8 @@ class PenWidthComboBox(wx.combo.OwnerDrawnComboBox):
         if item == 0:
             penStyle = wx.TRANSPARENT
         pen = wx.Pen(dc.GetTextForeground(), item, penStyle)
+        pen.SetCap(wx.CAP_BUTT)
+        
         dc.SetPen(pen)
         
         if flags & wx.combo.ODCB_PAINTING_CONTROL:
