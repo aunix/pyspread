@@ -110,9 +110,9 @@ class TestPyspreadGrid(object):
         """Single and multiple item assignment test"""
         
         self.grid[0, 0, 0] = "'Test'"
-        assert len(self.grid.unredo.undolist) == 2
+        assert len(self.grid.unredo.undolist) == 1
         self.grid[0, 0, 0] = "'Tes'"
-        assert len(self.grid.unredo.undolist) == 4
+        assert len(self.grid.unredo.undolist) == 2
         
         assert self.grid[0, 0, 0] == 'Tes'
         for teststring in v.getstrings(number=100, maxlength=1000):

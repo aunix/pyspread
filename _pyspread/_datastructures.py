@@ -434,7 +434,9 @@ class PyspreadGrid(object):
         sgrid = self.sgrid
         
         for key in sgrid:
-            if key[axis] >= ins_point:
+            if key in ["rows", "cols", "tabs"]:
+                pass
+            elif key[axis] >= ins_point:
                 new_key = list(key)
                 new_key[axis] += notoinsert
                 new_key = tuple(new_key)
@@ -479,7 +481,10 @@ class PyspreadGrid(object):
         sgrid = self.sgrid
         
         for key in sgrid:
-            if rmp <= key[axis] < rmp + notoremove:
+            if key in ["rows", "cols", "tabs"]:
+                pass
+                
+            elif rmp <= key[axis] < rmp + notoremove:
                 # Delete cell
                 del_keys.append(key)
                 del_key_storage[key] = sgrid[key]
@@ -487,6 +492,7 @@ class PyspreadGrid(object):
             elif rmp <= key[axis]:
                 # Move cell
                 new_key = list(key)
+                print new_key
                 new_key[axis] -= notoremove
                 new_key = tuple(new_key)
                 key_update[new_key] = sgrid[key]
