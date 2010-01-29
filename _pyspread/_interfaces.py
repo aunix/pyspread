@@ -441,13 +441,23 @@ def make_repr(obj):
 def get_default_font():
     """Returns the default system font"""
     
-    global DEFAULT_FONT
+    return DEFAULT_FONT
+
+def get_font_from_data(fontdata):
+    """Returns wx.Font from fontdata string"""
     
-    try:
+    if fontdata == "":
         return DEFAULT_FONT
-    except NameError:
-        DEFAULT_FONT = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
-        return DEFAULT_FONT
+    
+    textfont = wx.Font(10, wx.NORMAL, wx.NORMAL, 
+                               wx.NORMAL, False, 'Arial')
+    nativefontinfo = wx.NativeFontInfo()
+    nativefontinfo.FromString(fontdata)
+
+    textfont.SetNativeFontInfo(nativefontinfo)
+    
+    return textfont
+
 
 def get_pen_from_data(pendata):
     """Returns wx.Pen from pendata attribute list"""

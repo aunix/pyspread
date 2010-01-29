@@ -146,16 +146,16 @@ elif wx.Platform == '__WXMAC__':
               'mono' : 'Monaco',
               'helv' : 'Arial',
               'other': 'Comic Sans MS',
-              'size' : 12,
-              'size2': 10,
+              'size' : 10,
+              'size2': 8,
              }
 else:
     faces = { 'times': 'Times',
               'mono' : 'Courier',
-              'helv' : 'Helvetica',
+              'helv' : 'Sans',
               'other': 'new century schoolbook',
-              'size' : 12,
-              'size2': 10,
+              'size' : 10,
+              'size2': 8,
              }
 
 """
@@ -164,7 +164,13 @@ Default cell font size
 
 """
 
-DEFAULT_FONT_SIZE = 10
+if wx.Platform == '__WXMSW__':
+    DEFAULT_FONT = wx.Font(faces['size'], wx.NORMAL, wx.NORMAL, 
+                           wx.NORMAL, False, faces['helv'])
+    DEFAULT_FONT.SetPointSize(faces['size'])
+else:
+    DEFAULT_FONT = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+
 FONT_SIZES = range(3, 14) + range(16, 32, 2) + range(36, 99, 4)
 
 selected_cell_brush = wx.Brush(wx.Colour(127, 127, 255), wx.SOLID)

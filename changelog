@@ -13,6 +13,7 @@
 + wxPython v 2.8 is now preferred
 + Error handling bug removed
 + Help files are now found after changing the path
++ Font rendering in Windows fixed
 
 
 0.0.13

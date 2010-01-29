@@ -47,7 +47,6 @@ import wx.stc  as  stc
 import wx.lib.mixins.listctrl  as  listmix
 
 from _pyspread.config import faces, text_styles, fold_symbol_style
-from _pyspread.config import DEFAULT_FONT_SIZE
 
 class CollapsiblePane(wx.CollapsiblePane):
     """Collapsible pane with basic toggle mechanism
@@ -456,7 +455,7 @@ class FontChoiceCombobox(wx.combo.OwnerDrawnComboBox):
         __rect.Deflate(3, 5)
         
         font_string = self.GetString(item)
-        font = wx.Font(DEFAULT_FONT_SIZE, wx.DEFAULT, wx.NORMAL, wx.NORMAL, \
+        font = wx.Font(faces['size'], wx.DEFAULT, wx.NORMAL, wx.NORMAL, \
                        False, font_string)
         dc.SetFont(font)
         text_width, text_height = dc.GetTextExtent(font_string)

@@ -55,7 +55,7 @@ from _pyspread._interfaces import CsvInterfaces, PysInterfaces, \
             string_match, bzip_dump, is_pyme_present, genkey, sign, verify
 
 from _pyspread.config import ICONPREFIX, icon_size, KEYFUNCTIONS, \
-            DEFAULT_FONT_SIZE, odftags
+            faces, odftags
 
 
 class MainWindow(wx.Frame):
@@ -1191,8 +1191,8 @@ class MainWindow(wx.Frame):
         
         try:
             size = int(event.GetString())
-        except:
-            size = DEFAULT_FONT_SIZE
+        except Exception:
+            size = faces['size']
         
         for key in keys:
             pysgrid.create_sgrid_attribute(key, "textfont")

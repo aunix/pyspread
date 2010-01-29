@@ -62,13 +62,14 @@ import wx.grid
 import wx.combo
 import numpy
 
-from _pyspread.config import odftags, DEFAULT_FONT_SIZE, dpi, GRID_LINE_PEN
+from _pyspread.config import odftags, DEFAULT_FONT, faces, dpi, GRID_LINE_PEN
 from _pyspread.config import column_width_tag, row_height_tag
 from _pyspread.config import default_cell_attributes, selected_cell_brush
 from _pyspread._datastructures import PyspreadGrid
 from _pyspread._choicebars import ContextMenu
 from _pyspread._interfaces import Clipboard, Digest, PysInterfaces, \
-                                 get_pen_from_data, get_brush_from_data
+                                 get_pen_from_data, get_brush_from_data, \
+                                 get_font_from_data
 from _pyspread.irange import irange
 
 class MainGridTable(wx.grid.PyGridTableBase):
@@ -392,99 +393,14 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             check_col -= 1
         
         return visible_cols
-    
-    def get_visible_cell_attr_cache(self, visible_rows, visible_cols):
-        """Returns cache of the visible cell attributes
         
-        Cell attributes
-        ---------------
-        
-         * borderpen
-         * bgbrush
-         * textfont
-        
-        """
-        
-        pys_attr = self.table.pysgrid.get_sgrid_attr
-        
-        tab = self.table.current_table
-        
-        # Empty cache
-        
-        cell_attr_cache = {}
-        
-        # Store objects to avoid doublettes
-        
-        pen_set = {}
-        brush_set = {}
-        font_set = {}
-        
-        # Default values
-        
-        default_bp = default_cell_attributes["borderpen"]()
-        default_borderpen = get_pen_from_data(default_bp)
-        
-        default_bg = default_cell_attributes["bgbrush"]()
-        default_bgbrush = get_brush_from_data(default_bg)
-        
-        default_fn = default_cell_attributes["textfont"]()
-        
-        nativefontinfo = wx.NativeFontInfo()
-        nativefontinfo.FromString(default_fn)
-        default_textfont = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL, 
-                                   False, 'Arial')
-        default_textfont.SetNativeFontInfo(nativefontinfo)
-        
-        # Set up the cache
-        
-        for row in visible_rows:
-            for col in visible_cols:
-                curr_cache = cell_attr_cache[(row, col)] = {}
-                
-                borderpen_data = pys_attr((row, col, tab), "borderpen")
-                if borderpen_data == default_bp:
-                    curr_cache["borderpen"] = default_borderpen
-                elif repr(borderpen_data) in pen_set:
-                    curr_cache["borderpen"] = pen_set[repr(borderpen_data)]
-                else:
-                    curr_cache["borderpen"] = get_pen_from_data(borderpen_data)
-                    pen_set[repr(borderpen_data)] = curr_cache["borderpen"]
-                
-                bgbrush_data = pys_attr((row, col, tab), "bgbrush")
-                if bgbrush_data == default_bg:
-                    curr_cache["bgbrush"] = default_bgbrush
-                elif repr(bgbrush_data) in brush_set:
-                    curr_cache["bgbrush"] = brush_set[repr(bgbrush_data)]
-                else:
-                    curr_cache["bgbrush"] = get_brush_from_data(bgbrush_data)
-                    brush_set[repr(bgbrush_data)] = curr_cache["bgbrush"]
-                
-                textfont_data = pys_attr((row, col, tab), "textfont")
-                if textfont_data == default_fn:
-                    curr_cache["textfont"] = default_textfont
-                elif repr(textfont_data) in font_set:
-                    curr_cache["textfont"] = font_set[repr(textfont_data)]
-                else:
-                    curr_cache["textfont"] = wx.Font(10, wx.NORMAL, wx.NORMAL, 
-                                                     wx.NORMAL, False, 'Arial')
-                    nativefontinfo = wx.NativeFontInfo()
-                    nativefontinfo.FromString(textfont_data)
-                    curr_cache["textfont"].SetNativeFontInfo(nativefontinfo)
-                    font_set[repr(textfont_data)] = curr_cache["textfont"]
-        
-        return cell_attr_cache
-        
-    def draw_visible_backgrounds(self, grid, attr, dc, rect, row, col):
+    def draw_visible_backgrounds(self, grid, attr, dc, rect, rows, cols):
         """Draws all backgrounds for all visible cells"""
         
         pysgrid = self.table.pysgrid
-        key = (row, col, self.table.current_table)
+        tab = self.table.current_table
         
-        cell_attr_cache = self.cell_attr_cache
-        
-        drawn_cells = cell_attr_cache.keys()
-        
-        vis_cells_rects = (grid.CellToRect(r, c) for r, c in drawn_cells)
+        vis_cells_rects = (grid.CellToRect(r, c) for r in rows for c in cols)
         vis_cells_tuples = [(r.x - 1, r.y - 1, r.width + 1, r.height + 1) \
                                 for r in vis_cells_rects]
         
@@ -493,38 +409,45 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         # Now redraw all cells that have non-standard borders
         bordered_cells = []
         
-        for r, c in cell_attr_cache:
-            if cell_attr_cache[(r, c)]["borderpen"] != default_bp:
-                bordered_cells.append((r, c))
+        for row in rows:
+            for col in cols:
+                key = (row, col, tab)
+                if get_pen_from_data(pysgrid.get_sgrid_attr(key, 
+                    "borderpen")) != default_bp:
+                    bordered_cells.append(key)
         
-        bordered_cells_rects = (grid.CellToRect(r, c) 
-                                for r, c in bordered_cells)
-        vis_cells_tuples += [(r.x - 1, r.y - 1, r.width + 1, r.height + 1) \
-                                for r in bordered_cells_rects]
+        bordered_cells_rects = (grid.CellToRect(row, col) 
+                                for row, col in bordered_cells)
+        vis_cells_tuples += [(row.x - 1, row.y - 1, 
+                              row.width + 1, row.height + 1) \
+                                for row in bordered_cells_rects]
         
-        drawn_cells += bordered_cells
         borderpens = []
         bgbrushes = []
         
-        for r, c in drawn_cells:
-            cell_attr = cell_attr_cache[(r, c)]
+        for row in rows:
+            for col in cols:
             
-            # Create pens
-            borderpen = cell_attr["borderpen"]
-            borderwidth = borderpen.GetWidth()
-            bordercolor = borderpen.GetColour()
-            borderstyle = borderpen.GetStyle()
-            
-            zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
-            zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, borderstyle)
-            zoomed_pen.SetJoin(wx.JOIN_MITER)
-            
-            borderpens.append(zoomed_pen)
-            colstr = str(borderpen.GetColour())
-            
-            # Create brushes
-            bgbrush = cell_attr["bgbrush"]
-            bgbrushes.append(bgbrush)
+                key = (row, col, tab)
+                # Create pens
+                borderpen = get_pen_from_data( \
+                    pysgrid.get_sgrid_attr(key, "borderpen"))
+                borderwidth = borderpen.GetWidth()
+                bordercolor = borderpen.GetColour()
+                borderstyle = borderpen.GetStyle()
+
+                zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
+                zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, 
+                                    borderstyle)
+                zoomed_pen.SetJoin(wx.JOIN_MITER)
+
+                borderpens.append(zoomed_pen)
+                colstr = str(borderpen.GetColour())
+
+                # Create brushes
+                bgbrush = get_brush_from_data( \
+                    pysgrid.get_sgrid_attr(key, "bgbrush"))
+                bgbrushes.append(bgbrush)
         
         # Draw the background
         dc.DrawRectangleList(vis_cells_tuples, borderpens, bgbrushes)
@@ -599,14 +522,9 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             visible_rows = self.get_visible_rows(grid, row, col)
             visible_cols = self.get_visible_cols(grid, row, col)
             
-            self.cell_attr_cache = \
-                self.get_visible_cell_attr_cache(visible_rows, visible_cols)
-            
-            # Draw grid lines
-            #self.draw_grid_lines(grid, attr, dc, rect, row, col)
-            
             # Draw grid background rects
-            self.draw_visible_backgrounds(grid, attr, dc, rect, row, col)
+            self.draw_visible_backgrounds(grid, attr, dc, rect, 
+                                          visible_rows, visible_cols)
             
             # Reset the background draw flag
             if is_bottomright_cell:
@@ -617,28 +535,8 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
         
-        try:
-            textfont = self.cell_attr_cache[(row, col)]["textfont"]
-        except KeyError:
-            # Cache miss --> Update cache
-            visible_rows = self.get_visible_rows(grid, row, col)
-            visible_cols = self.get_visible_cols(grid, row, col)
-            
-            new = self.get_visible_cell_attr_cache(visible_rows, visible_cols)
-            self.cell_attr_cache.update(new)
-            
-            try:
-                textfont = self.cell_attr_cache[(row, col)]["textfont"]
-            except KeyError:
-                # We are drawing soemthing invisible! 
-                # (e.g. printing)
-                # Therefore, cache the invisible cell
-                
-                cell_content = self.get_visible_cell_attr_cache([row], [col])
-                
-                self.cell_attr_cache.update(cell_content)
-                    
-                textfont = self.cell_attr_cache[(row, col)]["textfont"]
+        textfont = get_font_from_data( \
+            pysgrid.get_sgrid_attr(key, "textfont"))
         
         # Check if the dc is drawn manually be a return func
         
@@ -671,6 +569,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         # Adjust font size to zoom
         
         font_size = textfont.GetPointSize()
+        
         zoomed_fontsize = max(1, int(round(font_size * grid.zoom)))
         
         zoomed_font = wx.Font(zoomed_fontsize, textfont.GetFamily(),
@@ -965,7 +864,7 @@ class GridSelectionMixin(object):
                 try:
                     if (row + rowslice.start, col + colslice.start) \
                           not in selection:
-                        print repr(row, col)
+                        #print repr(row, col)
                         data[row, col] = omittedfield_repr
                 except TypeError:
                     if selection is None:
@@ -1410,6 +1309,8 @@ class MainGrid(wx.grid.Grid,
         self.std_row_size = self.GetRowSize(0)
         self.std_col_size = self.GetColSize(0)
         
+        self.SetDefaultCellFont(DEFAULT_FONT)
+        
         # Event bindings
         
         self.Bind(wx.EVT_TEXT, self.OnText)
@@ -1817,7 +1718,7 @@ class MainGrid(wx.grid.Grid,
         
         labelfont = self.GetLabelFont()
         labelfont.SetPointSize(max(1, 
-                            int(round(DEFAULT_FONT_SIZE * self.zoom))))
+                            int(round(faces['size'] * self.zoom))))
         self.SetLabelFont(labelfont)
         
     def OnMouseWheel(self, event):
