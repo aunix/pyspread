@@ -1,3 +1,7 @@
+0.0.14a
+-------
+Font problem fixed (BUG 2942779)
+
 0.0.14
 ------
 + Sparse grid now supports up to 80 000 000 rows

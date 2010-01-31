@@ -152,7 +152,8 @@ elif wx.Platform == '__WXMAC__':
 else:
     faces = { 'times': 'Times',
               'mono' : 'Courier',
-              'helv' : 'Sans',
+              'helv' : wx.SystemSettings.GetFont( \
+                       wx.SYS_DEFAULT_GUI_FONT).GetFaceName(),
               'other': 'new century schoolbook',
               'size' : 10,
               'size2': 8,
