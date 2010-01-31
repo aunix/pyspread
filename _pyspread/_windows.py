@@ -1246,6 +1246,7 @@ class MainWindow(wx.Frame):
                            wx.NORMAL, False, 'Arial')
             
             font.SetNativeFontInfo(nativefontinfo)
+            font.SetPointSize(faces['size'])
 
             istoggled = event.GetEventObject().GetToolState(event.GetId())
 

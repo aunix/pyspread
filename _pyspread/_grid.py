@@ -922,9 +922,22 @@ class GridSelectionMixin(object):
             self.SetFocus()
         self.MakeCellVisible(*key[:2])
         self.SetGridCursor(*key[:2])
-        
+    
     def delete(self, selection=None):
         """Deletes selection"""
+        
+        if selection is None:
+            selection = self.get_selection()
+        for cell in selection:
+            try:
+                self.pysgrid[cell[0], cell[1], self.current_table] = u""
+            except KeyError:
+                #Cell is not there
+                pass
+        self.pysgrid.unredo.mark()
+    
+    def purge(self, selection=None):
+        """Deletes selection including cell attributes"""
         
         if selection is None:
             selection = self.get_selection()
@@ -1657,7 +1670,9 @@ class MainGrid(wx.grid.Grid,
     def OnKeyUp(self, event):
         """Key released event handler"""
         
-        # If shift is released, a new selection is present => redraw
+        # If shift is released, a new selection is present 
+        # => redraw
+        
         if event.GetKeyCode() == 306:
             self.text_renderer.redraw_imminent = True
             self.ForceRefresh()

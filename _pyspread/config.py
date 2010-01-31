@@ -107,8 +107,10 @@ Defines, what actions are mapped on which key for the main window
 
 """
 
-KEYFUNCTIONS = {"Ctrl+A": "MainGrid.SelectAll", \
-                "\x7f": "MainGrid.delete"} # Del key
+KEYFUNCTIONS = {"Ctrl+A": "MainGrid.SelectAll",
+                "\x7f": "MainGrid.delete", # Del key
+                "Shift+\x7f": "MainGrid.purge", # Shift+Del key
+                } 
 
 # Not needed because of menu:
 #            "not_Shift+Ctrl+C": "OnCopy", \

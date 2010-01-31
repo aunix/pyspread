@@ -784,8 +784,8 @@ class UnRedo(object):
     def append(self, undo_operation, operation):
         """Stores an operation and its undo operation in the undolist
         
-        undo_operation: (undo_function, [undo_function_atttribute_1, ...])
-        operation: (redo_function, [redo_function_atttribute_1, ...])
+        undo_operation: (undo_function, [undo_function_attribute_1, ...])
+        operation: (redo_function, [redo_function_attribute_1, ...])
         
         """
         

@@ -1,6 +1,8 @@
 0.0.14a
 -------
-Font problem fixed (BUG 2942779)
++ Font problem fixed (BUG 2942779)
++ Shift+Del now deletes the cell with all attributes
++ Del now deletes only the code
 
 0.0.14
 ------
