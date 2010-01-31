@@ -10,7 +10,7 @@ Program info
 
 """
 
-VERSION = "0.0.14" # The current version of pyspread
+VERSION = "0.0.14a" # The current version of pyspread
 
 
 """
