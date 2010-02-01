@@ -609,7 +609,11 @@ class AttributesToolbar(wx.ToolBar):
         font_style = textfont.GetStyle()
         font_is_underlined = textfont.GetUnderlined()
         
-        fontface_id = self.fonts.index(font_face)
+        try:
+            fontface_id = self.fonts.index(font_face)
+        except ValueError:
+            fontface_id = 0
+        
         self.font_choice_combo.Select(fontface_id)
         
         try:
