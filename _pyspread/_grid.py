@@ -394,8 +394,8 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         return visible_cols
         
-    def draw_visible_backgrounds(self, grid, attr, dc, rect, rows, cols):
-        """Draws all backgrounds for all visible cells"""
+    def draw_backgrounds(self, grid, dc, rect, rows, cols):
+        """Draws backgrounds for cells in rows and cols"""
         
         pysgrid = self.table.pysgrid
         tab = self.table.current_table
@@ -405,52 +405,40 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
                                 for r in vis_cells_rects]
         
         default_bp = get_pen_from_data(default_cell_attributes["borderpen"]())
+        borderpens = [wx.TRANSPARENT_PEN] * len(vis_cells_tuples)
+        bgbrushes = [get_brush_from_data( \
+                    pysgrid.get_sgrid_attr((row, col, tab), "bgbrush")) \
+                        for row in rows for col in cols]
         
-        # Now redraw all cells that have non-standard borders
-        bordered_cells = []
-        
-        for row in rows:
-            for col in cols:
-                key = (row, col, tab)
-                if get_pen_from_data(pysgrid.get_sgrid_attr(key, 
-                    "borderpen")) != default_bp:
-                    bordered_cells.append(key)
-        
-        bordered_cells_rects = (grid.CellToRect(row, col) 
-                                for row, col in bordered_cells)
-        vis_cells_tuples += [(row.x - 1, row.y - 1, 
-                              row.width + 1, row.height + 1) \
-                                for row in bordered_cells_rects]
-        
-        borderpens = []
-        bgbrushes = []
-        
-        for row in rows:
-            for col in cols:
-            
-                key = (row, col, tab)
-                # Create pens
-                borderpen = get_pen_from_data( \
-                    pysgrid.get_sgrid_attr(key, "borderpen"))
-                borderwidth = borderpen.GetWidth()
-                bordercolor = borderpen.GetColour()
-                borderstyle = borderpen.GetStyle()
-
-                zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
-                zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, 
-                                    borderstyle)
-                zoomed_pen.SetJoin(wx.JOIN_MITER)
-
-                borderpens.append(zoomed_pen)
-                colstr = str(borderpen.GetColour())
-
-                # Create brushes
-                bgbrush = get_brush_from_data( \
-                    pysgrid.get_sgrid_attr(key, "bgbrush"))
-                bgbrushes.append(bgbrush)
-        
-        # Draw the background
         dc.DrawRectangleList(vis_cells_tuples, borderpens, bgbrushes)
+        
+    def draw_border_lines(self, grid, dc, rect, row, col):
+        """Draws lines for given cell in row, col"""
+        
+        # Get borderpens and bgbrushes for rects
+        
+        x, y, w, h  = rect.x - 1, rect.y - 1, rect.width, rect.height
+        
+        topline = x, y, x + w, y
+        bottomline = x, y + h, x + w, y + h
+        leftline = x, y, x, y + h
+        rightline = x+ w, y, x + w, y + h
+        lines = (topline, bottomline, leftline, rightline)
+        
+        key = (row, col, self.table.current_table)
+        
+        borderpen = get_pen_from_data( \
+            grid.pysgrid.get_sgrid_attr(key, "borderpen"))
+        borderwidth = borderpen.GetWidth()
+        bordercolor = borderpen.GetColour()
+        borderstyle = borderpen.GetStyle()
+
+        zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
+        zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, 
+                            borderstyle)
+        zoomed_pen.SetJoin(wx.JOIN_MITER)
+        
+        dc.DrawLineList(lines, zoomed_pen)
 
     def draw_selection_background(self, grid, dc, rect):
         """Draws the background for a selected cell"""
@@ -523,8 +511,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             visible_cols = self.get_visible_cols(grid, row, col)
             
             # Draw grid background rects
-            self.draw_visible_backgrounds(grid, attr, dc, rect, 
-                                          visible_rows, visible_cols)
+            self.draw_backgrounds(grid, dc, rect, visible_rows, visible_cols)
             
             # Reset the background draw flag
             if is_bottomright_cell:
@@ -532,6 +519,8 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         if isSelected:
             self.draw_selection_background(grid, dc, rect)
+        
+        self.draw_border_lines(grid, dc, rect, row, col)
         
         textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
         
