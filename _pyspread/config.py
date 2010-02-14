@@ -10,7 +10,8 @@ Program info
 
 """
 
-VERSION = "0.0.14a" # The current version of pyspread
+# The current version of pyspread
+VERSION = "0.0.14b" 
 
 
 """
@@ -181,7 +182,10 @@ selected_cell_brush = wx.Brush(wx.Colour(127, 127, 255), wx.SOLID)
 default_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
 
 default_cell_attributes = {
-    "borderpen": lambda: [wx.Colour(200, 200, 200).GetRGB(), 1, int(wx.SOLID)],
+    "borderpen_bottom": \
+        lambda: [wx.Colour(200, 200, 200).GetRGB(), 1, int(wx.SOLID)],
+    "borderpen_right": \
+        lambda: [wx.Colour(200, 200, 200).GetRGB(), 1, int(wx.SOLID)],
     "bgbrush": lambda: [int(default_color.GetRGB()), int(wx.SOLID)],
     "textattributes": lambda: {},
     "textfont": lambda: unicode(wx.Font(faces['size'], wx.DEFAULT, wx.NORMAL, 
@@ -341,13 +345,37 @@ icons = {"FileNew": _action_path + "filenew.png",
          "AlignCenter": _action_path + "format-text-aligncenter.png", 
          "AlignBottom": _action_path + "format-text-alignbottom.png", 
          "Freeze": _action_path + "frozen_small.png",
+         "AllBorders": _toggle_path + "border_all.xpm",
+         "LeftBorders": _toggle_path + "border_left.xpm",
+         "RightBorders": _toggle_path + "border_right.xpm",
+         "TopBorders": _toggle_path + "border_top.xpm",
+         "BottomBorders": _toggle_path + "border_bottom.xpm",
+         "OutsideBorders": _toggle_path + "border_outside.xpm",
+         "TopBottomBorders": _toggle_path + "border_top_n_bottom.xpm",
          "SearchDirectionUp": _toggle_path + "go-down.png",
          "SearchDirectionDown": _toggle_path + "go-up.png",
          "SearchCaseSensitive": _toggle_path + "aA.png",
          "SearchRegexp": _toggle_path + "regex.png",
          "SearchWholeword": _toggle_path + "wholeword.png",
          }
+         
+"""
+Border toggles
+==============
 
+Toggles for border changes, points to (top, bottom, left, right, inner, outer)
+
+"""
+
+border_toggles = { \
+    "AllBorders":       (1, 1, 1, 1, 1, 1),
+    "LeftBorders":      (0, 0, 1, 0, 1, 1),
+    "RightBorders":     (0, 0, 0, 1, 1, 1),
+    "TopBorders":       (1, 0, 0, 0, 1, 1),
+    "BottomBorders":    (0, 1, 0, 0, 1, 1),
+    "OutsideBorders":   (1, 1, 1, 1, 0, 1),
+    "TopBottomBorders": (1, 1, 0, 0, 0, 1),
+}
 
 """
 ODF tags

@@ -39,7 +39,7 @@ Provides:
 import wx
 import wx.lib.colourselect as csel
 
-from _pyspread.config import icons, odftags, FONT_SIZES
+from _pyspread.config import icons, odftags, border_toggles, FONT_SIZES
 
 from _pyspread._interfaces import get_font_list
 import _widgets
@@ -474,6 +474,7 @@ class AttributesToolbar(wx.ToolBar):
         self._create_font_face_buttons()
         self._create_justification_button()
         self._create_alignment_button()
+        self._create_borderchoice_combo()
         self._create_penwidth_combo()
         self._create_color_buttons()
         self._create_textrotation_spinctrl()
@@ -549,6 +550,20 @@ class AttributesToolbar(wx.ToolBar):
         self.Bind(wx.EVT_BUTTON, self.parent.OnToolClick, 
                     self.alignment_tb)
         self.AddControl(self.alignment_tb)
+    
+    def _create_borderchoice_combo(self):
+        """Create border choice combo box"""
+        
+        self.pen_width_combo = _widgets.BorderEditChoice(self, 
+                                choices=border_toggles.keys(), \
+                                style=wx.CB_READONLY, size=(50, -1))
+        
+        self.AddControl(self.pen_width_combo)
+        
+        self.Bind(wx.EVT_COMBOBOX, self.parent.OnBorderChoice, 
+                    self.pen_width_combo)
+        
+        self.pen_width_combo.SetValue("AllBorders")
     
     def _create_penwidth_combo(self):
         """Create pen width combo box"""

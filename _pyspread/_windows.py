@@ -55,7 +55,7 @@ from _pyspread._interfaces import CsvInterfaces, PysInterfaces, \
             string_match, bzip_dump, is_pyme_present, genkey, sign, verify
 
 from _pyspread.config import ICONPREFIX, icon_size, KEYFUNCTIONS, \
-            faces, odftags
+            faces, odftags, border_toggles
 
 
 class MainWindow(wx.Frame):
@@ -143,6 +143,7 @@ class MainWindow(wx.Frame):
         self.MainGrid.mainwindow = self
         self.MainGrid.deletion_imminent = False
         self.filepath = None # No file loaded yet
+        self.borderstate = "AllBorders" # For color and width changes
     
     def _set_properties(self):
         """Setup title, icon, size, scale, statusbar, main grid"""
@@ -1050,6 +1051,48 @@ class MainWindow(wx.Frame):
         else:
             return [self._getkey()]
     
+    def OnBorderChoice(self, event):
+        """Change the borders that are affected by color and width changes"""
+        
+        choicelist = event.GetEventObject().GetItems()
+        self.borderstate = choicelist[event.GetInt()]
+    
+    def get_chosen_borders(self, keys):
+        """Returns 2-tuple of bottom and right borderlines to be changed
+        
+        {"borderpen_bottom": [keys], "borderpen_right":[keys]}
+        
+        where [keys] are lists of cell keys with border line adjustments
+        
+        """
+        
+        bottom_keys = []
+        right_keys = []
+        
+        # top, bottom, left, right, inner, outer
+        btoggles = border_toggles[self.borderstate]
+        
+        min_x = min(x for x, y, z in keys)
+        max_x = max(x for x, y, z in keys)
+        min_y = min(y for x, y, z in keys)
+        max_y = max(y for x, y, z in keys)
+        
+        for key in keys:
+            if btoggles[0] and key[0] > 0:
+                # Top border
+                bottom_keys.append((key[0] - 1, key[1], key[2]))
+            if btoggles[1]:
+                # Bottom border
+                bottom_keys.append(key)
+            if btoggles[2] and key[1] > 0:
+                # Left border
+                right_keys.append((key[0], key[1] - 1, key[2]))
+            if btoggles[3]:
+                # Right border
+                right_keys.append(key)
+        
+        return (bottom_keys, right_keys)
+    
     def OnLineColor(self, event):
         """Change the line color of current cell/selection border"""
         
@@ -1060,14 +1103,27 @@ class MainWindow(wx.Frame):
         
         color = event.GetValue()
         
-        for key in keys:
-            pysgrid.create_sgrid_attribute(key, "borderpen")
+        bottom_keys, right_keys = self.get_chosen_borders(keys)
+        
+        for key in bottom_keys:
+            pysgrid.create_sgrid_attribute(key, "borderpen_bottom")
             
             try:
-                sgrid[key].borderpen[0] = color.GetRGB()
+                sgrid[key].borderpen_bottom[0] = color.GetRGB()
             except KeyError:
-                sgrid[key].borderpen = default_cell_attributes["borderpen"]()
-                sgrid[key].borderpen[0] = color.GetRGB()
+                sgrid[key].borderpen_bottom = \
+                    default_cell_attributes["borderpen_bottom"]()
+                sgrid[key].borderpen_bottom[0] = color.GetRGB()
+        
+        for key in right_keys:
+            pysgrid.create_sgrid_attribute(key, "borderpen_right")
+            
+            try:
+                sgrid[key].borderpen_right[0] = color.GetRGB()
+            except KeyError:
+                sgrid[key].borderpen_right = \
+                    default_cell_attributes["borderpen_right"]()
+                sgrid[key].borderpen_right[0] = color.GetRGB()
         
         self.MainGrid.ForceRefresh()
         
@@ -1080,6 +1136,7 @@ class MainWindow(wx.Frame):
         sgrid = pysgrid.sgrid
         
         keys = self._get_key_list()
+        bottom_keys, right_keys = self.get_chosen_borders(keys)
         
         linewidth_combobox = event.GetEventObject()
         idx = event.GetInt()
@@ -1089,15 +1146,28 @@ class MainWindow(wx.Frame):
         else:
             penstyle = wx.SOLID
         
-        for key in keys:
-            pysgrid.create_sgrid_attribute(key, "borderpen")
+        for key in right_keys:
+            pysgrid.create_sgrid_attribute(key, "borderpen_right")
             try:
-                sgrid[key].borderpen[1] = line_width
-                sgrid[key].borderpen[2] = int(penstyle)
+                sgrid[key].borderpen_right[1] = line_width
+                sgrid[key].borderpen_right[2] = int(penstyle)
             except KeyError:
-                sgrid[key].borderpen = default_cell_attributes["borderpen"]()
-                sgrid[key].borderpen[1] = line_width
-                sgrid[key].borderpen[2] = int(penstyle)
+                sgrid[key].borderpen_right = \
+                    default_cell_attributes["borderpen_right"]()
+                sgrid[key].borderpen_right[1] = line_width
+                sgrid[key].borderpen_right[2] = int(penstyle)
+
+        
+        for key in bottom_keys:
+            pysgrid.create_sgrid_attribute(key, "borderpen_bottom")
+            try:
+                sgrid[key].borderpen_bottom[1] = line_width
+                sgrid[key].borderpen_bottom[2] = int(penstyle)
+            except KeyError:
+                sgrid[key].borderpen_bottom = \
+                    default_cell_attributes["borderpen_bottom"]()
+                sgrid[key].borderpen_bottom[1] = line_width
+                sgrid[key].borderpen_bottom[2] = int(penstyle)
         
         self.MainGrid.ForceRefresh()
         

@@ -404,7 +404,6 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         vis_cells_tuples = [(r.x - 1, r.y - 1, r.width + 1, r.height + 1) \
                                 for r in vis_cells_rects]
         
-        default_bp = get_pen_from_data(default_cell_attributes["borderpen"]())
         borderpens = [wx.TRANSPARENT_PEN] * len(vis_cells_tuples)
         bgbrushes = [get_brush_from_data( \
                     pysgrid.get_sgrid_attr((row, col, tab), "bgbrush")) \
@@ -419,26 +418,32 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         x, y, w, h  = rect.x - 1, rect.y - 1, rect.width, rect.height
         
-        topline = x, y, x + w, y
+        # Each cell draws its bottom and its right line only
         bottomline = x, y + h, x + w, y + h
-        leftline = x, y, x, y + h
         rightline = x+ w, y, x + w, y + h
-        lines = (topline, bottomline, leftline, rightline)
+        lines = (bottomline, rightline)
         
         key = (row, col, self.table.current_table)
         
-        borderpen = get_pen_from_data( \
-            grid.pysgrid.get_sgrid_attr(key, "borderpen"))
-        borderwidth = borderpen.GetWidth()
-        bordercolor = borderpen.GetColour()
-        borderstyle = borderpen.GetStyle()
-
-        zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
-        zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, 
-                            borderstyle)
-        zoomed_pen.SetJoin(wx.JOIN_MITER)
+        pen_names = ["borderpen_bottom", "borderpen_right"]
         
-        dc.DrawLineList(lines, zoomed_pen)
+        borderpens = [get_pen_from_data(grid.pysgrid.get_sgrid_attr(key, pen)) \
+                        for pen in pen_names]
+        
+        zoomed_pens = []
+        
+        for pen in borderpens:
+            bordercolor = pen.GetColour()
+            borderwidth = pen.GetWidth()
+            borderstyle = pen.GetStyle()
+            
+            zoomed_borderwidths = max(1, int(round(borderwidth * grid.zoom)))
+            zoomed_pen = wx.Pen(bordercolor, borderwidth, borderstyle)
+            zoomed_pen.SetJoin(wx.JOIN_MITER)
+            
+            zoomed_pens.append(zoomed_pen)
+        
+        dc.DrawLineList(lines, zoomed_pens)
 
     def draw_selection_background(self, grid, dc, rect):
         """Draws the background for a selected cell"""
@@ -1539,7 +1544,7 @@ class MainGrid(wx.grid.Grid,
         
         bgbrush_data = pysgrid.get_sgrid_attr(self.key, "bgbrush")
         
-        borderpen_data = pysgrid.get_sgrid_attr(self.key, "borderpen")
+        borderpen_data = pysgrid.get_sgrid_attr(self.key, "borderpen_bottom")
         
         self.parent.attributes_toolbar.update(\
             textfont=textfont, textattributes=textattributes,

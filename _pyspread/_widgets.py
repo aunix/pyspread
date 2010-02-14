@@ -32,9 +32,11 @@ Provides:
   2. CollapsiblePane: Collapsible pane with basic toggle mechanism
   3. MacroEditPanel: Collapsible label, parameter entry area and editor
   4. SortedListCtrl: ListCtrl with items sorted in first column
-  5. PenStyleComboBox: ComboBox for border pen style selection
-  6. FontChoiceCombobox: ComboBox for font selection
-  7. BitmapToggleButton: Button that toggles through a list of bitmaps
+  5. ImageComboBox: Base class for image combo boxes
+  6. PenStyleComboBox: ComboBox for border pen style selection
+  7. FontChoiceCombobox: ComboBox for font selection
+  8. BorderEditChoice: ComboBox for border selection
+  9. BitmapToggleButton: Button that toggles through a list of bitmaps
 
 """
 
@@ -46,7 +48,7 @@ import wx.combo
 import wx.stc  as  stc
 import wx.lib.mixins.listctrl  as  listmix
 
-from _pyspread.config import faces, text_styles, fold_symbol_style
+from _pyspread.config import faces, text_styles, fold_symbol_style, icons
 
 class CollapsiblePane(wx.CollapsiblePane):
     """Collapsible pane with basic toggle mechanism
@@ -273,7 +275,39 @@ class PythonSTC(stc.StyledTextCtrl):
 # end of class PythonSTC
 
 
-class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
+class ImageComboBox(wx.combo.OwnerDrawnComboBox):
+    """Base class for image combo boxes
+    
+    The class provides alternating backgrounds. Stolen from demo.py
+    
+    """
+    
+    def OnDrawBackground(self, dc, rect, item, flags):
+        """Called for drawing the background area of each item
+        
+        Overridden from OwnerDrawnComboBox
+        
+        """
+        
+        # If the item is selected, or its item is even, 
+        # or if we are painting the combo control itself
+        # then use the default rendering.
+        
+        if (item & 1 == 0 or flags & (wx.combo.ODCB_PAINTING_CONTROL |
+                                      wx.combo.ODCB_PAINTING_SELECTED)):
+            wx.combo.OwnerDrawnComboBox.OnDrawBackground(self, dc, 
+                                                         rect, item, flags)
+            return
+        
+        # Otherwise, draw every other background with 
+        # different color.
+        
+        bg_color = wx.Colour(240, 240, 250)
+        dc.SetBrush(wx.Brush(bg_color))
+        dc.SetPen(wx.Pen(bg_color))
+        dc.DrawRectangleRect(rect)
+
+class PenStyleComboBox(ImageComboBox):
     """Combo box for choosing line styles for cell borders
     
     Stolen from demo.py
@@ -281,8 +315,8 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
     """
     
     def OnDrawItem(self, dc, rect, item, flags):
+        
         if item == wx.NOT_FOUND:
-            # painting the control, but there is no valid item selected yet
             return
         
         r = wx.Rect(*rect)  # make a copy
@@ -328,27 +362,6 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
             dc.DrawLine(r.x+5, r.y+((r.height/4)*3)+1, 
                         r.x+r.width - 5, r.y+((r.height/4)*3)+1)
     
-    def OnDrawBackground(self, dc, rect, item, flags):
-        """Called for drawing the background area of each item
-        
-        Overridden from OwnerDrawnComboBox
-        
-        """
-        
-        # If the item is selected, or its item # iseven, or we are painting the
-        # combo control itself, then use the default rendering.
-        if (item & 1 == 0 or flags & (wx.combo.ODCB_PAINTING_CONTROL |
-                                      wx.combo.ODCB_PAINTING_SELECTED)):
-            wx.combo.OwnerDrawnComboBox.OnDrawBackground(self, dc, 
-                                                         rect, item, flags)
-            return
-        
-        # Otherwise, draw every other background with different colour.
-        bg_color = wx.Colour(240, 240, 250)
-        dc.SetBrush(wx.Brush(bg_color))
-        dc.SetPen(wx.Pen(bg_color))
-        dc.DrawRectangleRect(rect)
-    
     def OnMeasureItem(self, item):
         """should return the height needed to display an item in the popup, 
         or -1 for default
@@ -373,12 +386,12 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
     
 # end of class PenStyleComboBox
 
-class PenWidthComboBox(wx.combo.OwnerDrawnComboBox):
+class PenWidthComboBox(ImageComboBox):
     """Combo box for choosing line width for cell borders"""
     
     def OnDrawItem(self, dc, rect, item, flags):
+    
         if item == wx.NOT_FOUND:
-            # painting the control, but there is no valid item selected yet
             return
         
         r = wx.Rect(*rect)  # make a copy
@@ -402,53 +415,14 @@ class PenWidthComboBox(wx.combo.OwnerDrawnComboBox):
             dc.DrawLine(r.x + 5, r.y + r.height / 2, 
                         r.x + r.width - 5, r.y + r.height / 2)
     
-    def OnDrawBackground(self, dc, rect, item, flags):
-        """Called for drawing the background area of each item
-        
-        Overridden from OwnerDrawnComboBox
-        
-        """
-        
-        # If the item is selected, or its item # iseven, or we are painting the
-        # combo control itself, then use the default rendering.
-        if (item & 1 == 0 or flags & (wx.combo.ODCB_PAINTING_CONTROL |
-                                      wx.combo.ODCB_PAINTING_SELECTED)):
-            wx.combo.OwnerDrawnComboBox.OnDrawBackground(self, dc, 
-                                                         rect, item, flags)
-            return
-        
-        # Otherwise, draw every other background with different colour.
-        bg_color = wx.Colour(240, 240, 250)
-        dc.SetBrush(wx.Brush(bg_color))
-        dc.SetPen(wx.Pen(bg_color))
-        dc.DrawRectangleRect(rect)
-    
-    def OnMeasureItem(self, item):
-        """should return the height needed to display an item in the popup, 
-        or -1 for default
-        
-        Overridden from OwnerDrawnComboBox
-        
-        """
-        
-        return -1
-    
-    def OnMeasureItemWidth(self, item):
-        """Callback for item width, or -1 for default/undetermined
-        
-        Overridden from OwnerDrawnComboBox
-        
-        """
-        return -1 # default - will be measured from text width
-    
 # end of class PenWidthComboBox
 
-class FontChoiceCombobox(wx.combo.OwnerDrawnComboBox):
+class FontChoiceCombobox(ImageComboBox):
     """Combo box for choosing fonts"""
     
     def OnDrawItem(self, dc, rect, item, flags):
+        
         if item == wx.NOT_FOUND:
-            # painting the control, but there is no valid item selected yet
             return
         
         __rect = wx.Rect(*rect)  # make a copy
@@ -462,30 +436,40 @@ class FontChoiceCombobox(wx.combo.OwnerDrawnComboBox):
         text_x = __rect.x
         text_y = __rect.y + int((__rect.height - text_height) / 2.0)
         dc.DrawText(font_string, text_x, text_y)
-    
-    def OnDrawBackground(self, dc, rect, item, flags):
-        """Called for drawing the background area of each item
-        
-        Overridden from OwnerDrawnComboBox
-        
-        """
-        
-        # If the item is selected, or its item # iseven, or we are painting the
-        # combo control itself, then use the default rendering.
-        if (item & 1 == 0 or flags & (wx.combo.ODCB_PAINTING_CONTROL |
-                                      wx.combo.ODCB_PAINTING_SELECTED)):
-            wx.combo.OwnerDrawnComboBox.OnDrawBackground(self, dc, 
-                                                         rect, item, flags)
-            return
-        
-        # Otherwise, draw every other background with different colour.
-        bg_color = wx.Colour(240, 240, 250)
-        dc.SetBrush(wx.Brush(bg_color))
-        dc.SetPen(wx.Pen(bg_color))
-        dc.DrawRectangleRect(rect)
 
 
 # end of class FontChoiceCombobox
+
+class BorderEditChoice(ImageComboBox):
+    """Combo box for selecting the cell borders that shall be changed"""
+    
+    def OnDrawItem(self, dc, rect, item, flags):
+    
+        if item == wx.NOT_FOUND:
+            return
+        
+        r = wx.Rect(*rect)  # make a copy
+        item_name = self.GetItems()[item]
+        icon = wx.Icon(icons[item_name], wx.BITMAP_TYPE_XPM)
+        dc.DrawIcon(icon, r.x, r.y)
+    
+    def OnMeasureItem(self, item):
+        """Returns the height of the items in the popup"""
+        
+        item_name = self.GetItems()[item]
+        icon = wx.Icon(icons[item_name], wx.BITMAP_TYPE_XPM)
+        
+        return icon.GetHeight()
+
+    def OnMeasureItemWidth(self, item):
+        """Returns the height of the items in the popup"""
+        
+        item_name = self.GetItems()[item]
+        icon = wx.Icon(icons[item_name], wx.BITMAP_TYPE_XPM)
+        
+        return icon.GetWidth()
+
+# end of class BorderEditChoice
 
 class BitmapToggleButton(wx.BitmapButton):
     """Toggle button that goes through a list of bitmaps

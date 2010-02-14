@@ -1,3 +1,8 @@
+0.0.14b
+-------
++ Cell borders can now be changed independently
+
+
 0.0.14a
 -------
 + Font problem fixed (BUG 2942779)

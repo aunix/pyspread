@@ -86,7 +86,8 @@ class PyspreadGrid(object):
         
         self.unredo = UnRedo()
         
-        self.safe_mode = False # Values are results for all cells if True
+        self.safe_mode = False # Values are results for all cells 
+                               # if True
         
         self.frozen_cells = {} # Values are results for frozen cells
         
