@@ -350,6 +350,7 @@ icons = {"FileNew": _action_path + "filenew.png",
          "RightBorders": _toggle_path + "border_right.xpm",
          "TopBorders": _toggle_path + "border_top.xpm",
          "BottomBorders": _toggle_path + "border_bottom.xpm",
+         "InsideBorders": _toggle_path + "border_inside.xpm",
          "OutsideBorders": _toggle_path + "border_outside.xpm",
          "TopBottomBorders": _toggle_path + "border_top_n_bottom.xpm",
          "SearchDirectionUp": _toggle_path + "go-down.png",
@@ -367,15 +368,16 @@ Toggles for border changes, points to (top, bottom, left, right, inner, outer)
 
 """
 
-border_toggles = { \
-    "AllBorders":       (1, 1, 1, 1, 1, 1),
-    "LeftBorders":      (0, 0, 1, 0, 1, 1),
-    "RightBorders":     (0, 0, 0, 1, 1, 1),
-    "TopBorders":       (1, 0, 0, 0, 1, 1),
-    "BottomBorders":    (0, 1, 0, 0, 1, 1),
-    "OutsideBorders":   (1, 1, 1, 1, 0, 1),
-    "TopBottomBorders": (1, 1, 0, 0, 0, 1),
-}
+border_toggles = [ \
+    ("AllBorders",       (1, 1, 1, 1, 1, 1)),
+    ("LeftBorders",      (0, 0, 1, 0, 1, 1)),
+    ("RightBorders",     (0, 0, 0, 1, 1, 1)),
+    ("TopBorders",       (1, 0, 0, 0, 1, 1)),
+    ("BottomBorders",    (0, 1, 0, 0, 1, 1)),
+    ("InsideBorders",    (1, 1, 1, 1, 1, 0)),
+    ("OutsideBorders",   (1, 1, 1, 1, 0, 1)),
+    ("TopBottomBorders", (1, 1, 0, 0, 0, 1)),
+]
 
 """
 ODF tags

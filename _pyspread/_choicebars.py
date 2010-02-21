@@ -555,7 +555,7 @@ class AttributesToolbar(wx.ToolBar):
         """Create border choice combo box"""
         
         self.pen_width_combo = _widgets.BorderEditChoice(self, 
-                                choices=border_toggles.keys(), \
+                                choices=[c[0] for c in border_toggles], \
                                 style=wx.CB_READONLY, size=(50, -1))
         
         self.AddControl(self.pen_width_combo)

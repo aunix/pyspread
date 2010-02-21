@@ -1070,12 +1070,21 @@ class MainWindow(wx.Frame):
         right_keys = []
         
         # top, bottom, left, right, inner, outer
-        btoggles = border_toggles[self.borderstate]
+        for borderstate, toggles in border_toggles:
+            if self.borderstate == borderstate:
+                btoggles = toggles
+                break
         
         min_x = min(x for x, y, z in keys)
         max_x = max(x for x, y, z in keys)
         min_y = min(y for x, y, z in keys)
         max_y = max(y for x, y, z in keys)
+        
+        # Returns True if a right key is outer key
+        is_inner_r = lambda key: min_x <= key[0] <= max_x and \
+                                 min_y <= key[1] < max_y
+        is_inner_b = lambda key: min_x <= key[0] < max_x and \
+                                 min_y <= key[1] <= max_y
         
         for key in keys:
             if btoggles[0] and key[0] > 0:
@@ -1090,6 +1099,14 @@ class MainWindow(wx.Frame):
             if btoggles[3]:
                 # Right border
                 right_keys.append(key)
+            if not btoggles[4]:
+                # Inner borders
+                right_keys = [key for key in right_keys if not is_inner_r(key)]
+                bottom_keys= [key for key in bottom_keys if not is_inner_b(key)]
+            if not btoggles[5]:
+                # Outer borders
+                right_keys = [key for key in right_keys if is_inner_r(key)]
+                bottom_keys = [key for key in bottom_keys if is_inner_b(key)]
         
         return (bottom_keys, right_keys)
     
