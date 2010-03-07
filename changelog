@@ -1,6 +1,9 @@
 0.0.14b
 -------
-+ Cell borders can now be changed independently
++ Cell borders can now be changed independently (done)
++ Most upper and left borders of grid
++ Cells access using negative indices, when not slicing (BUG:)
+ 
 
 
 0.0.14a

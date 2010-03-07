@@ -635,22 +635,22 @@ class MainWindow(wx.Frame):
         
         # Set up window
         
-        tutorial_window = wx.Frame(self, -1, "Pyspread tutorial", 
+        help_window = wx.Frame(self, -1, "Pyspread help", 
                                    wx.DefaultPosition, wx.Size(600, 500))
-        tutorial = wx.html.HtmlWindow(tutorial_window, -1, 
+        help_htmlwindow = wx.html.HtmlWindow(help_window, -1, 
                             wx.DefaultPosition, wx.Size(600, 500))
         
-        # Get tutorial data
+        # Get help data
         current_path = os.getcwd()
         os.chdir(self.module_path)
-        tutorial_file = open(filename, "r")
-        tutorial_html = tutorial_file.read()
-        tutorial_file.close()
+        help_file = open(filename, "r")
+        help_html = help_file.read()
+        help_file.close()
         
         # Show tutorial window
         
-        tutorial.SetPage(tutorial_html)
-        tutorial_window.Show()
+        help_htmlwindow.SetPage(help_html)
+        help_window.Show()
         
         os.chdir(current_path)
     

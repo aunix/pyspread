@@ -1021,8 +1021,8 @@ class AboutDialog(object):
         info.Version = VERSION
         info.Copyright = "(C) Martin Manns 2008-2010"
         info.Description = wordwrap( 
-            "A cross-platform Python spreadsheet application.\n"
-            "It is based on and written in the programming language Python.",
+            "A cross-platform Python spreadsheet application.\nPyspread is "
+            "based on and written in the programming language Python.",
             350, wx.ClientDC(parent))
         info.WebSite = ("http://pyspread.sourceforge.net", 
                         "Pyspread Web site")
