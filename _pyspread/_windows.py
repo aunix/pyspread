@@ -514,8 +514,6 @@ class MainWindow(wx.Frame):
         
         except TypeError:
             return 0
-            
-        #csvfilename = os.path.split(path)[1]
         
         # Export file
         csv_interface = CsvInterfaces(path, dialect, digest_types, has_header)
@@ -1090,12 +1088,16 @@ class MainWindow(wx.Frame):
             if btoggles[0] and key[0] > 0:
                 # Top border
                 bottom_keys.append((key[0] - 1, key[1], key[2]))
+            elif btoggles[0] and key[0] == 0:
+                bottom_keys.append(("top", key[1], key[2]))
             if btoggles[1]:
                 # Bottom border
                 bottom_keys.append(key)
             if btoggles[2] and key[1] > 0:
                 # Left border
                 right_keys.append((key[0], key[1] - 1, key[2]))
+            elif btoggles[2] and key[1] == 0:
+                right_keys.append((key[0], "left", key[2]))
             if btoggles[3]:
                 # Right border
                 right_keys.append(key)

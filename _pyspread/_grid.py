@@ -418,17 +418,35 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         x, y, w, h  = rect.x - 1, rect.y - 1, rect.width, rect.height
         
+        tab = self.table.current_table
+        
         # Each cell draws its bottom and its right line only
         bottomline = x, y + h, x + w, y + h
         rightline = x+ w, y, x + w, y + h
-        lines = (bottomline, rightline)
+        lines = [bottomline, rightline]
         
-        key = (row, col, self.table.current_table)
+        key = (row, col, tab)
         
         pen_names = ["borderpen_bottom", "borderpen_right"]
         
         borderpens = [get_pen_from_data(grid.pysgrid.get_sgrid_attr(key, pen)) \
                         for pen in pen_names]
+        
+        # Topmost line if in top cell
+        
+        if row == 0:
+            lines.append((x, y, x + w, y))
+            topkey = "top", col, tab
+            toppen_data  = grid.pysgrid.get_sgrid_attr(topkey, pen_names[0])
+            borderpens.append(get_pen_from_data(toppen_data))
+        
+        # Leftmost line if in left cell
+        
+        if col == 0:
+            lines.append((x, y, x, y + h))
+            leftkey = row, "left", tab
+            toppen_data  = grid.pysgrid.get_sgrid_attr(leftkey, pen_names[1])
+            borderpens.append(get_pen_from_data(toppen_data))
         
         zoomed_pens = []
         
@@ -437,8 +455,8 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             borderwidth = pen.GetWidth()
             borderstyle = pen.GetStyle()
             
-            zoomed_borderwidths = max(1, int(round(borderwidth * grid.zoom)))
-            zoomed_pen = wx.Pen(bordercolor, borderwidth, borderstyle)
+            zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
+            zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, borderstyle)
             zoomed_pen.SetJoin(wx.JOIN_MITER)
             
             zoomed_pens.append(zoomed_pen)
@@ -461,8 +479,6 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
     def _draw_strikethrough_line(self, grid, attr, dc, rect, angle, 
                                  string_x, string_y, text_extent):
         """Draws the strikethrough line"""
-        
-        # wx.FONTFLAG_STRIKETHROUGH
 
         strikethroughwidth = max(1, int(round(1.5 * grid.zoom)))
         dc.SetPen(wx.Pen(wx.BLACK, strikethroughwidth, wx.SOLID))

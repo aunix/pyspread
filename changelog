@@ -1,7 +1,7 @@
 0.0.14b
 -------
 + Cell borders can now be changed independently (done)
-+ Most upper and left borders of grid
++ Most upper and left borders of grid need upper / left border (done)
 + Cells access using negative indices, when not slicing (done)
  
 
