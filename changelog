@@ -2,7 +2,7 @@
 -------
 + Cell borders can now be changed independently (done)
 + Most upper and left borders of grid
-+ Cells access using negative indices, when not slicing (BUG:)
++ Cells access using negative indices, when not slicing (done)
  
 
 
