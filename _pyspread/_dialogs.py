@@ -336,10 +336,8 @@ class CsvParameterWidgets(object):
             csv.register_dialect('user', **parameters)
         
         except TypeError, err:
-            dlg = wx.MessageDialog(self.parent, \
-                'The dialect is invalid. \n \nError message:\n' + \
-                str(err),
-                style=wx.ID_CANCEL)
+            msg = 'The dialect is invalid. \n \nError message:\n' + str(err)
+            dlg = wx.MessageDialog(self.parent, msg, style=wx.ID_CANCEL)
             dlg.ShowModal()
             dlg.Destroy()
             raise TypeError, err

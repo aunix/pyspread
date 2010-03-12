@@ -43,6 +43,8 @@ import wx
 import wx.aui
 import wx.grid
 import wx.html
+import wx.lib.agw.genericmessagedialog as gmd
+
 import _pyspread._printout as printout
 
 import _pyspread._grid as _grid
@@ -258,38 +260,6 @@ class MainWindow(wx.Frame):
         if event.GetKeyCode():
             event.Skip()
     
-    def _confirm_largegrid(self, dim):
-        """
-        Asks on large grid dimensions
-        
-        Returns True if grid not large or large grid accepted.
-        Returns False otherwise
-        
-        Parameters
-        ----------
-        dim: n-tuple of int > 0
-        \tDimensions of an n-dim grid
-        
-        """
-        
-        no_gridcells = reduce(lambda x, y: x*y, dim)
-        
-        if no_gridcells >= 2**28:
-            dlg = wx.MessageDialog(self, 'The grid has ' + \
-                unicode(no_gridcells) + ' cells.\n' + \
-                'You may run out of memory.\n' + \
-                'On 32 bit systems, the operation will likely fail.' + \
-                'Do you want to continue?',
-                'Memory alert',
-                wx.OK | wx.CANCEL | wx.ICON_INFORMATION)
-            
-            res = dlg.ShowModal()
-            dlg.Destroy()
-            
-            if res != wx.ID_OK:
-                return False
-        return True
-    
     def OnFileNew(self, event):
         """Creates a new grid and destroys the old one"""
         
@@ -301,9 +271,6 @@ class MainWindow(wx.Frame):
         dim_dialog.Destroy()
         
         dimensions = tuple(dim_dialog.dimensions)
-        
-        if not self._confirm_largegrid(dimensions):
-            return False
         
         self.Destroy()
         self = MainWindow(None, dimensions=dimensions)
@@ -352,8 +319,15 @@ class MainWindow(wx.Frame):
                 file_approve_menuitem = \
                     self.main_menu.methodname_item["OnFileApprove"]
                 file_approve_menuitem.Enable(True)
-            
-            self.MainGrid.loadfile(self.filepath, self.wildcard_interface)
+                
+            try:
+                self.MainGrid.loadfile(self.filepath, self.wildcard_interface)
+            except IOError:
+                msg =  "Could not read file " + self.filepath
+                dlg = gmd.GenericMessageDialog(self, msg, 'File read error',
+                    wx.CANCEL | wx.ICON_ERROR)
+                dlg.ShowModal()
+                dlg.Destroy()
             
             self.MainGrid.OnCombo(event)
             self.MainGrid.ForceRefresh()
@@ -369,10 +343,9 @@ class MainWindow(wx.Frame):
             signfile.write(signature)
             signfile.close()
         else:
-            dlg = wx.MessageDialog(self, 'Cannot sign file!',
-                                  'Cannot sign the file. '
-                                  'Maybe PyMe is not installed',
-                                  wx.CANCEL)
+            msg = 'Cannot sign the file. Maybe PyMe is not installed.'
+            dlg = gmd.GenericMessageDialog(self, msg, 'Cannot sign file!',
+                wx.CANCEL | wx.ICON_WARNING)
             dlg.ShowModal()
             dlg.Destroy()
     
@@ -433,12 +406,12 @@ class MainWindow(wx.Frame):
         try:
             filterdlg = CsvImportDialog(self, csvfilepath=path)
         except csv.Error, err:
-            dlg = wx.MessageDialog(self, \
-                'The file "' + csvfilename + '" does not seem to be ' + \
-                'a valid CSV file.\n \nOpening it yielded the error:\n' + \
-                str(err), \
-                'Error opening CSV file', \
-                style=wx.ID_CANCEL)
+            msg = csvfilename + '" does not seem to be a valid CSV file.' + \
+                '\n \nOpening it yielded the error:\n' + str(err)
+                
+            dlg = gmd.GenericMessageDialog(self, msg, 
+                'Error opening CSV file', style=wx.ID_CANCEL | wx.ICON_ERROR)
+            
             dlg.ShowModal()
             dlg.Destroy()
             return False
@@ -465,12 +438,12 @@ class MainWindow(wx.Frame):
         try:
             csv_interface.read(self.MainGrid.pysgrid, key=topleftcell)
         except ValueError, err:
-            dlg = wx.MessageDialog(self, \
-                'The file "' + csvfilename + '" has only been loaded ' + \
-                'partly. \n \nError message:\n' + \
-                str(err), \
-                'Error reading CSV file', \
-                style=wx.ID_OK)
+            msg = 'The file "' + csvfilename + '" has only been loaded ' + \
+                'partly. \n \nError message:\n' + str(err)
+                
+            dlg = gmd.GenericMessageDialog(self, msg, 
+                'Error reading CSV file', style=wx.ID_OK | wx.ICON_INFORMATION)
+            
             dlg.ShowModal()
             dlg.Destroy()
         self.MainGrid.ForceRefresh()
@@ -520,12 +493,12 @@ class MainWindow(wx.Frame):
         try:
             csv_interface.write(data)
         except IOError, err:
-            dlg = wx.MessageDialog(self, \
-                'The file "' + path + '" could not be fully written ' + \
-                '\n \nError message:\n' + \
-                str(err), \
-                'Error writing CSV file', \
-                style=wx.ID_OK)
+            msg = 'The file "' + path + '" could not be fully written ' + \
+                  '\n \nError message:\n' + str(err)
+                  
+            dlg = gmd.GenericMessageDialog(self, msg, 
+                'Error writing CSV file', style=wx.ID_OK | wx.ICON_ERROR)
+                
             dlg.ShowModal()
             dlg.Destroy()
 
@@ -536,10 +509,9 @@ class MainWindow(wx.Frame):
             return None
         
         # The file can damage the system --> Ask again
-        import wx.lib.agw.genericmessagedialog as GMD
         from config import file_approval_warning as warning
         
-        dlg = GMD.GenericMessageDialog(self, warning, "Security warning",
+        dlg = gmd.GenericMessageDialog(self, warning, "Security warning",
             wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING)
         if dlg.ShowModal() == wx.ID_YES:
             proceed = True
@@ -728,21 +700,12 @@ class MainWindow(wx.Frame):
         
         dimensions = tuple(dim_dialog.dimensions)
         
-        #print dimensions
-        
-        if not self._confirm_largegrid(dimensions):
-            return False
-        
         # Check for each dimension, how many items are inserted or deleted
         dim_diff = [dimensions[i] - self.MainGrid.pysgrid.shape[i] \
                         for i in xrange(3)]
-                        
-        #print dim_diff
         
         for dim, diff in enumerate(dim_diff):
             self.MainGrid.change_dim(dim, diff)
-        
-        #print self.MainGrid.pysgrid.shape
         
         self.MainGrid.pysgrid.unredo.reset()
     
