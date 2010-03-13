@@ -79,8 +79,7 @@ try:
 except ImportError:
     pass
 
-from _pyspread.config import VERSION, SNIFF_SIZE, default_dimensions, dpi, \
-                             splash_image_path
+from _pyspread.config import VERSION, SNIFF_SIZE, default_dimensions, dpi
 
 DEFAULT_FONT = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
 

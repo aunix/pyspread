@@ -66,7 +66,7 @@ from _pyspread.config import odftags, DEFAULT_FONT, faces, dpi, GRID_LINE_PEN
 from _pyspread.config import column_width_tag, row_height_tag
 from _pyspread.config import default_cell_attributes, selected_cell_brush
 from _pyspread._datastructures import PyspreadGrid
-from _pyspread._choicebars import ContextMenu
+from _pyspread._menubars import ContextMenu
 from _pyspread._interfaces import Clipboard, Digest, PysInterfaces, \
                                  get_pen_from_data, get_brush_from_data, \
                                  get_font_from_data
@@ -1561,10 +1561,13 @@ class MainGrid(wx.grid.Grid,
         bgbrush_data = pysgrid.get_sgrid_attr(self.key, "bgbrush")
         
         borderpen_data = pysgrid.get_sgrid_attr(self.key, "borderpen_bottom")
-        
-        self.parent.attributes_toolbar.update(\
-            textfont=textfont, textattributes=textattributes,
-            bgbrush_data=bgbrush_data, borderpen_data=borderpen_data)
+        try:
+            self.parent.attributes_toolbar.update(\
+                textfont=textfont, textattributes=textattributes,
+                bgbrush_data=bgbrush_data, borderpen_data=borderpen_data)
+        except NameError:
+            # Attributes toolbar not yet created
+            pass
         
         event.Skip()
 

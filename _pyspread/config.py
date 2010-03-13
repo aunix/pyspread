@@ -39,14 +39,6 @@ import wx.stc  as  stc
 ICONPREFIX = os.path.dirname(os.path.realpath(__file__)) + '/'
 
 """
-Splash image
-============
-
-"""
-
-splash_image_path = ICONPREFIX + "icons/splash_image.png"
-
-"""
 GPG key parameters
 ==================
 
@@ -428,24 +420,6 @@ column_width_tag = '{urn:oasis:names:tc:opendocument:xmlns:style:1.0}' + \
                    'column-width'
 row_height_tag = '{urn:oasis:names:tc:opendocument:xmlns:style:1.0}' + \
                  'row-height'
-
-pen_styles = { \
-            "solid": wx.SOLID,
-            "dotted": wx.DOT,
-            "long-dashed": wx.LONG_DASH,
-            "dashed": wx.SHORT_DASH,
-            "dot-dashed": wx.DOT_DASH,
-            "user-dashed": wx.USER_DASH,
-            "none": wx.TRANSPARENT,
-            "hidden": wx.TRANSPARENT,
-            "stippled": wx.STIPPLE,
-            "bdiag-hatched": wx.BDIAGONAL_HATCH,
-            "cdiag-hatched": wx.CROSSDIAG_HATCH,
-            "fdiag-hatched": wx.FDIAGONAL_HATCH,
-            "cross-hatched": wx.CROSS_HATCH,
-            "horizontal-hatched": wx.HORIZONTAL_HATCH,
-            "vertical-hatched": wx.VERTICAL_HATCH,
-            }
 
 # Font attributes: tag: 
 # [getter, setter, assertionfunction, conversionfunction]

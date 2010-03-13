@@ -799,7 +799,7 @@ class MacroDialog(wx.Dialog, listmix.ColumnSorterMixin):
             return None
     
     def GetMacroString(self):
-        """ Gets the current macro string
+        """Gets the current macro string
         
         Gets the string-formatted call for the current function with the
         values from the macro entry form
@@ -947,8 +947,7 @@ class DimensionsEntryDialog(wx.Dialog):
         self.Layout()
     
     def _ondim(self, dimension, valuestring):
-        """
-        Converts valuestring to int and assigns result to self.dim
+        """Converts valuestring to int and assigns result to self.dim
         
         If there is an error (such as an empty valuestring) or if
         the value is < 1, the value 1 is assigned to self.dim
@@ -1008,8 +1007,8 @@ class DimensionsEntryDialog(wx.Dialog):
 
 
 class AboutDialog(object):
-
     """Displays information about pyspread"""
+    
     def __init__(self, *args, **kwds):
         # First we create and fill the info object
         parent = args[0]
@@ -1045,7 +1044,7 @@ class AboutDialog(object):
                                   "\nCopyright Martin Manns 2008-2009")
     
     def _do_layout(self):
-        """Laoyt sizers"""
+        """Layout sizers"""
         
         sizer_v = wx.BoxSizer(wx.VERTICAL)
         sizer_h = wx.BoxSizer(wx.HORIZONTAL)
