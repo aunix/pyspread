@@ -759,6 +759,7 @@ class MacroDialog(wx.Frame):
         self.apply_button.SetToolTipString("Apply changes to current macro")
         self.cancel_button.SetToolTipString("Remove current macro")
         self.splitter.SetBackgroundStyle(wx.BG_STYLE_COLOUR)
+        self.result_ctrl.SetMinSize((10, 10))
     
     def OnText(self, event):
         """Event handler for code control"""
