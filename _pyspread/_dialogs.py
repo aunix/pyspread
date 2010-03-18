@@ -771,7 +771,7 @@ class MacroDialog(wx.Frame):
         
         self.sgrid.macros = self.macros
         safe_mode = self.parent.MainGrid.pysgrid.safe_mode
-        outstring = self.sgrid.execute_macros(safe_mode=safe_mode)
+        outstring = self.sgrid.execute_macros(safe_mode)
         self.result_ctrl.SetText(outstring)
         
         self.parent.macro_dlg = None
@@ -782,7 +782,7 @@ class MacroDialog(wx.Frame):
         
         self.sgrid.macros = self.macros
         safe_mode = self.parent.MainGrid.pysgrid.safe_mode
-        outstring = self.sgrid.execute_macros(safe_mode=safe_mode)
+        outstring = self.sgrid.execute_macros(safe_mode)
         self.result_ctrl.SetValue(outstring)
         
         event.Skip()

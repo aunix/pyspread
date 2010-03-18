@@ -871,41 +871,36 @@ class DictGrid(UserDict.IterableUserDict):
         self.shape = shape
         self.indices = [list(irange(size)) for size in self.shape]
 
-    def execute_macros(self, safe_mode=False):
+    def execute_macros(self, safe_mode):
         """Executes all macros and returns result string if not safe_mode"""
         
         if safe_mode:
-            return "Safe mode activated. Code not evaluated."
+            return "Safe mode activated. Code not executed."
         
         # Windows exec does not like Windows newline
         self.macros = self.macros.replace('\r\n', '\n')
         
         # Create file-like string to capture output
-        codeOut = cStringIO.StringIO()
-        codeErr = cStringIO.StringIO()
+        code_out = cStringIO.StringIO()
+        code_err = cStringIO.StringIO()
 
         # Capture output and errors
-        sys.stdout = codeOut
-        sys.stderr = codeErr
+        sys.stdout = code_out
+        sys.stderr = code_err
 
-        exec(self.macros, globals())
+        try:
+            exec(self.macros, globals())
+        except Exception, err:
+            print err
 
         # Restore stdout and stderr
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
-        outstring = ""
+        outstring = code_out.getvalue() + code_err.getvalue()
 
-        err_str = codeErr.getvalue()
-        if err_str:
-            outstring += "Error:\n" + err_str + "\n"
-
-        out_str = codeOut.getvalue()
-        if out_str:
-            outstring += "Output:\n" + out_str + "\n"
-
-        codeOut.close()
-        codeErr.close()
+        code_out.close()
+        code_err.close()
 
         return outstring
 
