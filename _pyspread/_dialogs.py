@@ -717,6 +717,7 @@ class MacroDialog(wx.Frame):
         
         self.sgrid = self.parent.MainGrid.pysgrid.sgrid
         self.macros = self.parent.MainGrid.pysgrid.sgrid.macros[:]
+        self.codetext_ctrl.SetText(self.macros)
         
         # Bindings
         self.Bind(stc.EVT_STC_MODIFIED, self.OnText, self.codetext_ctrl)
@@ -769,10 +770,7 @@ class MacroDialog(wx.Frame):
     def OnOk(self, event):
         """Event handler for Ok button"""
         
-        self.sgrid.macros = self.macros
-        safe_mode = self.parent.MainGrid.pysgrid.safe_mode
-        outstring = self.sgrid.execute_macros(safe_mode)
-        self.result_ctrl.SetText(outstring)
+        self.OnApply(event)
         
         self.parent.macro_dlg = None
         self.Destroy()
@@ -784,6 +782,8 @@ class MacroDialog(wx.Frame):
         safe_mode = self.parent.MainGrid.pysgrid.safe_mode
         outstring = self.sgrid.execute_macros(safe_mode)
         self.result_ctrl.SetValue(outstring)
+        
+        self.sgrid.macros = self.macros
         
         event.Skip()
     
