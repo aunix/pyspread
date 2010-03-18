@@ -1,5 +1,6 @@
 _pyspread/pyspread
-_pyspread/_choicebars.py
+_pyspread/_menubars.py
+_pyspread/_toolbars.py
 _pyspread/_dialogs.py
 _pyspread/_widgets.py
 _pyspread/_windows.py

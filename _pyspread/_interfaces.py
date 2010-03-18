@@ -94,7 +94,7 @@ class SafeUnpickler(object):
         '_pyspread._interfaces': set(['UserString']),
         '_pyspread._datastructures': set(['DictGrid']),
         'wx._gdi': set(['Colour']),
-        'pyspread._interfaces': set(['UserString']), # compatibility < 0.0.13
+        'pyspread._interfaces': set(['UserString']), # compat < 0.0.13
     }
  
     @classmethod

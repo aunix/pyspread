@@ -149,6 +149,7 @@ class MainWindow(wx.Frame):
         wx.EVT_KEY_DOWN(self.MainGrid, self.OnKey)
         
         # Misc
+        self.macro_dlg = None # Macro dialog if present
         self.MainGrid.mainwindow = self
         self.MainGrid.deletion_imminent = False
         self.filepath = None # No file loaded yet
@@ -727,59 +728,50 @@ class MainWindow(wx.Frame):
     def OnMacroList(self, event):
         """Invokes the MacroDialog and updates the macros in the app"""
         
-        dlg = MacroDialog(None, -1, "", macros = self.MainGrid.pysgrid.macros)
-        if dlg.ShowModal() == wx.ID_OK:
-            # Insert function string into current cell
-            targetcell = self.MainGrid.get_currentcell()
-            macrostring = dlg.GetMacroString()
-            try:
-                self.MainGrid.entry_line.SetValue(macrostring)
-            except TypeError:
-                self.MainGrid.entry_line.SetValue("")
-            if macrostring is not None:
-                self.MainGrid.pysgrid[targetcell] = macrostring
-                self.MainGrid.ForceRefresh()
-        self.MainGrid.pysgrid.macros = dlg.macros
-        self.MainGrid.pysgrid.set_global_macros(self.MainGrid.pysgrid.macros)
-        dlg.Destroy()
-        self.MainGrid.ForceRefresh()
+        macros=self.MainGrid.pysgrid.sgrid.macros
+        if self.macro_dlg:
+            self.macro_dlg.Raise()
+            self.macro_dlg.SetFocus()
+        else:
+            self.macro_dlg = MacroDialog(self, -1)
+            self.macro_dlg.Show()
     
     def OnMacroListLoad(self, event): # wxGlade: MainWindow.<event_handler>
-        macrowildcard = " Macro file|*.*"
-        # File choice
-        filedlg = wx.FileDialog(
-            self, message="Load a Macro-file", defaultDir=os.getcwd(),
-            defaultFile="", wildcard=macrowildcard, \
-            style=wx.OPEN | wx.CHANGE_DIR)
-        if filedlg.ShowModal() == wx.ID_OK:
-            path = filedlg.GetPath()
-            filedlg.Destroy()
-        macrocodes = {}
-        infile = bz2.BZ2File(path, "r")
-        macrocodes = pickle.load(infile)
-        infile.close()
-        #print macrocodes
-        for macroname in macrocodes:
-            self.MainGrid.pysgrid.macros.add(macrocodes[macroname])
-        self.MainGrid.pysgrid.set_global_macros()
+#        macrowildcard = " Macro file|*.*"
+#        # File choice
+#        filedlg = wx.FileDialog(
+#            self, message="Load a Macro-file", defaultDir=os.getcwd(),
+#            defaultFile="", wildcard=macrowildcard, \
+#            style=wx.OPEN | wx.CHANGE_DIR)
+#        if filedlg.ShowModal() == wx.ID_OK:
+#            path = filedlg.GetPath()
+#            filedlg.Destroy()
+#        macrocodes = {}
+#        infile = bz2.BZ2File(path, "r")
+#        macrocodes = pickle.load(infile)
+#        infile.close()
+#        #print macrocodes
+#        for macroname in macrocodes:
+#            self.MainGrid.pysgrid.sgrid.macros.add(macrocodes[macroname])
+#        self.MainGrid.pysgrid.set_global_macros()
         event.Skip()
     
     def OnMacroListSave(self, event):
         """Event handler"""
         
-        macrowildcard = " Macro file|*.*"
-        # File choice
-        filedlg = wx.FileDialog(
-            self, message="Save a Macro-file", defaultDir=os.getcwd(),
-            defaultFile="", wildcard=macrowildcard, \
-            style=wx.OPEN | wx.CHANGE_DIR)
-        if filedlg.ShowModal() == wx.ID_OK:
-            path = filedlg.GetPath()
-            filedlg.Destroy()
-        macros = self.MainGrid.pysgrid.macros
-        macrocodes = dict((m, macros[m].func_dict['macrocode']) for m in macros)
-        
-        bzip_dump(macrocodes, path)
+#        macrowildcard = " Macro file|*.*"
+#        # File choice
+#        filedlg = wx.FileDialog(
+#            self, message="Save a Macro-file", defaultDir=os.getcwd(),
+#            defaultFile="", wildcard=macrowildcard, \
+#            style=wx.OPEN | wx.CHANGE_DIR)
+#        if filedlg.ShowModal() == wx.ID_OK:
+#            path = filedlg.GetPath()
+#            filedlg.Destroy()
+#        macros = self.MainGrid.pysgrid.sgrid.macros
+#        macrocodes = dict((m, macros[m].func_dict['macrocode']) for m in macros)
+#        
+#        bzip_dump(macrocodes, path)
         
         event.Skip()
     

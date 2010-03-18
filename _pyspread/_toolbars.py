@@ -319,6 +319,7 @@ class AttributesToolbar(wx.ToolBar):
         self.SetToolBitmapSize(self.font_size_combo.GetSize())
         self.AddControl(self.font_size_combo)
         self.Bind(wx.EVT_COMBOBOX, self.OnTextSize, self.font_size_combo)
+        self.Bind(wx.EVT_TEXT_ENTER, self.OnTextSize, self.font_size_combo)
     
     def _create_font_face_buttons(self):
         """Creates font face buttons"""
@@ -435,12 +436,7 @@ class AttributesToolbar(wx.ToolBar):
         
         self.font_choice_combo.Select(fontface_id)
         
-        try:
-            fontsize_id = self.std_font_sizes.index(font_size)
-        except:
-            ## This is ugly. The size choice should be replaced by a combo
-            fontsize_id = 0
-        self.font_size_combo.Select(fontsize_id)
+        self.font_size_combo.SetValue(str(font_size))
         
         if font_weight == wx.FONTWEIGHT_NORMAL:
             # Toggle up
@@ -519,8 +515,6 @@ class AttributesToolbar(wx.ToolBar):
         else:
             # Toggle up
             self.ToggleTool(wx.FONTFLAG_UNDERLINED, 0)
-    
-
     
     def _update_justification(self, textattributes):
         """Updates horizontal text justification button"""
@@ -800,7 +794,7 @@ class AttributesToolbar(wx.ToolBar):
         self.grid.ForceRefresh()
         
     def OnBGColor(self, event):
-        """Change the line color of current cell/selection background"""
+        """Change the color of current cell/selection background"""
         
         pysgrid = self.pysgrid
         sgrid = pysgrid.sgrid
@@ -822,7 +816,7 @@ class AttributesToolbar(wx.ToolBar):
         event.Skip()
         
     def OnTextColor(self, event):
-        """Change the line color of current cell/selection text"""
+        """Change the color of current cell/selection text"""
         
         pysgrid = self.pysgrid
         sgrid = pysgrid.sgrid
@@ -843,7 +837,7 @@ class AttributesToolbar(wx.ToolBar):
         event.Skip()
     
     def OnTextFont(self, event):
-        """Change the line color of current cell/selection text"""
+        """Change the font of current cell/selection text"""
         
         pysgrid = self.pysgrid
         sgrid = pysgrid.sgrid
@@ -880,17 +874,24 @@ class AttributesToolbar(wx.ToolBar):
         event.Skip()
     
     def OnTextSize(self, event):
-        """Change the line color of current cell/selection text"""
-        
-        pysgrid = self.pysgrid
-        sgrid = pysgrid.sgrid
-        
-        keys = self._get_key_list()
+        """Text size combo text event handler"""
         
         try:
             size = int(event.GetString())
         except Exception:
             size = faces['size']
+        
+        self.change_text_size(size)
+        
+        event.Skip()
+        
+    def change_text_size(self, size):
+        """Change the size of current cell/selection text"""
+        
+        pysgrid = self.pysgrid
+        sgrid = pysgrid.sgrid
+        
+        keys = self._get_key_list()
         
         for key in keys:
             pysgrid.create_sgrid_attribute(key, "textfont")
@@ -910,8 +911,6 @@ class AttributesToolbar(wx.ToolBar):
             sgrid[key].textfont = str(textfont.GetNativeFontInfo())
         
         self.grid.ForceRefresh()
-        
-        event.Skip()
     
     def OnToolClick(self, event):
         """Toggle the tool attribute of the current cell/selection text

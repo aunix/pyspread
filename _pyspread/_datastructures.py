@@ -31,6 +31,8 @@ Provides
 
 """
 
+import cStringIO
+import sys
 import types
 import UserDict
 
@@ -81,8 +83,6 @@ class PyspreadGrid(object):
         except (MemoryError, ValueError), error:
             self.sgrid = DictGrid(shape=(1, 1, 1))
             self.sgrid[0, 0, 0] = "Matrix creation failed: " + error
-        
-        self.macros = Macros({}) # Macros from Macrolist
         
         self.unredo = UnRedo()
         
@@ -604,7 +604,7 @@ class PyspreadGrid(object):
         
         self._resultcache = {}
         if macros is None: 
-            macros = self.macros
+            macros = self.sgrid.macros
         for macroname, macro in macros.iteritems():
             globals()[macroname] = macro
     
@@ -664,34 +664,34 @@ class PyspreadGrid(object):
 # end of class PyspreadGrid
 
 
-class Macros(UserDict.IterableUserDict):
-    """User dict class for macros.
-
-    This class provides a getter and setter method for storing the full
-    macro Python code in the 'macrocode' attribute of the funcdict.
-
-    """
-    
-    def add(self, code):
-        """ Adds a macro with the code string 'code' to the macro dict"""
-        
-        funcname = code.split("(")[0][3:].strip()
-        
-        # Windows exec does not like Windows newline
-        code = code.replace('\r\n', '\n')
-        
-        exec(code)
-        
-        func = eval(funcname, globals(), locals())
-        func.func_dict['macrocode'] = code
-        
-        if func.__name__ in self:
-            return 0
-        self[func.__name__] = func
-        
-        return func
-        
-# end of class Macros
+#class Macros(UserDict.IterableUserDict):
+#    """User dict class for macros.
+#
+#    This class provides a getter and setter method for storing the full
+#    macro Python code in the 'macrocode' attribute of the funcdict.
+#
+#    """
+#    
+#    def add(self, code):
+#        """ Adds a macro with the code string 'code' to the macro dict"""
+#        
+#        funcname = code.split("(")[0][3:].strip()
+#        
+#        # Windows exec does not like Windows newline
+#        code = code.replace('\r\n', '\n')
+#        
+#        exec(code)
+#        
+#        func = eval(funcname, globals(), locals())
+#        func.func_dict['macrocode'] = code
+#        
+#        if func.__name__ in self:
+#            return 0
+#        self[func.__name__] = func
+#        
+#        return func
+#        
+## end of class Macros
 
 class UnRedo(object):
     """Undo/Redo framework class.
@@ -812,6 +812,9 @@ class DictGrid(UserDict.IterableUserDict):
         self.set_shape(shape)
         self.default_value = default_value
         
+        # Macros from Macrolist
+        self.macros = ""
+        
         UserDict.IterableUserDict.__init__(self)
         
         self.rows = {}
@@ -867,5 +870,43 @@ class DictGrid(UserDict.IterableUserDict):
         
         self.shape = shape
         self.indices = [list(irange(size)) for size in self.shape]
+
+    def execute_macros(self, safe_mode=False):
+        """Executes all macros and returns result string if not safe_mode"""
+        
+        if safe_mode:
+            return "Safe mode activated. Code not evaluated."
+        
+        # Windows exec does not like Windows newline
+        self.macros = self.macros.replace('\r\n', '\n')
+        
+        # Create file-like string to capture output
+        codeOut = cStringIO.StringIO()
+        codeErr = cStringIO.StringIO()
+
+        # Capture output and errors
+        sys.stdout = codeOut
+        sys.stderr = codeErr
+
+        exec(self.macros, globals())
+
+        # Restore stdout and stderr
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+        outstring = ""
+
+        err_str = codeErr.getvalue()
+        if err_str:
+            outstring += "Error:\n" + err_str + "\n"
+
+        out_str = codeOut.getvalue()
+        if out_str:
+            outstring += "Output:\n" + out_str + "\n"
+
+        codeOut.close()
+        codeErr.close()
+
+        return outstring
 
 # end of class DictGrid

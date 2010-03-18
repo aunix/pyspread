@@ -43,17 +43,18 @@ import cStringIO
 import csv
 import os
 import struct
+import sys
 import types
 
 import wx
 import wx.grid
 import wx.lib.mixins.listctrl  as  listmix
 from wx.lib.wordwrap import wordwrap
+import wx.stc as stc
 
 from _pyspread._grid import GridIndexMixin
 from _pyspread._widgets import SortedListCtrl, PythonSTC
 from _pyspread._interfaces import Digest, sniff, fill_wxgrid
-from _pyspread._datastructures import Macros
 from _pyspread.config import VERSION, ICONPREFIX
 
 class ChoiceRenderer(wx.grid.PyGridCellRenderer):
@@ -686,208 +687,111 @@ class CsvExportDialog(wx.Dialog):
 # end of class CsvImportDialog
 
 
-class MacroDialog(wx.Dialog, listmix.ColumnSorterMixin):
+class MacroDialog(wx.Frame):
     """Macro management dialog"""
     
     def __init__(self, *args, **kwds):
-        try:
-            # Map all macros names to the respective functions
-            self.macros = Macros(kwds.pop("macros"))
-        except KeyError:
-            self.macros = Macros()
-        
+    
         # begin wxGlade: MacroDialog.__init__
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.THICK_FRAME
+        self.parent = args[0]
+        wx.Frame.__init__(self, *args, **kwds)
         
-        wx.Dialog.__init__(self, *args, **kwds)
+        self.splitter = wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_BORDER)
         
-        self.window_1 = wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_BORDER)
-        self.left_panel = wx.Panel(self.window_1, -1)
-        self.right_panel = wx.Panel(self.window_1, -1)
-        self.button_1 = wx.Button(self.left_panel, wx.ID_ADD, "")
-        self.button_2 = wx.Button(self.left_panel, wx.ID_APPLY, "")
-        self.button_3 = wx.Button(self.left_panel, wx.ID_REMOVE, "")
-        self.macro_list_ctrl = SortedListCtrl(self.left_panel, -1, \
-                style=wx.LC_REPORT|wx.LC_SINGLE_SEL| \
-                      wx.LC_SORT_ASCENDING|wx.SUNKEN_BORDER)
-                      
-        self.CodeTextCtrl = PythonSTC(self.right_panel, wx.NewId(), \
-          pos=wx.DefaultPosition, \
-          size=wx.DefaultSize, 
+        self.upper_panel = wx.Panel(self.splitter, -1)
+        self.lower_panel = wx.Panel(self.splitter, -1)
+        
+        self.codetext_ctrl = PythonSTC(self.upper_panel, -1, 
           style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.EXPAND)
         
-        self.CodeTextCtrl.SetToolTipString("Enter one python function here." + \
-                        "\nThe first line has to begin with def")
+        self.result_ctrl = wx.TextCtrl(self.lower_panel, -1, 
+          style=wx.TE_MULTILINE|wx.TE_READONLY)
         
-        self.ok_button = wx.Button(self.right_panel, wx.ID_OK)
-        self.cancel_button = wx.Button(self.right_panel, wx.ID_CANCEL)
+        self.ok_button = wx.Button(self.lower_panel, wx.ID_OK)
+        self.apply_button = wx.Button(self.lower_panel, wx.ID_APPLY)
+        self.cancel_button = wx.Button(self.lower_panel, wx.ID_CANCEL)
         
         self._set_properties()
         self._do_layout()
         
-        self.Bind(wx.EVT_BUTTON, self.OnAddMacro, self.button_1)
-        self.Bind(wx.EVT_BUTTON, self.OnApplyChange, self.button_2)
-        self.Bind(wx.EVT_BUTTON, self.OnRemoveMacro, self.button_3)
-        self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.OnMacroFocused, \
-                                            self.macro_list_ctrl)
-        # end wxGlade
-        self.macro_list_ctrl.InsertColumn(0, "Function")
-        self.macro_list_ctrl.InsertColumn(1, "Description")
-        self.UpdateMacroList(func=None)
-    
-    def _set_properties(self):
-        """Setup title, size and tooltips"""
+        self.sgrid = self.parent.MainGrid.pysgrid.sgrid
+        self.macros = self.parent.MainGrid.pysgrid.sgrid.macros[:]
         
-        self.SetTitle("Macro list")
-        self.SetSize((1122, 600))
-        self.button_1.SetToolTipString("Add new macro")
-        self.button_2.SetToolTipString("Apply changes to current macro")
-        self.button_3.SetToolTipString("Remove current macro")
+        # Bindings
+        self.Bind(stc.EVT_STC_MODIFIED, self.OnText, self.codetext_ctrl)
+        self.Bind(wx.EVT_BUTTON, self.OnOk, self.ok_button)
+        self.Bind(wx.EVT_BUTTON, self.OnApply, self.apply_button)
+        self.Bind(wx.EVT_BUTTON, self.OnCancel, self.cancel_button)
     
     def _do_layout(self):
         """Layout sizers"""
         
-        sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
-        grid_sizer_3 = wx.FlexGridSizer(2, 1, 5, 0)
-        grid_sizer_4 = wx.FlexGridSizer(1, 3, 0, 5)
-        code_sizer = wx.FlexGridSizer(2, 1, 5, 0)
-        button_sizer = wx.FlexGridSizer(1, 2, 0, 5)
-        button_sizer.Add(self.ok_button)
-        button_sizer.Add(self.cancel_button)
-        grid_sizer_4.Add(self.button_1, 0, wx.ALL|wx.EXPAND, 3)
-        grid_sizer_4.Add(self.button_2, 0, wx.ALL|wx.EXPAND, 3)
-        grid_sizer_4.Add(self.button_3, 0, wx.ALL|wx.EXPAND, 3)
-        grid_sizer_4.AddGrowableCol(0)
-        grid_sizer_4.AddGrowableCol(1)
-        grid_sizer_4.AddGrowableCol(2)
-        grid_sizer_3.Add(grid_sizer_4, 1, wx.TOP|wx.EXPAND, 5)
-        grid_sizer_3.Add(self.macro_list_ctrl, 1, wx.EXPAND, 0)
-        self.left_panel.SetSizer(grid_sizer_3)
-        grid_sizer_3.AddGrowableRow(1)
-        grid_sizer_3.AddGrowableCol(0)
-        code_sizer.Add(self.CodeTextCtrl, 0, wx.ALL|wx.EXPAND, 0)
-        code_sizer.Add(button_sizer, 0, wx.ALL|wx.EXPAND, 0)
-        code_sizer.AddGrowableRow(0)
-        code_sizer.AddGrowableCol(0)
-        self.right_panel.SetSizer(code_sizer)
-        self.window_1.SplitVertically(self.left_panel, self.right_panel, 500)
-        sizer_1.Add(self.window_1, 1, wx.EXPAND, 0)
-        self.SetSizer(sizer_1)
+        dialog_main_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        upper_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        lower_sizer = wx.FlexGridSizer(2, 1, 5, 0)
+        lower_sizer.AddGrowableRow(0)
+        lower_sizer.AddGrowableCol(0)
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        upper_sizer.Add(self.codetext_ctrl, 1, wx.EXPAND, 0)
+        lower_sizer.Add(self.result_ctrl, 1, wx.EXPAND, 0)
+        lower_sizer.Add(button_sizer, 1, wx.EXPAND, 0)
+        button_sizer.Add(self.ok_button, 1, wx.EXPAND, 0)
+        button_sizer.Add(self.apply_button, 1, wx.EXPAND, 0)
+        button_sizer.Add(self.cancel_button, 1, wx.EXPAND, 0)
+        
+        self.upper_panel.SetSizer(upper_sizer)
+        self.lower_panel.SetSizer(lower_sizer)
+        
+        self.splitter.SplitHorizontally(self.upper_panel, self.lower_panel, 500)
+        dialog_main_sizer.Add(self.splitter, 1, wx.EXPAND, 0)
+        self.SetSizer(dialog_main_sizer)
         self.Layout()
+        
+    def _set_properties(self):
+        """Setup title, size and tooltips"""
+        
+        self.SetTitle("Macro list")
+        self.SetSize((800, 600))
+        self.codetext_ctrl.SetToolTipString("Enter python code here.")
+        self.ok_button.SetToolTipString("Accept all changes")
+        self.apply_button.SetToolTipString("Apply changes to current macro")
+        self.cancel_button.SetToolTipString("Remove current macro")
+        self.splitter.SetBackgroundStyle(wx.BG_STYLE_COLOUR)
     
+    def OnText(self, event):
+        """Event handler for code control"""
+        
+        self.macros = self.codetext_ctrl.GetText()
     
-    def GetListCtrl(self):
-        """Used by the ColumnSorterMixin, see wx/lib/mixins/listctrl.py"""
+    def OnOk(self, event):
+        """Event handler for Ok button"""
         
-        return self.macro_list_ctrl
+        self.sgrid.macros = self.macros
+        safe_mode = self.parent.MainGrid.pysgrid.safe_mode
+        outstring = self.sgrid.execute_macros(safe_mode=safe_mode)
+        self.result_ctrl.SetText(outstring)
+        
+        self.parent.macro_dlg = None
+        self.Destroy()
     
-    def GetCurrentMacro(self, event=None):
-        """Returns the selected macro or None if not found"""
+    def OnApply(self, event):
+        """Event handler for Apply button"""
         
-        if event is None:
-            itemno = self.macro_list_ctrl.GetFocusedItem()
-            if itemno == -1:
-                current_listitem = None
-            else:
-                current_listitem = self.macro_list_ctrl.GetItem(itemno)
-        else:
-            current_listitem = self.macro_list_ctrl.GetItem(event.m_itemIndex)
-        #print current_listitem
-        try:
-            return self.macros[current_listitem.GetText()]
-        except (KeyError, AttributeError):
-            return None
-    
-    def GetMacroString(self):
-        """Gets the current macro string
+        self.sgrid.macros = self.macros
+        safe_mode = self.parent.MainGrid.pysgrid.safe_mode
+        outstring = self.sgrid.execute_macros(safe_mode=safe_mode)
+        self.result_ctrl.SetValue(outstring)
         
-        Gets the string-formatted call for the current function with the
-        values from the macro entry form
-        
-        Format
-        ------
-        Functionname + ( + var1 + , +  ... + , + varn + )
-        
-        """
-        
-        macro = self.GetCurrentMacro()
-        if macro is None:
-            return None
-        functionname = macro.__name__
-        varentries = []
-        varlist = varentries[:]
-        return functionname + "(" + ", ".join(varlist) + ")"
-    
-    def UpdateMacroList(self, func=None):
-        """ Updates the macro list from self.macros """
-        
-        self.macro_list_ctrl.DeleteAllItems()
-        for i, key in enumerate(sorted(list(self.macros))):
-            listentry = (key, self.macros[key].__doc__)
-            index = self.macro_list_ctrl.Append(listentry)
-            self.macro_list_ctrl.SetItemData(index, i)
-        if func is not None:
-            self.UpdateMacroListSelection(func)
-    
-    def UpdateMacroListSelection(self, func):
-        """ Updates the selection so that it focuses
-            the item of the recently selected macro """
-            
-        newitempos = self.macro_list_ctrl.FindItem(-1, func.__name__)
-        self.macro_list_ctrl.Select(newitempos)
-    
-    def OnAddMacro(self, event):
-        """Stores an added macro and adds it to the list"""
-        
-        code = self.CodeTextCtrl.GetText()
-        func = self.macros.add(code)
-        if func != 0:
-            self.UpdateMacroList(func)
         event.Skip()
     
-    def OnApplyChange(self, event):
-        """Applies change in function to macro dict"""
+    def OnCancel(self, event):
+        """Event handler for Cancel button"""
         
-        code = self.CodeTextCtrl.GetText()
-        func = self.macros.get_macro(code)
-        
-        macro_list_ctrl = self.macro_list_ctrl
-        
-        if func.__name__ not in self.macros:
-            # If the function name has changed, the old function is removed
-            selecteditem_pos = macro_list_ctrl.GetFirstSelected()
-            if selecteditem_pos != -1:
-                current_listitem = macro_list_ctrl.GetItem(selecteditem_pos)
-                current_macro = self.macros[current_listitem.GetText()]
-                self.macros.pop(current_macro.__name__)
-        self.macros[func.__name__] = func
-        self.UpdateMacroList(func)
-        event.Skip()
-    
-    def OnRemoveMacro(self, event):
-        """Removes the current macro from the global macro list"""
-        
-        selecteditem_pos = self.macro_list_ctrl.GetFirstSelected()
-        if selecteditem_pos != -1:
-            current_listitem = self.macro_list_ctrl.GetItem(selecteditem_pos)
-            current_macro = self.macros[current_listitem.GetText()]
-            self.macros.pop(current_macro.__name__)
-            self.UpdateMacroList()
-        event.Skip()
-    
-    def OnMacroFocused(self, event):
-        """Updates the right hand side panels"""
-        
-        current_macro = self.GetCurrentMacro(event)
-        
-        if current_macro is None:
-            event.Skip()
-            return 0
-        
-        code = current_macro.func_dict['macrocode']
-        self.CodeTextCtrl.SetText(code)
-        
-        event.Skip()
+        self.parent.macro_dlg = None
+        self.Destroy()
+
 
 # end of class MacroDialog
 
