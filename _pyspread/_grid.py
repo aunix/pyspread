@@ -1460,6 +1460,8 @@ class MainGrid(wx.grid.Grid,
         for key in self.pysgrid.sgrid:
             self.pysgrid[key]
         self.pysgrid._resultcache = {}
+        self.pysgrid.sgrid.execute_macros(safe_mode=self.pysgrid.safe_mode)
+        
         self.Update()
 
     def savefile(self, filename, interface = None):

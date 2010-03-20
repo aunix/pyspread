@@ -178,16 +178,16 @@ class MainMenu(_filledMenu):
             [item, ["OnShowFindReplace", "Replace\tCtrl+Shift+f", 
                 "Replace strings in cells"]], \
             ["Separator"], \
-            [item, ["OnInsertRows", "Insert &rows\tShift+Ctrl+i", 
+            [item, ["OnInsertRows", "Insert &rows", 
                 "Insert rows at cursor"]], \
-            [item, ["OnInsertColumns", "&Insert columns\tCtrl+i", 
+            [item, ["OnInsertColumns", "&Insert columns", 
                 "Insert columns at cursor"]], \
             [item, ["OnInsertTable", "Insert &table", 
                 "Insert table before current table"]], \
             ["Separator"], \
-            [item, ["OnDeleteRows", "Delete rows\tShift+Ctrl+d", 
+            [item, ["OnDeleteRows", "Delete rows", 
                 "Delete rows"]], \
-            [item, ["OnDeleteColumns", "Delete columns\tCtrl+Alt+d", 
+            [item, ["OnDeleteColumns", "Delete columns", 
                 "Delete columns"]], \
             [item, ["OnDeleteTable", "Delete table", 
                 "Delete current table"]], \
@@ -206,9 +206,9 @@ class MainMenu(_filledMenu):
         [wx.Menu, "&Macro", [\
             [item, ["OnMacroList", "&Macro list\tCtrl+m", 
                         "Choose, fill in, manage, and create macros"]], \
-            [item, ["OnMacroListLoad", "&Load macro list\tShift+Ctrl+m", 
+            [item, ["OnMacroListLoad", "&Load macro list", 
                         "Load macro list"]], \
-            [item, ["OnMacroListSave", "&Save macro list\tShift+Alt+m", 
+            [item, ["OnMacroListSave", "&Save macro list", 
                         "Save macro list"]]]], \
         [wx.Menu, "&Help", [\
             [item, ["OnManual", "&Manual", "Launch manual"]],

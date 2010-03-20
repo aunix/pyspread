@@ -735,13 +735,6 @@ class Clipboard(object):
 
 # end of class Clipboard
 
-def bzip_dump(sgrid, filepath):
-    """Saves the pickled object obj to a bzipped file named filepath"""
-
-    outfile = bz2.BZ2File(filepath,"wb")
-    pickle.dump(sgrid, outfile, protocol=2)
-    outfile.close()
-
 def string_match(datastring, findstring, flags=None):
     """
     Returns position of findstring in datastring or None if not found.

@@ -54,7 +54,7 @@ from _pyspread._toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _pyspread._dialogs import MacroDialog, CsvImportDialog, CsvExportDialog, \
             DimensionsEntryDialog, AboutDialog
 from _pyspread._interfaces import CsvInterfaces, PysInterfaces, \
-            string_match, bzip_dump, is_pyme_present, genkey, sign, verify
+            string_match, is_pyme_present, genkey, sign, verify
 from _pyspread.config import ICONPREFIX, icon_size, KEYFUNCTIONS
             
 
@@ -290,33 +290,84 @@ class MainWindow(wx.Frame):
         # Check if the sig is valid for the sigfile
         return verify(sigfilename, filename)
     
-    def OnFileOpen(self, event):
-        """Opens file dialog and loads file"""
+    def make_safe(self, filepath):
+        """Sets safe mode if signature missing of invalid"""
         
-        dlg = wx.FileDialog(
-            self, message="Choose a file", defaultDir=os.getcwd(),
-            defaultFile="", wildcard=self.wildcard, \
-            style=wx.OPEN | wx.CHANGE_DIR)
+        if self.validate_signature(filepath):
+            self.MainGrid.pysgrid.safe_mode = False
+            self.main_window_statusbar.SetStatusText( \
+                "Valid signature found. File is trusted.")
+        else:
+            self.MainGrid.pysgrid.safe_mode = True
+            self.main_window_statusbar.SetStatusText( \
+                "File is not properly signed. Safe mode activated. " + \
+                "Select File -> Approve to leave safe mode.")
+            
+            # Disable menu item for leaving save mode
+            file_approve_menuitem = \
+                self.main_menu.methodname_item["OnFileApprove"]
+            file_approve_menuitem.Enable(True)
+    
+    def _get_filepath(self, *args, **kwargs):
+        """Opens a file dialog and returns filepath and Filterindex
+        
+        If the keyword argument safe is not set to False
+        safe mode is entered if the file is not trusted.
+        
+        Other parameters follow wx.FileDialog, 
+        wildcard defaults to self.wildcard
+        
+        """
+        
+        if "wildcard" not in kwargs:
+            kwargs["wildcard"] = self.wildcard
+        
+        try:
+            safe = kwargs.pop("safe")
+        except KeyError:
+            safe = True
+        
+        dlg = wx.FileDialog(self, *args, **kwargs)
+        
+        filepath = None
+        
         if dlg.ShowModal() == wx.ID_OK:
-            self.filepath = dlg.GetPath()
+            filepath = dlg.GetPath()
             wildcard_no = dlg.GetFilterIndex()
             self.wildcard_interface = self.wildcard_interfaces[wildcard_no]()
             
-            # Set safe mode if signature missing of invalid
-            if self.validate_signature(self.filepath):
-                self.MainGrid.pysgrid.safe_mode = False
-                self.main_window_statusbar.SetStatusText( \
-                    "Valid signature found. File is trusted.")
-            else:
-                self.MainGrid.pysgrid.safe_mode = True
-                self.main_window_statusbar.SetStatusText( \
-                    "File is not properly signed. Safe mode activated. " + \
-                    "Select File -> Approve to leave safe mode.")
-                # Disable menu item for leaving save mode
-                file_approve_menuitem = \
-                    self.main_menu.methodname_item["OnFileApprove"]
-                file_approve_menuitem.Enable(True)
-                
+            if safe:
+                self.make_safe(filepath)
+        
+        return filepath, dlg.GetFilterIndex()
+    
+    def _get_filename(self, *args, **kwargs):
+        """Opens a file dialog and returns filename and Filterindex
+        
+        If the keyword argument safe is not set to False
+        safe mode is entered if the file is not trusted.
+        
+        Other parameters follow wx.FileDialog, 
+        wildcard defaults to self.wildcard
+        
+        """
+        
+        filepath, filterindex = self._get_filepath(*args, **kwargs)
+        
+        try:
+            filename = os.path.split(filepath)[1]
+        except AttributeError:
+            return None
+        
+        return filename, filterindex
+    
+    def OnFileOpen(self, event):
+        """Opens file dialog and loads file"""
+        
+        filepath, _ = self._get_filepath(style=wx.OPEN|wx.CHANGE_DIR, safe=True)
+        
+        if filepath is not None:
+            self.filepath = filepath
             try:
                 self.MainGrid.loadfile(self.filepath, self.wildcard_interface)
             except IOError:
@@ -328,8 +379,6 @@ class MainWindow(wx.Frame):
             
             self.MainGrid.OnCombo(event)
             self.MainGrid.ForceRefresh()
-        dlg.Hide()
-        dlg.Destroy()
     
     def sign_file(self):
         """Signs file if possible"""
@@ -363,32 +412,27 @@ class MainWindow(wx.Frame):
     def OnFileSaveAs(self, event):
         """Opens the file dialog and saves the file to the chosen location"""
         
-        dlg = wx.FileDialog( \
-            self, message="Save file as ...", defaultDir=os.getcwd(), \
-            defaultFile="", wildcard=self.wildcard, style=wx.SAVE)
+        filepath, filterindex = self._get_filepath(safe=False, style=wx.SAVE)
         
-        if dlg.ShowModal() == wx.ID_OK:
-            self.filepath = dlg.GetPath()
-            wildcard_no = dlg.GetFilterIndex()
-            self.wildcard_interface = self.wildcard_interfaces[wildcard_no]()
+        if filepath is not None:
+            self.filepath = filepath
+            self.wildcard_interface = self.wildcard_interfaces[filterindex]()
             
-            self.MainGrid.savefile(self.filepath, self.wildcard_interface)
+            self.MainGrid.savefile(filepath, self.wildcard_interface)
+            
             if self.MainGrid.pysgrid.safe_mode:
                 self.main_window_statusbar.SetStatusText("Untrusted file saved")
             else:
                 self.sign_file()
                 self.main_window_statusbar.SetStatusText( \
                     "File saved and sigend")
-        
-        dlg.Hide()
-        dlg.Destroy()
     
     def OnFileImport(self, event): # wxGlade: MainWindow.<event_handler>
         """Imports files. Currently only CSV files supported"""
         
         # File choice
         try:
-            path, filterindex = self._getfilename( \
+            path, filterindex = self._get_filename( \
                     message="Import file", \
                     defaultDir=os.getcwd(), \
                     defaultFile="", \
@@ -475,7 +519,7 @@ class MainWindow(wx.Frame):
         
         path = None
         try:
-            path, filterindex = self._getfilename( \
+            path, filterindex = self._get_filename( \
                     message="Export file", \
                     defaultDir=os.getcwd(), \
                     defaultFile="", \
@@ -520,9 +564,8 @@ class MainWindow(wx.Frame):
             # Leave safe mode
             self.MainGrid.pysgrid.safe_mode = False
             
-            # Sign file
-            self.sign_file()
-            self.main_window_statusbar.SetStatusText("File saved and sigend")
+            # Run macros
+            self.MainGrid.pysgrid.sgrid.execute_macros(safe_mode=False)
             
             # Hide Menu item
             menuitem = event.GetEventObject().FindItemById(event.Id)
@@ -706,25 +749,6 @@ class MainWindow(wx.Frame):
         
         self.MainGrid.pysgrid.unredo.reset()
     
-    def _getfilename(self, message, defaultDir=os.getcwd(), defaultFile="", \
-                     wildcard=" Any file|*.*", style=wx.OPEN | wx.CHANGE_DIR):
-        """Spawns a wx.FileDialog and returns filename"""
-        
-        filedlg = wx.FileDialog(self, message=message, defaultDir=defaultDir, \
-                       defaultFile=defaultFile, wildcard=wildcard, style=style)
-        if filedlg.ShowModal() == wx.ID_OK:
-            path = filedlg.GetPath()
-        else:
-            path = None
-        filedlg.Destroy()
-        
-        try:
-            filename = os.path.split(path)[1]
-        except AttributeError:
-            return None
-        
-        return filename, filedlg.GetFilterIndex()
-    
     def OnMacroList(self, event):
         """Invokes the MacroDialog and updates the macros in the app"""
         
@@ -736,42 +760,34 @@ class MainWindow(wx.Frame):
             self.macro_dlg = MacroDialog(self, -1)
             self.macro_dlg.Show()
     
-    def OnMacroListLoad(self, event): # wxGlade: MainWindow.<event_handler>
-#        macrowildcard = " Macro file|*.*"
-#        # File choice
-#        filedlg = wx.FileDialog(
-#            self, message="Load a Macro-file", defaultDir=os.getcwd(),
-#            defaultFile="", wildcard=macrowildcard, \
-#            style=wx.OPEN | wx.CHANGE_DIR)
-#        if filedlg.ShowModal() == wx.ID_OK:
-#            path = filedlg.GetPath()
-#            filedlg.Destroy()
-#        macrocodes = {}
-#        infile = bz2.BZ2File(path, "r")
-#        macrocodes = pickle.load(infile)
-#        infile.close()
-#        #print macrocodes
-#        for macroname in macrocodes:
-#            self.MainGrid.pysgrid.sgrid.macros.add(macrocodes[macroname])
-#        self.MainGrid.pysgrid.set_global_macros()
+    def OnMacroListLoad(self, event): 
+        """Macro list load event handler"""
+        
+        macrowildcard = " Macro file|*.*"
+        macropath, _ = self._get_filepath(style=wx.OPEN|wx.CHANGE_DIR, 
+                                       wildcard=macrowildcard)
+        
+        if macropath is not None:
+            macro_infile = open(macropath, "r")
+            macrocode = macro_infile.read()
+            macro_infile.close()
+            self.MainGrid.pysgrid.sgrid.macros += "\n" + macrocode.strip("\n")
+        
         event.Skip()
     
     def OnMacroListSave(self, event):
         """Event handler"""
         
-#        macrowildcard = " Macro file|*.*"
-#        # File choice
-#        filedlg = wx.FileDialog(
-#            self, message="Save a Macro-file", defaultDir=os.getcwd(),
-#            defaultFile="", wildcard=macrowildcard, \
-#            style=wx.OPEN | wx.CHANGE_DIR)
-#        if filedlg.ShowModal() == wx.ID_OK:
-#            path = filedlg.GetPath()
-#            filedlg.Destroy()
-#        macros = self.MainGrid.pysgrid.sgrid.macros
-#        macrocodes = dict((m, macros[m].func_dict['macrocode']) for m in macros)
-#        
-#        bzip_dump(macrocodes, path)
+        macrowildcard = " Macro file|*.*"
+        
+        macropath, _ = self._get_filepath(style=wx.SAVE|wx.CHANGE_DIR, 
+                                          wildcard=macrowildcard)
+        
+        macros = self.MainGrid.pysgrid.sgrid.macros
+        
+        macro_outfile = open(macropath, "w")
+        macro_outfile.write(macros)
+        macro_outfile.close()
         
         event.Skip()
     
