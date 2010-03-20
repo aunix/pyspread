@@ -32,10 +32,8 @@ Provides:
 
 """
 
-import bz2
 import os
 import csv
-import cPickle as pickle
 import sys
 import types
 
@@ -54,7 +52,7 @@ from _pyspread._toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _pyspread._dialogs import MacroDialog, CsvImportDialog, CsvExportDialog, \
             DimensionsEntryDialog, AboutDialog
 from _pyspread._interfaces import CsvInterfaces, PysInterfaces, \
-            string_match, is_pyme_present, genkey, sign, verify
+            string_match, is_pyme_present, sign, verify
 from _pyspread.config import ICONPREFIX, icon_size, KEYFUNCTIONS
             
 
@@ -154,7 +152,10 @@ class MainWindow(wx.Frame):
         self.MainGrid.deletion_imminent = False
         self.filepath = None # No file loaded yet
         self.borderstate = "AllBorders" # For color and width changes
-    
+        
+        # Scale for Custom Renderer drawn content (needs TableBase!!)
+        self.scale = 1.0
+        
     def _set_properties(self):
         """Setup title, icon, size, scale, statusbar, main grid"""
         
@@ -170,9 +171,6 @@ class MainWindow(wx.Frame):
         # Status bar
         
         self.main_window_statusbar.SetStatusWidths([-1])
-        
-        # Scale for Custom Renderer drawn content (needs TableBase!!)
-        self.scale = 1.0
         
         # statusbar fields
         main_window_statusbar_fields = [""]
@@ -752,7 +750,7 @@ class MainWindow(wx.Frame):
     def OnMacroList(self, event):
         """Invokes the MacroDialog and updates the macros in the app"""
         
-        macros=self.MainGrid.pysgrid.sgrid.macros
+        macros = self.MainGrid.pysgrid.sgrid.macros
         if self.macro_dlg:
             self.macro_dlg.Raise()
             self.macro_dlg.SetFocus()

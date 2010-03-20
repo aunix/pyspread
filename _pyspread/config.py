@@ -484,6 +484,11 @@ font_attributes = { \
 
 # brush_styles not yet implemented
 
+pen_styles = [wx.SOLID, wx.TRANSPARENT, wx.DOT, wx.LONG_DASH, wx.SHORT_DASH,
+              wx.DOT_DASH, wx.BDIAGONAL_HATCH, wx.CROSSDIAG_HATCH, 
+              wx.FDIAGONAL_HATCH, wx.CROSS_HATCH, wx.HORIZONTAL_HATCH, 
+              wx.VERTICAL_HATCH]
+
 brush_styles = { \
     "": wx.TRANSPARENT,
     "": wx.SOLID,

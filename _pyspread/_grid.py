@@ -37,40 +37,23 @@ Provides:
 
 """
 
-from copy import copy
 from math import sin, cos, pi
 from itertools import izip
 import string
 import types
-
-try:
-    from itertools import product
-except ImportError:
-    # Python <= 2.5 
-    def product(*args, **kwds):
-        # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
-        # product(range(2), repeat=3) --> 000 001 010 011 100 101 110 111
-        pools = map(tuple, args) * kwds.get('repeat', 1)
-        result = [[]]
-        for pool in pools:
-            result = [x+[y] for x in result for y in pool]
-        for prod in result:
-            yield tuple(prod)
 
 import wx
 import wx.grid
 import wx.combo
 import numpy
 
-from _pyspread.config import odftags, DEFAULT_FONT, faces, dpi, GRID_LINE_PEN
-from _pyspread.config import column_width_tag, row_height_tag
-from _pyspread.config import default_cell_attributes, selected_cell_brush
+from _pyspread.config import odftags, DEFAULT_FONT, selected_cell_brush
+from _pyspread.config import column_width_tag, row_height_tag, faces, dpi
 from _pyspread._datastructures import PyspreadGrid
 from _pyspread._menubars import ContextMenu
 from _pyspread._interfaces import Clipboard, Digest, PysInterfaces, \
                                  get_pen_from_data, get_brush_from_data, \
                                  get_font_from_data
-from _pyspread.irange import irange
 
 class MainGridTable(wx.grid.PyGridTableBase):
     """Table base class that handles interaction between MainGrid and pysgrid"""
@@ -148,8 +131,11 @@ class MainGridTable(wx.grid.PyGridTableBase):
     def UpdateValues(self):
         """Update all displayed values"""
         
-        # This sends an event to the grid table to update all of the values
-        msg = wx.grid.GridTableMessage(self, wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
+        # This sends an event to the grid table 
+        # to update all of the values
+        
+        msg = wx.grid.GridTableMessage(self, 
+                wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
         self.grid.ProcessTableMessage(msg)
 
     def ResetView(self):
@@ -172,10 +158,10 @@ class MainGridTable(wx.grid.PyGridTableBase):
         ]:
 
             if new < current:
-                msg = wx.grid.GridTableMessage(self,delmsg,new,current-new)
+                msg = wx.grid.GridTableMessage(self, delmsg, new, current-new)
                 grid.ProcessTableMessage(msg)
             elif new > current:
-                msg = wx.grid.GridTableMessage(self,addmsg,new-current)
+                msg = wx.grid.GridTableMessage(self, addmsg, new-current)
                 grid.ProcessTableMessage(msg)
                 self.UpdateValues()
 
@@ -203,9 +189,10 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
         wx.grid.PyGridCellEditor.__init__(self)
 
     def Create(self, parent, id, evtHandler):
-        """
-        Called to create the control, which must derive from wx.Control.
+        """Called to create the control, which must derive from wx.Control.
+        
         *Must Override*
+        
         """
         
         self._tc = EntryLine(parent, id, "", grid=self.parent)
@@ -223,14 +210,16 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
         super(TextCellEditor, self).Show(show, attr)
 
     def BeginEdit(self, row, col, grid):
-        """
-        Fetch the value from the table and prepare the edit control
-        to begin editing.  Set the focus to the edit control.
+        """Fetch value from the table and prepare the edit control for editing.
+        
+        Set the focus to the edit control.
         *Must Override*
+        
         """
-        self.startValue = grid.GetTable().GetSource(row, col)
+        
+        self.start_value = grid.GetTable().GetSource(row, col)
         try:
-            self._tc.SetValue(self.startValue)
+            self._tc.SetValue(self.start_value)
         except TypeError:
             pass
         self._tc.SetInsertionPointEnd()
@@ -240,19 +229,25 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
         self._tc.SetSelection(0, self._tc.GetLastPosition())
 
     def EndEdit(self, row, col, grid):
-        """
-        Complete the editing of the current cell. Returns True if the value
-        has changed.  If necessary, the control may be destroyed.
+        """Complete the editing of the current cell.
+        
+        Returns True if the value has changed.  
+        If necessary, the control may be destroyed.
         *Must Override*
+        
         """
         changed = False
         
         val = self._tc.GetValue()
         
-        if val != self.startValue:
+        if val != self.start_value:
             changed = True
-            grid.GetTable().SetValue(row, col, val) # update the table
-        self.startValue = ''
+            
+            # Update the table
+            
+            grid.GetTable().SetValue(row, col, val) 
+            
+        self.start_value = ''
         
         self.parent.pysgrid.unredo.mark()
         
@@ -261,50 +256,55 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
     def Reset(self):
         """
         Reset the value in the control back to its starting value.
-        *Must Override*
-        """
-        self._tc.SetValue(self.startValue)
         
-        self._tc.SetValue(self.startValue)
+        *Must Override*
+        
+        """
+        
+        self._tc.SetValue(self.start_value)
         self._tc.SetInsertionPointEnd()
 
     def StartingKey(self, evt):
-        """
-        If the editor is enabled by pressing keys on the grid, this will be
+        """If the editor is enabled by pressing keys on the grid, this will be
+        
         called to let the editor do something about that first key if desired.
+        
         """
+        
         key = evt.GetKeyCode()
-        ch = None
+        char = None
         if key in [ wx.WXK_NUMPAD0, wx.WXK_NUMPAD1, wx.WXK_NUMPAD2, 
                     wx.WXK_NUMPAD3, wx.WXK_NUMPAD4, wx.WXK_NUMPAD5, 
                     wx.WXK_NUMPAD6, wx.WXK_NUMPAD7, wx.WXK_NUMPAD8, 
                     wx.WXK_NUMPAD9 ]:
-            ch = ch = chr(ord('0') + key - wx.WXK_NUMPAD0)
+            char = chr(ord('0') + key - wx.WXK_NUMPAD0)
 
         elif key < 256 and key >= 0 and chr(key) in string.printable:
-            ch = chr(key)
+            char = chr(key)
 
-        if ch is not None:
-            # For this example, replace the text.  Normally we would append it.
-            #self._tc.AppendText(ch)
-            self._tc.SetValue(ch)
+        if char is not None:
+            self._tc.AppendText(char)
+            #self._tc.SetValue(char) # Replace
             self._tc.SetInsertionPointEnd()
         else:
             evt.Skip()
 
     def StartingClick(self):
+        """If the editor is enabled by clicking on the cell,
+        this method will be called to allow the editor to 
+        simulate the click on the control if needed.
+        
         """
-        If the editor is enabled by clicking on the cell, this method will be
-        called to allow the editor to simulate the click on the control if
-        needed.
-        """
+        
         pass
 
     def Clone(self):
-        """
-        Create a new object which is the copy of this one
+        """Create a new object which is the copy of this one
+        
         *Must Override*
+        
         """
+        
         return TextCellEditor(parent=self)
 
 # end of class TextCellEditor
@@ -780,10 +780,10 @@ class GridSelectionMixin(object):
                 (selection[0][0], selection[0][1], self.current_table)
 
         # Check if selection is rectangular
-        min_x = min(x for x,y in selection)
-        max_x = max(x for x,y in selection) + 1
-        min_y = min(y for x,y in selection)
-        max_y = max(y for x,y in selection) + 1
+        min_x = min(x for x, y in selection)
+        max_x = max(x for x, y in selection) + 1
+        min_y = min(y for x, y in selection)
+        max_y = max(y for x, y in selection) + 1
 
         rect = [(x, y) for x in xrange(min_x, max_x) \
                        for y in xrange(min_y, max_y)]
@@ -1381,7 +1381,7 @@ class MainGrid(wx.grid.Grid,
             if tabno == 0:
                 self.SetRowSize(rowno, dpi_adjusted_size * self.zoom)
             
-            key = (0, colno, tabno)
+            key = (rowno, 0, tabno)
             tag = odftags["rowheight"]
             
             self.pysgrid.create_sgrid_attribute(key, tag)
@@ -1459,6 +1459,7 @@ class MainGrid(wx.grid.Grid,
         # Evaluate everything in order to catch globals
         for key in self.pysgrid.sgrid:
             self.pysgrid[key]
+        
         self.pysgrid._resultcache = {}
         self.pysgrid.sgrid.execute_macros(safe_mode=self.pysgrid.safe_mode)
         

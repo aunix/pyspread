@@ -63,23 +63,20 @@ import cPickle as pickle
 import csv
 from itertools import ifilter
 import optparse
-import os
 import re
 import sys
 import types
 import cStringIO as StringIO
 
 import wx
-import numpy
 
 try:
-    from pyme import core, callbacks, constants, pygpgme
-    from pyme.constants.sig import mode
-    from pyme.constants import protocol
+    from pyme import core, pygpgme
+    import pyme.errors
 except ImportError:
     pass
 
-from _pyspread.config import VERSION, SNIFF_SIZE, default_dimensions, dpi
+from _pyspread.config import VERSION, SNIFF_SIZE, default_dimensions
 
 DEFAULT_FONT = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
 
@@ -390,7 +387,7 @@ def make_string(obj):
         return ""
     try:
         return str(obj)
-    except:
+    except Exception:
         return repr(obj)
 
 def make_unicode(obj):

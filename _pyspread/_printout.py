@@ -3,7 +3,8 @@ import wx
 class MyCanvas(wx.ScrolledWindow):
     def __init__(self, parent, grid, rowslice, colslice, tab,
                  id = -1, size = wx.DefaultSize):
-        wx.ScrolledWindow.__init__(self, parent, id, (0, 0), size=size, style=wx.SUNKEN_BORDER)
+        wx.ScrolledWindow.__init__(self, parent, id, (0, 0), size=size, 
+                                   style=wx.SUNKEN_BORDER)
         
         self.lines = []
         self.width  = 1280
@@ -24,7 +25,7 @@ class MyCanvas(wx.ScrolledWindow):
         self.SetCursor(wx.StockCursor(wx.CURSOR_PENCIL))
 
         self.SetVirtualSize((self.width, self.height))
-        self.SetScrollRate(20,20)
+        self.SetScrollRate(20, 20)
         
         self.Show(False)
     
@@ -51,8 +52,6 @@ class MyCanvas(wx.ScrolledWindow):
                 self.grid.text_renderer.redraw_imminent = False
         
         dc.EndDrawing()
-
-
 
 
 class MyPrintout(wx.Printout):

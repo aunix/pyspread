@@ -43,19 +43,17 @@ import cStringIO
 import csv
 import os
 import struct
-import sys
 import types
 
 import wx
 import wx.grid
-import wx.lib.mixins.listctrl  as  listmix
 from wx.lib.wordwrap import wordwrap
 import wx.stc as stc
 
 from _pyspread._grid import GridIndexMixin
-from _pyspread._widgets import SortedListCtrl, PythonSTC
+from _pyspread._widgets import PythonSTC
 from _pyspread._interfaces import Digest, sniff, fill_wxgrid
-from _pyspread.config import VERSION, ICONPREFIX
+from _pyspread.config import VERSION
 
 class ChoiceRenderer(wx.grid.PyGridCellRenderer):
     """Renders choice dialog box for grid
@@ -369,6 +367,8 @@ class CSVPreviewGrid(wx.grid.Grid, GridIndexMixin):
         
         self.CreateGrid(*self.shape)
         
+        self.dtypes = []
+        
         self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.OnMouse)
         self.Bind(wx.grid.EVT_GRID_EDITOR_CREATED, self.OnGridEditorCreated)
     
@@ -411,6 +411,8 @@ class CSVPreviewGrid(wx.grid.Grid, GridIndexMixin):
         # Get columns from csv
         csvfile = open(self.csvfilepath, "rb")
         csvreader = csv.reader(csvfile, dialect=dialect)
+        
+        first_line = ""
         for first_line in csvreader:
             self.shape[1] = len(first_line)
             break
@@ -811,8 +813,9 @@ class DimensionsEntryDialog(wx.Dialog):
         self.Tabs_Label = wx.StaticText(self, -1, "Tabs", style=wx.ALIGN_CENTRE)
         self.Z_DimensionsEntry = wx.TextCtrl(self, -1, "")
         
-        self.textctrls = \
-            [self.X_DimensionsEntry, self.Y_DimensionsEntry, self.Z_DimensionsEntry]
+        self.textctrls = [self.X_DimensionsEntry, 
+                          self.Y_DimensionsEntry, 
+                          self.Z_DimensionsEntry]
         
         self.ok_button = wx.Button(self, wx.ID_OK, "")
         self.cancel_button = wx.Button(self, wx.ID_CANCEL, "")
@@ -827,10 +830,14 @@ class DimensionsEntryDialog(wx.Dialog):
         self.dimensions = [1, 1, 1]
     
     def _set_properties(self):
+        """Wx property setup"""
+        
         self.SetTitle("Create a new grid and discard the old one")
         self.cancel_button.SetDefault()
     
     def _do_layout(self):
+        """Layout sizers"""
+        
         grid_sizer_1 = wx.GridSizer(4, 2, 3, 3)
         grid_sizer_1.Add(self.Rows_Label, 0, \
                          wx.LEFT|wx.ALIGN_CENTER_VERTICAL, 3)

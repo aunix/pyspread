@@ -44,7 +44,7 @@ class TestPyspreadGrid(object):
         """Test for completeness of grid attributes and correct size."""
         
         assert hasattr (self.grid, 'sgrid')
-        assert hasattr (self.grid, 'macros')
+        assert hasattr (self.grid.sgrid, 'macros')
         assert hasattr (self.grid, 'unredo')
         x_list, y_list, z_list = [v.getints(1, 100, 100) for i in xrange(3)]
         for dim in zip(x_list, y_list, z_list):
@@ -72,7 +72,7 @@ class TestPyspreadGrid(object):
         
         gridsize = 100
         filled_grid = _datastructures.PyspreadGrid(dimensions=(gridsize, 10, 1))
-        for i in v.getints(gmpy.mpz(-2**99), gmpy.mpz(2**99), 10):
+        for i in v.getints(-2**99, 2**99, 10):
             for j in xrange(gridsize):
                 filled_grid[j, 0, 0] = str(i)
                 filled_grid[j, 1, 0] = str(i) + '+' + str(j)
@@ -299,31 +299,6 @@ class TestPyspreadGrid(object):
         assert self.grid[3, 0, 0] == 3
         assert self.grid.findnextmatch((0, 0, 0), "3", "DOWN") == (3, 0, 0)
         assert self.grid.findnextmatch((0, 0, 0), "99", "DOWN") == (99, 0, 0)
-    
-    def test_set_global_macros(self):
-        """Tests global macro setting for accessability"""
-        
-        funcstring = "def testmacro(x): return x+2"
-        self.grid.macros.add(funcstring)
-        self.grid.set_global_macros()
-        assert self.grid.macros['testmacro'](5) == 7 
-        ## How do I assert that it is in global scope?
-
-
-class TestMacros(object):
-    """Unit test for Macros"""
-    
-    def setup_method(self, method):
-        """Creates basic macro"""
-        
-        self.macros = _datastructures.Macros()
-        self.funcstring = "def testmacro(x): return x+2"
-        
-    def test_add(self):
-        """Test adding additional macro"""
-        
-        self.macros.add(self.funcstring)
-        assert self.macros['testmacro']
 
 
 class TestUnRedo(object):

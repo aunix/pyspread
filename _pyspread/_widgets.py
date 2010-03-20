@@ -31,12 +31,11 @@ Provides:
   2. MainGrid: Main grid
   2. CollapsiblePane: Collapsible pane with basic toggle mechanism
   3. MacroEditPanel: Collapsible label, parameter entry area and editor
-  4. SortedListCtrl: ListCtrl with items sorted in first column
-  5. ImageComboBox: Base class for image combo boxes
-  6. PenStyleComboBox: ComboBox for border pen style selection
-  7. FontChoiceCombobox: ComboBox for font selection
-  8. BorderEditChoice: ComboBox for border selection
-  9. BitmapToggleButton: Button that toggles through a list of bitmaps
+  4. ImageComboBox: Base class for image combo boxes
+  5. PenStyleComboBox: ComboBox for border pen style selection
+  6. FontChoiceCombobox: ComboBox for font selection
+  7. BorderEditChoice: ComboBox for border selection
+  8. BitmapToggleButton: Button that toggles through a list of bitmaps
 
 """
 
@@ -46,9 +45,9 @@ import wx
 import wx.grid
 import wx.combo
 import wx.stc  as  stc
-import wx.lib.mixins.listctrl  as  listmix
 
-from _pyspread.config import faces, text_styles, fold_symbol_style, icons
+from _pyspread.config import faces, text_styles, fold_symbol_style
+from _pyspread.config import icons, pen_styles
 
 class CollapsiblePane(wx.CollapsiblePane):
     """Collapsible pane with basic toggle mechanism
@@ -86,15 +85,6 @@ class CollapsiblePane(wx.CollapsiblePane):
 
 # end of class CollapsiblePane
 
-class SortedListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
-    """ListCtrl with items sorted in first column"""
-    
-    def __init__(self, parent, wxid, pos=wx.DefaultPosition,
-                 size=wx.DefaultSize, style=0):
-        wx.ListCtrl.__init__(self, parent, wxid, pos, size, style)
-        listmix.ListCtrlAutoWidthMixin.__init__(self)
-
-# end of class SortedListCtrl
 
 class PythonSTC(stc.StyledTextCtrl):
     """Editor that highlights Python source code.
@@ -322,31 +312,12 @@ class PenStyleComboBox(ImageComboBox):
         r = wx.Rect(*rect)  # make a copy
         r.Deflate(3, 5)
         
-        penStyle = wx.SOLID
-        if item == 1:
-            penStyle = wx.TRANSPARENT
-        elif item == 2:
-            penStyle = wx.DOT
-        elif item == 3:
-            penStyle = wx.LONG_DASH
-        elif item == 4:
-            penStyle = wx.SHORT_DASH
-        elif item == 5:
-            penStyle = wx.DOT_DASH
-        elif item == 6:
-            penStyle = wx.BDIAGONAL_HATCH
-        elif item == 7:
-            penStyle = wx.CROSSDIAG_HATCH
-        elif item == 8:
-            penStyle = wx.FDIAGONAL_HATCH
-        elif item == 9:
-            penStyle = wx.CROSS_HATCH
-        elif item == 10:
-            penStyle = wx.HORIZONTAL_HATCH
-        elif item == 11:
-            penStyle = wx.VERTICAL_HATCH
+        if not 0 < item < 12:
+            item = 0
             
-        pen = wx.Pen(dc.GetTextForeground(), 3, penStyle)
+        pen_style = pen_styles[item]
+            
+        pen = wx.Pen(dc.GetTextForeground(), 3, pen_style)
         dc.SetPen(pen)
         
         if flags & wx.combo.ODCB_PAINTING_CONTROL:
@@ -397,10 +368,10 @@ class PenWidthComboBox(ImageComboBox):
         r = wx.Rect(*rect)  # make a copy
         r.Deflate(3, 5)
         
-        penStyle = wx.SOLID
+        pen_style = wx.SOLID
         if item == 0:
-            penStyle = wx.TRANSPARENT
-        pen = wx.Pen(dc.GetTextForeground(), item, penStyle)
+            pen_style = wx.TRANSPARENT
+        pen = wx.Pen(dc.GetTextForeground(), item, pen_style)
         pen.SetCap(wx.CAP_BUTT)
         
         dc.SetPen(pen)

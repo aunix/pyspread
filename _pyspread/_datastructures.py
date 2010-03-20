@@ -25,9 +25,8 @@ _datastructures
 
 Provides
   1. Grid object class Grid
-  2. Macro user dictionary class Macros
-  3. Undo/Redo framework class UnRedo
-  4. Sliceable dict based grid class DictGrid
+  2. Undo/Redo framework class UnRedo
+  3. Sliceable dict based grid class DictGrid
 
 """
 
@@ -599,15 +598,6 @@ class PyspreadGrid(object):
             if string_match(self.sgrid[key], find_string, flags) is not None:
                 return key
     
-    def set_global_macros(self, macros=None):
-        """ Sets macros to global scope """
-        
-        self._resultcache = {}
-        if macros is None: 
-            macros = self.sgrid.macros
-        for macroname, macro in macros.iteritems():
-            globals()[macroname] = macro
-    
     def create_sgrid_attribute(self, key, attribute):
         """Creates an attribute of the sgrid string if not already there
         
@@ -662,36 +652,6 @@ class PyspreadGrid(object):
             return default_cell_attributes[attr]()
 
 # end of class PyspreadGrid
-
-
-#class Macros(UserDict.IterableUserDict):
-#    """User dict class for macros.
-#
-#    This class provides a getter and setter method for storing the full
-#    macro Python code in the 'macrocode' attribute of the funcdict.
-#
-#    """
-#    
-#    def add(self, code):
-#        """ Adds a macro with the code string 'code' to the macro dict"""
-#        
-#        funcname = code.split("(")[0][3:].strip()
-#        
-#        # Windows exec does not like Windows newline
-#        code = code.replace('\r\n', '\n')
-#        
-#        exec(code)
-#        
-#        func = eval(funcname, globals(), locals())
-#        func.func_dict['macrocode'] = code
-#        
-#        if func.__name__ in self:
-#            return 0
-#        self[func.__name__] = func
-#        
-#        return func
-#        
-## end of class Macros
 
 class UnRedo(object):
     """Undo/Redo framework class.

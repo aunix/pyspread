@@ -37,8 +37,8 @@ Provides:
 import wx
 import wx.lib.colourselect as csel
 
-from _pyspread.config import icons, odftags, border_toggles
-from _pyspread.config import FONT_SIZES, DEFAULT_FONT, faces
+from _pyspread.config import odftags, border_toggles, default_cell_attributes
+from _pyspread.config import FONT_SIZES, DEFAULT_FONT, faces, icons
 
 from _pyspread._interfaces import get_font_list
 import _widgets
@@ -386,19 +386,26 @@ class AttributesToolbar(wx.ToolBar):
     def _create_color_buttons(self):
         """Create color choice buttons"""
         
-        color_button_data = [
-          ("OnLineColor", "linecolor_choice", (0, 0, 0), (30, 30), 
-                                                         unichr(0x2500)),
-          ("OnBGColor", "bgcolor_choice", (255, 255, 255), (30, 30), u""),
-          ("OnTextColor", "textcolor_choice", (0, 0, 0), (30, 30), u"A")]
+        button_size = (30, 30)
+        button_style = wx.NO_BORDER
         
-        for methodname, name, color, size, label in color_button_data:
-            setattr(self, name, 
-                csel.ColourSelect(self, -1, label, color, size = size, 
-                                  style=wx.NO_BORDER))
-            self.AddControl(getattr(self, name))
-            method = getattr(self, methodname)
-            getattr(self, name).Bind(csel.EVT_COLOURSELECT, method)
+        self.linecolor_choice = \
+            csel.ColourSelect(self, -1, unichr(0x2500), (0, 0, 0), 
+                              size=button_size, style=button_style)
+        self.bgcolor_choice = \
+            csel.ColourSelect(self, -1, "", (255, 255, 255), 
+                              size=button_size, style=button_style)
+        self.textcolor_choice = \
+            csel.ColourSelect(self, -1, "A", (0, 0, 0), 
+                              size=button_size, style=button_style)
+        
+        self.AddControl(self.linecolor_choice)
+        self.AddControl(self.bgcolor_choice)
+        self.AddControl(self.textcolor_choice)
+        
+        self.linecolor_choice.Bind(csel.EVT_COLOURSELECT, self.OnLineColor)
+        self.bgcolor_choice.Bind(csel.EVT_COLOURSELECT, self.OnBGColor)
+        self.textcolor_choice.Bind(csel.EVT_COLOURSELECT, self.OnTextColor)
     
     def _create_textrotation_spinctrl(self):
         """Create text rotation spin control"""
