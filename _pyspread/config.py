@@ -11,7 +11,7 @@ Program info
 """
 
 # The current version of pyspread
-VERSION = "0.0.14b" 
+VERSION = "0.1" 
 
 
 """

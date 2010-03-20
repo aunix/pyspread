@@ -59,6 +59,7 @@ _pyspread/icons/toggles/regex.png
 _pyspread/icons/toggles/wholeword.png
 _pyspread/icons/toggles/border_all.xpm
 _pyspread/icons/toggles/border_bottom.xpm
+_pyspread/icons/toggles/border_inside.xpm
 _pyspread/icons/toggles/border_left.xpm
 _pyspread/icons/toggles/border_none.xpm
 _pyspread/icons/toggles/border_outside.xpm

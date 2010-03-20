@@ -400,14 +400,20 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         pysgrid = self.table.pysgrid
         tab = self.table.current_table
         
-        vis_cells_rects = (grid.CellToRect(r, c) for r in rows for c in cols)
-        vis_cells_tuples = [(r.x - 1, r.y - 1, r.width + 1, r.height + 1) \
-                                for r in vis_cells_rects]
+        borderpens = [wx.TRANSPARENT_PEN] * (len(rows) * len(cols))
+        bgbrushes = []
+        vis_cells_tuples = []
         
-        borderpens = [wx.TRANSPARENT_PEN] * len(vis_cells_tuples)
-        bgbrushes = [get_brush_from_data( \
-                    pysgrid.get_sgrid_attr((row, col, tab), "bgbrush")) \
-                        for row in rows for col in cols]
+        for row in rows:
+            for col in cols:
+                rect = grid.CellToRect(row, col)
+                vis_cells_tuple = (rect.x - 1, rect.y - 1, 
+                                   rect.width + 1, rect.height + 1)
+                vis_cells_tuples.append(vis_cells_tuple)
+                
+                bgbrush = get_brush_from_data( \
+                        pysgrid.get_sgrid_attr((row, col, tab), "bgbrush"))
+                bgbrushes.append(bgbrush)
         
         dc.DrawRectangleList(vis_cells_tuples, borderpens, bgbrushes)
         
@@ -539,6 +545,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
                 self.redraw_imminent = False
         
         if isSelected:
+            grid.selection_present = True
             self.draw_selection_background(grid, dc, rect)
         
         self.draw_border_lines(grid, dc, rect, row, col)
@@ -766,6 +773,7 @@ class GridSelectionMixin(object):
         if selection == []:
             selection = [(self.get_currentcell())]
         selection = sorted(list(set(selection)))
+        
         return selection
     
     def get_selection_code(self):
@@ -1333,6 +1341,7 @@ class MainGrid(wx.grid.Grid,
         self.std_col_size = self.GetColSize(0)
         
         self.SetDefaultCellFont(DEFAULT_FONT)
+        self.selection_present = False
         
         # Event bindings
         
@@ -1521,7 +1530,6 @@ class MainGrid(wx.grid.Grid,
         """When a cell editor is hidden, the grid is refreshed"""
         
         self.ForceRefresh()
-        self.Update()
         event.Skip()
     
     def OnCellSelected(self, event):
@@ -1678,8 +1686,11 @@ class MainGrid(wx.grid.Grid,
         """Left mouse button up event handler"""
         
         # If there is a selection, activate redraw of grid
-        self.text_renderer.redraw_imminent = True
-        self.ForceRefresh()
+        
+        if self.selection_present:
+            self.selection_present = False
+            self.text_renderer.redraw_imminent = True
+            self.ForceRefresh()
         
         event.Skip()
     
@@ -1689,7 +1700,8 @@ class MainGrid(wx.grid.Grid,
         # If shift is released, a new selection is present 
         # => redraw
         
-        if event.GetKeyCode() == 306:
+        if event.GetKeyCode() == 306 and self.selection_present:
+            self.selection_present = False
             self.text_renderer.redraw_imminent = True
             self.ForceRefresh()
         event.Skip()

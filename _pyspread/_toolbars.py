@@ -367,6 +367,8 @@ class AttributesToolbar(wx.ToolBar):
                                 choices=[c[0] for c in border_toggles], \
                                 style=wx.CB_READONLY, size=(50, -1))
         
+        self.borderstate = border_toggles[0][0]
+        
         self.AddControl(self.pen_width_combo)
         
         self.Bind(wx.EVT_COMBOBOX, self.OnBorderChoice, self.pen_width_combo)
