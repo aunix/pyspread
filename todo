@@ -1,6 +1,10 @@
 pyspread todo
 =============
 
+0.1
+---
+Make refresh faster especially on Windows
+
 0.0.14
 ------
 + Signature based save load cycle

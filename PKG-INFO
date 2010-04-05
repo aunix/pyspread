@@ -8,7 +8,7 @@ Author-email: mmanns@gmx.net
 License: GPL v3 :: GNU General Public License
 Description: UNKNOWN
 Platform: UNKNOWN
-Classifier: Development Status :: 3 - Alpha
+Classifier: Development Status :: 4 - Beta
 Classifier: Environment :: MacOS X
 Classifier: Environment :: Win32 (MS Windows)
 Classifier: Environment :: X11 Applications :: GTK

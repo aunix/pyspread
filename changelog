@@ -1,3 +1,13 @@
+0.1
+---
++ New macro editor dialog. (done)
++ Macros can now contain any Python code. (done)
++ Macros load and save files are now plain text files. (done)
++ Macros are now saved within the pys-file. (done)
++ Macros files are now signed and included in the trusted file
+  concept. (done)
+
+
 0.0.14b
 -------
 + Cell borders can now be changed independently (done)
