@@ -311,6 +311,7 @@ Provides the dict 'icons' with paths to the toolbar icons.
 """
 
 icon_size = (36, 36)
+small_icon_size = (24, 24)
 _action_path = ICONPREFIX + "icons/actions/"
 _toggle_path = ICONPREFIX + "icons/toggles/"
 
