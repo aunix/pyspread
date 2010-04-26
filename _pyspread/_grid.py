@@ -142,6 +142,7 @@ class MainGridTable(wx.grid.PyGridTableBase):
         """
         (Grid) -> Reset the grid view.   Call this to
         update the grid if rows and columns have been added or deleted
+        
         """
         
         grid = self.grid
@@ -170,7 +171,9 @@ class MainGridTable(wx.grid.PyGridTableBase):
         self._rows = self.GetNumberRows()
         self._cols = self.GetNumberCols()
 
-        # update the scrollbars and the displayed part of the grid
+        # update the scrollbars and the displayed part 
+        # of the grid
+        
         grid.AdjustScrollbars()
         grid.ForceRefresh()
 
@@ -206,7 +209,9 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
         """
         Show or hide the edit control.  You can use the attr (if not None)
         to set colours or fonts for the control.
+        
         """
+        
         super(TextCellEditor, self).Show(show, attr)
 
     def BeginEdit(self, row, col, grid):
@@ -520,10 +525,17 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
     def Draw(self, grid, attr, dc, rect, row, col, isSelected):
         """Draws the cell border and content"""
         
+        ## This is far too slow
+        ## Idea: Cache all backgrounds, lines and text
+        ## Re-draw iif anything has changed at object 
+        ## or in a layer below
+        
+        
         pysgrid = self.table.pysgrid
         key = (row, col, self.table.current_table)
         
-        # Draw background if this is the last (at least partly) visible cell
+        # Draw background if this is the last (at least partly)
+        # visible cell
                     
         is_bottomright_cell = \
             grid.IsVisible(row, col, wholeCellVisible=False) and \
