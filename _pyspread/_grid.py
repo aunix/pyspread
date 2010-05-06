@@ -320,6 +320,10 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
     def __init__(self, table):
         
         wx.grid.PyGridCellRenderer.__init__(self)
+        
+        self.grid_dc = wx.MemoryDC()
+        self.background_dc = wx.MemoryDC()
+        
         self.table = table
         
         self.redraw_imminent = True
@@ -349,55 +353,41 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         dc.DestroyClippingRegion()
     
-    def get_visible_rows(self, grid, row, col):
+    def get_visible_rows(self, grid):
         """Returns a lists of the visible rows
         
         Parameters
         ----------
         grid: wx.Grid
         \tCurrent grid
-        row: Integer
-        \tLast visible row
-        col: Integer
-        \tLast visible col
         
         """
         
-        visible_rows = []
+        pos = grid.GetPosition()
+        size = grid.Size
         
-        check_row = row + 0
+        upper_cell = grid.YToRow(pos[1])
+        lower_cell = grid.YToRow(pos[1] + size[1] - 1)
         
-        while check_row >= 0 and \
-              grid.IsVisible(check_row, col, wholeCellVisible=False):
-            visible_rows.append(check_row)
-            check_row -= 1
+        return xrange(upper_cell, lower_cell)
         
-        return visible_rows
-        
-    def get_visible_cols(self, grid, row, col):
+    def get_visible_cols(self, grid):
         """Returns a lists of the visible rows
         
         Parameters
         ----------
         grid: wx.Grid
         \tCurrent grid
-        row: Integer
-        \tLast visible row
-        col: Integer
-        \tLast visible col
         
         """
         
-        visible_cols = []
+        pos = grid.GetPosition()
+        size = grid.Size
         
-        check_col = col + 0
+        left_cell = grid.XToCol(pos[0])
+        right_cell = grid.XToCol(pos[0] + size[0] - 1)
         
-        while check_col >= 0 and \
-              grid.IsVisible(row, check_col, wholeCellVisible=False):
-            visible_cols.append(check_col)
-            check_col -= 1
-        
-        return visible_cols
+        return xrange(left_cell, right_cell)
         
     def draw_backgrounds(self, grid, dc, rect, rows, cols):
         """Draws backgrounds for cells in rows and cols"""
@@ -522,63 +512,16 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
 
         dc.DrawLine(x1, y1, x2, y2)
 
-    def Draw(self, grid, attr, dc, rect, row, col, isSelected):
-        """Draws the cell border and content"""
+    def draw_text_label(self, dc, rect, grid, pysgrid, key):
+        """Draws text label of cell"""
         
-        ## This is far too slow
-        ## Idea: Cache all backgrounds, lines and text
-        ## Re-draw iif anything has changed at object 
-        ## or in a layer below
-        
-        
-        pysgrid = self.table.pysgrid
-        key = (row, col, self.table.current_table)
-        
-        # Draw background if this is the last (at least partly)
-        # visible cell
-                    
-        is_bottomright_cell = \
-            grid.IsVisible(row, col, wholeCellVisible=False) and \
-            not grid.IsVisible(row + 1, col, wholeCellVisible=False) and \
-            not grid.IsVisible(row, col + 1, wholeCellVisible=False)
-        
-        if self.redraw_imminent or is_bottomright_cell:
-            
-            # Set up cell attribute cache
-            
-            visible_rows = self.get_visible_rows(grid, row, col)
-            visible_cols = self.get_visible_cols(grid, row, col)
-            
-            # Draw grid background rects
-            self.draw_backgrounds(grid, dc, rect, visible_rows, visible_cols)
-            
-            # Reset the background draw flag
-            if is_bottomright_cell:
-                self.redraw_imminent = False
-        
-        if isSelected:
-            grid.selection_present = True
-            self.draw_selection_background(grid, dc, rect)
-        
-        self.draw_border_lines(grid, dc, rect, row, col)
+        row, col, _ = key
         
         textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
         
         textfont = get_font_from_data( \
             pysgrid.get_sgrid_attr(key, "textfont"))
         
-        # Check if the dc is drawn manually be a return func
-        
-        res = grid.pysgrid[row, col, grid.current_table]
-        if type(res) is types.FunctionType and \
-            True:
-            # add func_dict attribute so that we are sure that it uses a dc
-            res(grid, attr, dc, rect)
-            
-            # We do not want the string representation rendered so we return
-            return None
-        
-        # Text label
         res_text = grid.GetCellValue(row, col)
         
         try:
@@ -667,6 +610,64 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         if strikethrough in ["solid"]:
             self._draw_strikethrough_line(grid, attr, dc, rect, angle,
                                           string_x, string_y, text_extent)
+
+    def is_bottom_right_visible_cell(self, grid, key):
+        """Returns True if the cell is the last bottom right visisble cell"""
+        
+        row, col, _ = key
+        
+        return \
+            grid.IsVisible(row, col, wholeCellVisible=False) and \
+            not grid.IsVisible(row + 1, col, wholeCellVisible=False) and \
+            not grid.IsVisible(row, col + 1, wholeCellVisible=False)
+    
+    def Draw(self, grid, attr, dc, rect, row, col, isSelected):
+        """Draws the cell border and content"""
+        
+        ## This is far too slow
+        ## Idea: Draw in different layers
+        
+        pysgrid = self.table.pysgrid
+        key = (row, col, self.table.current_table)
+        
+        # Draw background if this is the last (at least partly)
+        # visible cell
+        
+        
+        if self.redraw_imminent or self.is_bottom_right_visible_cell(grid, key):
+            
+            # Set up cell attribute cache
+            
+            visible_rows = self.get_visible_rows(grid)
+            visible_cols = self.get_visible_cols(grid)
+            
+            # Draw grid background rects
+            self.draw_backgrounds(grid, dc, rect, 
+                                  visible_rows, visible_cols)
+            size = grid.Size
+            
+            # Reset the background draw flag
+            self.redraw_imminent = False
+        
+        if isSelected:
+            grid.selection_present = True
+            self.draw_selection_background(grid, dc, rect)
+        
+        self.draw_border_lines(grid, dc, rect, row, col)
+        
+        # Check if the dc is drawn manually be a return func
+        
+        res = grid.pysgrid[row, col, grid.current_table]
+        if type(res) is types.FunctionType and \
+            True:
+            # add func_dict attribute so that we are sure that it uses a dc
+            res(grid, attr, dc, rect)
+            
+            # We do not want the string representation rendered so we return
+            return None
+        
+        # Text label
+        self.draw_text_label(dc, rect, grid, pysgrid, key)
         
 # end of class TextRenderer
         
