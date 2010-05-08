@@ -91,8 +91,6 @@ class PyspreadGrid(object):
         self.frozen_cells = {} # Values are results for frozen cells
         
         self._resultcache = {}
-        
-        self._tabukey = None # Cycle detection key
     
     def _getshape(self):
         """Returns the shape of the array sgrid"""
@@ -228,11 +226,6 @@ class PyspreadGrid(object):
         
         listkeys, __listkeys = tee(self._get_list_keys(key, list_dim))
         
-        __listkeys = list(__listkeys)
-        
-        if self._tabukey in __listkeys:
-            raise KeyError, 'Infinite recursion detected.'
-        
         list_range = []
         for listkey in listkeys:
             list_range.append(ndim_method(listkey))
@@ -255,9 +248,6 @@ class PyspreadGrid(object):
     def __getitem__(self, key):
         """Gets items, key may consist of ints or slices"""
         
-        if self._tabukey is None:
-            self._tabukey = [key]
-        
         slicetype = types.SliceType
         
         if all(type(keyele) != slicetype for keyele in key):
@@ -273,9 +263,6 @@ class PyspreadGrid(object):
                 result = self._get_ndim_itemlist(key)
             except Exception, err:
                 result = err
-        
-        if key in self._tabukey:
-            self._tabukey = None
         
         return result
     
@@ -608,16 +595,15 @@ class PyspreadGrid(object):
         
         sgrid = self.sgrid
         
-        try:
-            sgrid_ele = sgrid[key]
-            
-        except KeyError:
+        sgrid_ele = sgrid[key]
+        
+        if sgrid_ele is None:
             # No element present
+            
             sgrid[key] = UserString(u"")
             setattr(sgrid[key], attribute, 
                     default_cell_attributes[attribute]())
-            
-            return None
+            return
             
         try:
             getattr(sgrid_ele, attribute)

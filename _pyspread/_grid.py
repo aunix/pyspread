@@ -89,13 +89,13 @@ class MainGridTable(wx.grid.PyGridTableBase):
         
         return str(col)
     
-    def IsEmptyCell(self, row, col):
-        """Return True if the cell is empty"""
-        
-        if self.pysgrid[row, col, self.grid.current_table] is None:
-            return True
-        else:
-            return False
+#    def IsEmptyCell(self, row, col):
+#        """Return True if the cell is empty"""
+#        
+#        if self.pysgrid.sgrid[row, col, self.grid.current_table] is None:
+#            return True
+#        else:
+#            return False
     
     def GetSource(self, row, col, table=None):
         """Return the source string of a cell"""
@@ -321,27 +321,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         wx.grid.PyGridCellRenderer.__init__(self)
         
-        self.grid_dc = wx.MemoryDC()
-        self.background_dc = wx.MemoryDC()
-        
         self.table = table
-        
-        self.redraw_imminent = True
-        
-        evts = [wx.EVT_MOUSEWHEEL,
-                wx.EVT_SCROLLWIN,
-               ]
-        
-        for evt in evts:
-            table.Bind(evt, self.OnRedraw_imminent)
-        
-        
-    def OnRedraw_imminent(self, event):
-        """A redraw is imminent -> set background and grid redraw flag"""
-        
-        self.redraw_imminent = True
-        
-        event.Skip()
 
     def Clip(self, dc, rect):
         """Setup the clipping rectangle"""
@@ -389,81 +369,6 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         return xrange(left_cell, right_cell)
         
-    def draw_backgrounds(self, grid, dc, rect, rows, cols):
-        """Draws backgrounds for cells in rows and cols"""
-        
-        pysgrid = self.table.pysgrid
-        tab = self.table.current_table
-        
-        borderpens = [wx.TRANSPARENT_PEN] * (len(rows) * len(cols))
-        bgbrushes = []
-        vis_cells_tuples = []
-        
-        for row in rows:
-            for col in cols:
-                rect = grid.CellToRect(row, col)
-                vis_cells_tuple = (rect.x - 1, rect.y - 1, 
-                                   rect.width + 1, rect.height + 1)
-                vis_cells_tuples.append(vis_cells_tuple)
-                
-                bgbrush = get_brush_from_data( \
-                        pysgrid.get_sgrid_attr((row, col, tab), "bgbrush"))
-                bgbrushes.append(bgbrush)
-        
-        dc.DrawRectangleList(vis_cells_tuples, borderpens, bgbrushes)
-        
-    def draw_border_lines(self, grid, dc, rect, row, col):
-        """Draws lines for given cell in row, col"""
-        
-        # Get borderpens and bgbrushes for rects
-        
-        x, y, w, h  = rect.x - 1, rect.y - 1, rect.width, rect.height
-        
-        tab = self.table.current_table
-        
-        # Each cell draws its bottom and its right line only
-        bottomline = x, y + h, x + w, y + h
-        rightline = x+ w, y, x + w, y + h
-        lines = [bottomline, rightline]
-        
-        key = (row, col, tab)
-        
-        pen_names = ["borderpen_bottom", "borderpen_right"]
-        
-        borderpens = [get_pen_from_data(grid.pysgrid.get_sgrid_attr(key, pen)) \
-                        for pen in pen_names]
-        
-        # Topmost line if in top cell
-        
-        if row == 0:
-            lines.append((x, y, x + w, y))
-            topkey = "top", col, tab
-            toppen_data  = grid.pysgrid.get_sgrid_attr(topkey, pen_names[0])
-            borderpens.append(get_pen_from_data(toppen_data))
-        
-        # Leftmost line if in left cell
-        
-        if col == 0:
-            lines.append((x, y, x, y + h))
-            leftkey = row, "left", tab
-            toppen_data  = grid.pysgrid.get_sgrid_attr(leftkey, pen_names[1])
-            borderpens.append(get_pen_from_data(toppen_data))
-        
-        zoomed_pens = []
-        
-        for pen in borderpens:
-            bordercolor = pen.GetColour()
-            borderwidth = pen.GetWidth()
-            borderstyle = pen.GetStyle()
-            
-            zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
-            zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, borderstyle)
-            zoomed_pen.SetJoin(wx.JOIN_MITER)
-            
-            zoomed_pens.append(zoomed_pen)
-        
-        dc.DrawLineList(lines, zoomed_pens)
-
     def draw_selection_background(self, grid, dc, rect):
         """Draws the background for a selected cell"""
         
@@ -477,10 +382,18 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             
         self.Unclip(dc)
 
-    def _draw_strikethrough_line(self, grid, attr, dc, rect, angle, 
-                                 string_x, string_y, text_extent):
-        """Draws the strikethrough line"""
-
+    def _draw_strikethrough_line(self, grid, dc, rect, 
+                                 textpos, textattributes, text_extent):
+        """Draws a strikethrough line if needed"""
+        
+        try:
+            strikethrough_tag = odftags["strikethrough"]
+            strikethrough = textattributes[strikethrough_tag]
+        except KeyError:
+            return
+            
+        string_x, string_y, angle = textpos
+        
         strikethroughwidth = max(1, int(round(1.5 * grid.zoom)))
         dc.SetPen(wx.Pen(wx.BLACK, strikethroughwidth, wx.SOLID))
 
@@ -512,18 +425,8 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
 
         dc.DrawLine(x1, y1, x2, y2)
 
-    def draw_text_label(self, dc, rect, grid, pysgrid, key):
-        """Draws text label of cell"""
-        
-        row, col, _ = key
-        
-        textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
-        
-        textfont = get_font_from_data( \
-            pysgrid.get_sgrid_attr(key, "textfont"))
-        
-        res_text = grid.GetCellValue(row, col)
-        
+    def set_font(self, dc, textfont, textattributes, zoom):
+        """Sets font, text color and style"""
         try:
             fontcolortag = odftags["fontcolor"]
             textcolor = textattributes[fontcolortag]
@@ -542,14 +445,15 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         font_size = textfont.GetPointSize()
         
-        zoomed_fontsize = max(1, int(round(font_size * grid.zoom)))
+        zoomed_fontsize = max(1, int(round(font_size * zoom)))
         
         zoomed_font = wx.Font(zoomed_fontsize, textfont.GetFamily(),
             textfont.GetStyle(), textfont.GetWeight(), 
             underline_mode == "continuous", textfont.GetFaceName())
         dc.SetFont(zoomed_font)
-        
-        # Position string
+    
+    def get_text_position(self, dc, rect, res_text, textattributes):
+        """Returns text x, y, angle position in cell"""
         
         text_extent = dc.GetTextExtent(res_text)
         
@@ -598,18 +502,35 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             string_y = string_y + text_extent[0] * sin(rot_angle)
         else:
             raise ValueError, "Cell justification must be left or right"
+    
+        return string_x, string_y, angle
+    
+    def draw_text_label(self, dc, rect, grid, pysgrid, key):
+        """Draws text label of cell"""
         
-        dc.DrawRotatedText(res_text, string_x, string_y, angle)
+        row, col, _ = key
         
-        try:
-            strikethrough_tag = odftags["strikethrough"]
-            strikethrough = textattributes[strikethrough_tag]
-        except KeyError:
-            strikethrough = "transparent"
+        textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
         
-        if strikethrough in ["solid"]:
-            self._draw_strikethrough_line(grid, attr, dc, rect, angle,
-                                          string_x, string_y, text_extent)
+        textfont = get_font_from_data( \
+            pysgrid.get_sgrid_attr(key, "textfont"))
+        
+        self.set_font(dc, textfont, textattributes, grid.zoom)
+        
+        res_text = grid.GetCellValue(row, col)
+        
+        text_pos = self.get_text_position(dc, rect, res_text, textattributes)
+        
+        if res_text:
+            angle = text_pos[2]
+            
+            if angle == 0:
+                dc.DrawText(res_text, *text_pos[:2])
+            else:
+                dc.DrawRotatedText(res_text, *text_pos)
+        
+        self._draw_strikethrough_line(grid, dc, rect, text_pos, 
+                textattributes, dc.GetTextExtent(res_text))
 
     def is_bottom_right_visible_cell(self, grid, key):
         """Returns True if the cell is the last bottom right visisble cell"""
@@ -624,47 +545,35 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
     def Draw(self, grid, attr, dc, rect, row, col, isSelected):
         """Draws the cell border and content"""
         
-        ## This is far too slow
-        ## Idea: Draw in different layers
-        
         pysgrid = self.table.pysgrid
         key = (row, col, self.table.current_table)
-        
-        # Draw background if this is the last (at least partly)
-        # visible cell
-        
-        
-        if self.redraw_imminent or self.is_bottom_right_visible_cell(grid, key):
-            
-            # Set up cell attribute cache
-            
-            visible_rows = self.get_visible_rows(grid)
-            visible_cols = self.get_visible_cols(grid)
-            
-            # Draw grid background rects
-            self.draw_backgrounds(grid, dc, rect, 
-                                  visible_rows, visible_cols)
-            size = grid.Size
-            
-            # Reset the background draw flag
-            self.redraw_imminent = False
         
         if isSelected:
             grid.selection_present = True
             self.draw_selection_background(grid, dc, rect)
         
-        self.draw_border_lines(grid, dc, rect, row, col)
+        try:
+            bg = self.table.backgrounds[key]
+        except KeyError:
+            if len(self.table.backgrounds) > 10000:
+                # self.table.backgrounds grows quickly
+                self.table.backgrounds = {}
+            bg = self.table.backgrounds[key] = Background(grid, *key)
+            
+        dc.Blit(rect.x, rect.y, rect.width, rect.height,
+                bg.mask, 0, 0, wx.AND)
         
         # Check if the dc is drawn manually be a return func
         
         res = grid.pysgrid[row, col, grid.current_table]
-        if type(res) is types.FunctionType and \
-            True:
-            # add func_dict attribute so that we are sure that it uses a dc
+        if type(res) is types.FunctionType:
+            # Add func_dict attribute 
+            # so that we are sure that it uses a dc
             res(grid, attr, dc, rect)
             
-            # We do not want the string representation rendered so we return
-            return None
+            # We do not want the string representation rendered 
+            # so we return
+            return
         
         # Text label
         self.draw_text_label(dc, rect, grid, pysgrid, key)
@@ -1266,6 +1175,91 @@ class GridManipulationMixin(object):
     
 # end of class GridManipulationMixin
 
+class Background(object):
+    """Memory DC with background content for given cell"""
+    
+    def __init__(self, grid, row, col, tab):
+        self.grid = grid
+        self.key = row, col, tab
+        
+        self.mask = wx.MemoryDC() 
+        self.rect = grid.CellToRect(row, col)
+        self.maskbitmap=wx.EmptyBitmap(self.rect.width,self.rect.height)
+        
+        self.mask.SelectObject(self.maskbitmap)
+        self.mask.SetBackgroundMode(wx.SOLID)
+
+        self.mask.SetDeviceOrigin(0,0)
+        
+        self.draw()
+    
+    def draw(self):
+        """Does the actual background drawing"""
+        
+        self.draw_background(self.mask)
+        self.draw_border_lines(self.mask)
+
+    def draw_background(self, dc):
+        """Draws the background of the background"""
+        
+        bgbrush = get_brush_from_data( \
+                self.grid.pysgrid.get_sgrid_attr(self.key, "bgbrush"))
+        
+        self.mask.SetBrush(bgbrush)
+        self.mask.SetPen(wx.TRANSPARENT_PEN)
+        self.mask.DrawRectangle(0, 0, self.rect.width, self.rect.height)
+
+    def draw_border_lines(self, dc):
+        """Draws lines"""
+        
+        x, y, w, h  = 0, 0, self.rect.width - 1, self.rect.height - 1
+        grid = self.grid
+        row, col, tab = key = self.key
+        
+        # Get borderpens and bgbrushes for rects        
+        # Each cell draws its bottom and its right line only
+        bottomline = x, y + h, x + w, y + h
+        rightline = x + w, y, x + w, y + h
+        lines = [bottomline, rightline]
+        
+        pen_names = ["borderpen_bottom", "borderpen_right"]
+        
+        borderpens = [get_pen_from_data(grid.pysgrid.get_sgrid_attr(key, pen)) \
+                        for pen in pen_names]
+        
+        # Topmost line if in top cell
+        
+        if row == 0:
+            lines.append((x, y, x + w, y))
+            topkey = "top", col, tab
+            toppen_data  = grid.pysgrid.get_sgrid_attr(topkey, pen_names[0])
+            borderpens.append(get_pen_from_data(toppen_data))
+        
+        # Leftmost line if in left cell
+        
+        if col == 0:
+            lines.append((x, y, x, y + h))
+            leftkey = row, "left", tab
+            toppen_data  = grid.pysgrid.get_sgrid_attr(leftkey, pen_names[1])
+            borderpens.append(get_pen_from_data(toppen_data))
+        
+        zoomed_pens = []
+        
+        for pen in borderpens:
+            bordercolor = pen.GetColour()
+            borderwidth = pen.GetWidth()
+            borderstyle = pen.GetStyle()
+            
+            zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
+            zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, borderstyle)
+            zoomed_pen.SetJoin(wx.JOIN_MITER)
+            
+            zoomed_pens.append(zoomed_pen)
+        
+        dc.DrawLineList(lines, zoomed_pens)
+
+# end of class Background
+
 class MainGrid(wx.grid.Grid, 
                GridIndexMixin, GridSelectionMixin,
                GridClipboardMixin, GridManipulationMixin):
@@ -1355,6 +1349,8 @@ class MainGrid(wx.grid.Grid,
         
         self.SetDefaultCellFont(DEFAULT_FONT)
         self.selection_present = False
+        
+        self.backgrounds = {} # key is (row, col, tab)
         
         # Event bindings
         
@@ -1495,7 +1491,6 @@ class MainGrid(wx.grid.Grid,
         
         interface.save(self.pysgrid.sgrid, filename)
 
-
     def undo(self):
         """Undo the recent operations"""
         
@@ -1528,7 +1523,7 @@ class MainGrid(wx.grid.Grid,
     def OnScroll(self, event):
         """Scroll event method updates the grid"""
         
-        self.Update()
+        #self.Update()
         event.Skip()
     
     def OnCellEditorShown(self, event):
@@ -1654,6 +1649,8 @@ class MainGrid(wx.grid.Grid,
     def OnRowSize(self, event):
         """Stores the size of a currently changed row in 1st col"""
         
+        self.backgrounds = {}
+        
         rowno = event.GetRowOrCol()
         tabno = self.current_table
         
@@ -1675,6 +1672,8 @@ class MainGrid(wx.grid.Grid,
         
     def OnColSize(self, event):
         """Stores the size of a currently changed column in 1st row attrib"""
+        
+        self.backgrounds = {}
         
         colno = event.GetRowOrCol()
         tabno = self.current_table
@@ -1698,25 +1697,11 @@ class MainGrid(wx.grid.Grid,
     def OnLeftUp(self, event):
         """Left mouse button up event handler"""
         
-        # If there is a selection, activate redraw of grid
-        
-        if self.selection_present:
-            self.selection_present = False
-            self.text_renderer.redraw_imminent = True
-            self.ForceRefresh()
-        
         event.Skip()
     
     def OnKeyUp(self, event):
         """Key released event handler"""
         
-        # If shift is released, a new selection is present 
-        # => redraw
-        
-        if event.GetKeyCode() == 306 and self.selection_present:
-            self.selection_present = False
-            self.text_renderer.redraw_imminent = True
-            self.ForceRefresh()
         event.Skip()
     
     def zoom_rows(self):
@@ -1742,7 +1727,7 @@ class MainGrid(wx.grid.Grid,
                 zoomed_row_size = sgrid.rows[rowno][tag] * self.zoom
                 self.SetRowSize(rowno, zoomed_row_size)
         
-        self.MakeCellVisible(*pos)
+        self.MakeCellVisible(*self.key[:2])
         
     def zoom_cols(self):
         """Zooms grid columns"""
@@ -1767,7 +1752,7 @@ class MainGrid(wx.grid.Grid,
                 zoomed_col_size = sgrid.cols[colno][tag] * self.zoom
                 self.SetColSize(colno, zoomed_col_size)
         
-        self.MakeCellVisible(*pos)
+        self.MakeCellVisible(*self.key[:2])
 
     def zoom_labels(self):
         """Zooms grid labels"""
@@ -1793,12 +1778,13 @@ class MainGrid(wx.grid.Grid,
                 if self.zoom > 0.6:
                     self.zoom -= zoomstep
             
-
+            self.backgrounds = {}
+            
             self.zoom_rows()
             self.zoom_cols()
             self.zoom_labels()
             
-            self.ForceRefresh()
+            #self.ForceRefresh()
         else:
             event.Skip()
 

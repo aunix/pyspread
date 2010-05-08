@@ -730,6 +730,8 @@ class AttributesToolbar(wx.ToolBar):
         pysgrid = self.pysgrid
         sgrid = pysgrid.sgrid
         
+        self.grid.backgrounds = {}
+        
         keys = self._get_key_list()
         
         color = event.GetValue()
@@ -738,7 +740,8 @@ class AttributesToolbar(wx.ToolBar):
         
         for key in bottom_keys:
             pysgrid.create_sgrid_attribute(key, "borderpen_bottom")
-            
+            if key not in sgrid:
+                sgrid[key] = None
             try:
                 sgrid[key].borderpen_bottom[0] = color.GetRGB()
             except KeyError:
@@ -748,7 +751,8 @@ class AttributesToolbar(wx.ToolBar):
         
         for key in right_keys:
             pysgrid.create_sgrid_attribute(key, "borderpen_right")
-            
+            if key not in sgrid:
+                sgrid[key] = None
             try:
                 sgrid[key].borderpen_right[0] = color.GetRGB()
             except KeyError:
@@ -766,6 +770,8 @@ class AttributesToolbar(wx.ToolBar):
         pysgrid = self.pysgrid
         sgrid = pysgrid.sgrid
         
+        self.grid.backgrounds = {}
+        
         keys = self._get_key_list()
         bottom_keys, right_keys = self.get_chosen_borders(keys)
         
@@ -779,6 +785,8 @@ class AttributesToolbar(wx.ToolBar):
         
         for key in right_keys:
             pysgrid.create_sgrid_attribute(key, "borderpen_right")
+            if key not in sgrid:
+                sgrid[key] = None
             try:
                 sgrid[key].borderpen_right[1] = line_width
                 sgrid[key].borderpen_right[2] = int(penstyle)
@@ -791,6 +799,8 @@ class AttributesToolbar(wx.ToolBar):
         
         for key in bottom_keys:
             pysgrid.create_sgrid_attribute(key, "borderpen_bottom")
+            if key not in sgrid:
+                sgrid[key] = None
             try:
                 sgrid[key].borderpen_bottom[1] = line_width
                 sgrid[key].borderpen_bottom[2] = int(penstyle)
@@ -808,6 +818,8 @@ class AttributesToolbar(wx.ToolBar):
         pysgrid = self.pysgrid
         sgrid = pysgrid.sgrid
         
+        self.grid.backgrounds = {}
+        
         keys = self._get_key_list()
         
         bgcolor = event.GetValue()
@@ -817,7 +829,11 @@ class AttributesToolbar(wx.ToolBar):
             try:
                 sgrid[key].bgbrush[0] = int(bgcolor.GetRGB())
             except KeyError:
-                sgrid[key].bgbrush = default_cell_attributes["bgbrush"]()
+                try:
+                    sgrid[key].bgbrush = default_cell_attributes["bgbrush"]()
+                except KeyError:
+                    sgrid[key] = None
+                    sgrid[key].bgbrush = default_cell_attributes["bgbrush"]()
                 sgrid[key].bgbrush[0] = int(bgcolor.GetRGB())
         
         self.grid.ForceRefresh()
@@ -835,11 +851,11 @@ class AttributesToolbar(wx.ToolBar):
         
         for key in keys:
             pysgrid.create_sgrid_attribute(key, "textattributes")
-            try:
-                textcolor = sgrid[key].textattributes[odftags["fontcolor"]]
-                textcolor.SetRGB(new_textcolor)
-            except KeyError:
-                sgrid[key].textattributes[odftags["fontcolor"]] = new_textcolor
+            
+            if key not in sgrid:
+                sgrid[key] = None
+                
+            sgrid[key].textattributes[odftags["fontcolor"]] = new_textcolor
         
         self.grid.ForceRefresh()
         
@@ -876,8 +892,11 @@ class AttributesToolbar(wx.ToolBar):
             textfont.SetNativeFontInfo(nativefontinfo)
             textfont.SetFaceName(font_string)
             
+            if key not in sgrid:
+                sgrid[key] = None
+            
             sgrid[key].textfont = str(textfont.GetNativeFontInfo())
-        
+          
         self.grid.ForceRefresh()
         
         event.Skip()
@@ -917,6 +936,9 @@ class AttributesToolbar(wx.ToolBar):
             textfont.SetNativeFontInfo(nativefontinfo)
             textfont.SetPointSize(size)
             
+            if key not in sgrid:
+                sgrid[key] = None
+                
             sgrid[key].textfont = str(textfont.GetNativeFontInfo())
         
         self.grid.ForceRefresh()
@@ -937,7 +959,10 @@ class AttributesToolbar(wx.ToolBar):
         # Font buttons
         
         for key in keys:
-
+        
+            if key not in sgrid:
+                sgrid[key] = None
+                
             pysgrid.create_sgrid_attribute(key, "textfont")
             
             try:
@@ -965,7 +990,7 @@ class AttributesToolbar(wx.ToolBar):
                 font.SetStyle(wx.FONTSTYLE_ITALIC)
             elif event.GetId() == wx.FONTSTYLE_ITALIC and not istoggled:
                 font.SetStyle(wx.FONTSTYLE_NORMAL)
-
+                
             sgrid[key].textfont = str(font.GetNativeFontInfo())
 
             # Text attribute buttons
