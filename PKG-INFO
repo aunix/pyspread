@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: pyspread
-Version: 0.1
+Version: 0.1.1
 Summary: A spreadsheet that accepts a pure python expression in each cell.
 Home-page: http://pyspread.sourceforge.net
 Author: Martin Manns
@@ -21,4 +21,4 @@ Classifier: Programming Language :: Python :: 2.5
 Classifier: Programming Language :: Python :: 2.6
 Classifier: Topic :: Office/Business :: Financial :: Spreadsheet
 Requires: numpy (>=1.1)
-Requires: wx (>=2.8.7)
+Requires: wx (>=2.8.9)

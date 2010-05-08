@@ -438,7 +438,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         except KeyError:
             underline_mode = None
         
-        dc.SetBackgroundMode(wx.TRANSPARENT)
+        dc.SetBackgroundMode(wx.SOLID)
         dc.SetTextForeground(textcolor)
         
         # Adjust font size to zoom
@@ -550,18 +550,26 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         if isSelected:
             grid.selection_present = True
-            self.draw_selection_background(grid, dc, rect)
-        
-        try:
-            bg = self.table.backgrounds[key]
-        except KeyError:
-            if len(self.table.backgrounds) > 10000:
-                # self.table.backgrounds grows quickly
-                self.table.backgrounds = {}
-            bg = self.table.backgrounds[key] = Background(grid, *key)
+            #self.draw_selection_background(grid, dc, rect)
+            bg = Background(grid, row, col, self.table.current_table,
+                            isSelected)
+        else:
+            try:
+                bg = self.table.backgrounds[key]
+            except KeyError:
+                if len(self.table.backgrounds) > 10000:
+                    # self.table.backgrounds grows quickly
+                    self.table.backgrounds = {}
+                bg = self.table.backgrounds[key] = Background(grid, *key)
+            
+        if wx.Platform == "__WXMSW__":
+            mask_type = wx.COPY
+        else:
+            mask_type = wx.AND
             
         dc.Blit(rect.x, rect.y, rect.width, rect.height,
-                bg.mask, 0, 0, wx.AND)
+                bg.mask, 0, 0, mask_type)
+        
         
         # Check if the dc is drawn manually be a return func
         
@@ -1178,13 +1186,15 @@ class GridManipulationMixin(object):
 class Background(object):
     """Memory DC with background content for given cell"""
     
-    def __init__(self, grid, row, col, tab):
+    def __init__(self, grid, row, col, tab, selection=False):
         self.grid = grid
         self.key = row, col, tab
         
         self.mask = wx.MemoryDC() 
         self.rect = grid.CellToRect(row, col)
         self.maskbitmap=wx.EmptyBitmap(self.rect.width,self.rect.height)
+        
+        self.selection = selection
         
         self.mask.SelectObject(self.maskbitmap)
         self.mask.SetBackgroundMode(wx.SOLID)
@@ -1202,7 +1212,10 @@ class Background(object):
     def draw_background(self, dc):
         """Draws the background of the background"""
         
-        bgbrush = get_brush_from_data( \
+        if self.selection:
+            bgbrush = selected_cell_brush
+        else:
+            bgbrush = get_brush_from_data( \
                 self.grid.pysgrid.get_sgrid_attr(self.key, "bgbrush"))
         
         self.mask.SetBrush(bgbrush)
