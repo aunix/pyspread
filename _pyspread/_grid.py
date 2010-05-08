@@ -438,7 +438,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         except KeyError:
             underline_mode = None
         
-        dc.SetBackgroundMode(wx.SOLID)
+        dc.SetBackgroundMode(wx.TRANSPARENT)
         dc.SetTextForeground(textcolor)
         
         # Adjust font size to zoom
@@ -812,7 +812,7 @@ class GridSelectionMixin(object):
                 try:
                     if (row + rowslice.start, col + colslice.start) \
                           not in selection:
-                        #print repr(row, col)
+                        print repr(row, col)
                         data[row, col] = omittedfield_repr
                 except TypeError:
                     if selection is None:
@@ -955,7 +955,7 @@ class GridClipboardMixin(object):
         
         try:
             data[0][0]
-        except TypeError: # Only one row
+        except (IndexError, TypeError): # Only one row
             data = [data]
         
         clipboard_data = [[]]
@@ -963,8 +963,11 @@ class GridClipboardMixin(object):
             if isinstance(datarow, unicode) or isinstance(datarow, basestring):
                 clipboard_data[-1].append(self.digest(datarow))
             else:
-                for ele in datarow:
-                    clipboard_data[-1].append(self.digest(ele))
+                try:
+                    for ele in datarow:
+                        clipboard_data[-1].append(self.digest(ele))
+                except TypeError:
+                    clipboard_data[-1].append(u"")
             clipboard_data.append([])
         
         return "\n".join("\t".join(line) for line in clipboard_data)
@@ -1197,7 +1200,7 @@ class Background(object):
         self.selection = selection
         
         self.mask.SelectObject(self.maskbitmap)
-        self.mask.SetBackgroundMode(wx.SOLID)
+        self.mask.SetBackgroundMode(wx.TRANSPARENT)
 
         self.mask.SetDeviceOrigin(0,0)
         
@@ -1536,7 +1539,6 @@ class MainGrid(wx.grid.Grid,
     def OnScroll(self, event):
         """Scroll event method updates the grid"""
         
-        #self.Update()
         event.Skip()
     
     def OnCellEditorShown(self, event):
