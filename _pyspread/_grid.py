@@ -368,19 +368,6 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         right_cell = grid.XToCol(pos[0] + size[0] - 1)
         
         return xrange(left_cell, right_cell)
-        
-    def draw_selection_background(self, grid, dc, rect):
-        """Draws the background for a selected cell"""
-        
-        self.Clip(dc, rect)
-        
-        dc.SetBrush(selected_cell_brush)
-        dc.SetPen(wx.TRANSPARENT_PEN)
-        draw_rect = wx.Rect(rect.x + 1, rect.y + 1, 
-                            rect.width - 2, rect.height - 2)
-        dc.DrawRectangleRect(draw_rect)
-            
-        self.Unclip(dc)
 
     def _draw_strikethrough_line(self, grid, dc, rect, 
                                  textpos, textattributes, text_extent):
@@ -522,12 +509,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         text_pos = self.get_text_position(dc, rect, res_text, textattributes)
         
         if res_text:
-            angle = text_pos[2]
-            
-            if angle == 0:
-                dc.DrawText(res_text, *text_pos[:2])
-            else:
-                dc.DrawRotatedText(res_text, *text_pos)
+            dc.DrawRotatedText(res_text, *text_pos)
         
         self._draw_strikethrough_line(grid, dc, rect, text_pos, 
                 textattributes, dc.GetTextExtent(res_text))
@@ -550,17 +532,27 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         if isSelected:
             grid.selection_present = True
-            #self.draw_selection_background(grid, dc, rect)
+            
             bg = Background(grid, row, col, self.table.current_table,
                             isSelected)
         else:
+            _, _, width, height = grid.CellToRect(row, col)
+            
+            bg_components = ["bgbrush", "borderpen_bottom", "borderpen_right"]
+            
+            bg_key = tuple([width, height] + \
+                           [tuple(grid.pysgrid.get_sgrid_attr(key, bgc)) \
+                                for bgc in bg_components])
+            
             try:
-                bg = self.table.backgrounds[key]
+                bg = self.table.backgrounds[bg_key]
+                
             except KeyError:
                 if len(self.table.backgrounds) > 10000:
-                    # self.table.backgrounds grows quickly
+                    # self.table.backgrounds may grow quickly
                     self.table.backgrounds = {}
-                bg = self.table.backgrounds[key] = Background(grid, *key)
+                
+                bg = self.table.backgrounds[bg_key] = Background(grid, *key)
             
         if wx.Platform == "__WXMSW__":
             mask_type = wx.COPY
@@ -1366,7 +1358,9 @@ class MainGrid(wx.grid.Grid,
         self.SetDefaultCellFont(DEFAULT_FONT)
         self.selection_present = False
         
-        self.backgrounds = {} # key is (row, col, tab)
+        # Background key is (width, height, bgbrush, 
+        # borderpen_bottom, borderpen_right)
+        self.backgrounds = {} 
         
         # Event bindings
         
