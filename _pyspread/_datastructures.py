@@ -771,8 +771,15 @@ class DictGrid(UserDict.IterableUserDict):
         
         get = UserDict.UserDict.__getitem__
         
-        adjusted_key = tuple(k if k >= 0 else self.shape[i] + k \
-                                for i, k in enumerate(key))
+        adjusted_key = []
+        
+        for i, k in enumerate(key):
+            if k >= 0:
+                adjusted_key.append(k)
+            else:
+                adjusted_key.append(self.shape[i] + k)
+                
+        adjusted_key = tuple(adjusted_key)
         
         try:
             return get(self, adjusted_key)

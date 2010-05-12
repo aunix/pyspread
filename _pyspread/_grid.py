@@ -510,19 +510,10 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         if res_text:
             dc.DrawRotatedText(res_text, *text_pos)
+            print text_pos, dc.GetTextExtent(res_text)
         
         self._draw_strikethrough_line(grid, dc, rect, text_pos, 
                 textattributes, dc.GetTextExtent(res_text))
-
-    def is_bottom_right_visible_cell(self, grid, key):
-        """Returns True if the cell is the last bottom right visisble cell"""
-        
-        row, col, _ = key
-        
-        return \
-            grid.IsVisible(row, col, wholeCellVisible=False) and \
-            not grid.IsVisible(row + 1, col, wholeCellVisible=False) and \
-            not grid.IsVisible(row, col + 1, wholeCellVisible=False)
     
     def Draw(self, grid, attr, dc, rect, row, col, isSelected):
         """Draws the cell border and content"""
