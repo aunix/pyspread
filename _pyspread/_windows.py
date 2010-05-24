@@ -165,8 +165,8 @@ class MainWindow(wx.Frame):
                              wx.BITMAP_TYPE_ANY))
         self.SetIcon(_icon)
         
-        self.SetInitialSize((1000, 700))
-        self.Maximize()
+        self.SetInitialSize((1024, 768))
+        #self.Maximize()
         
         # Status bar
         

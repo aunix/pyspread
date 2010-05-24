@@ -368,9 +368,34 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         right_cell = grid.XToCol(pos[0] + size[0] - 1)
         
         return xrange(left_cell, right_cell)
-
+        
+    def draw_text_label(self, dc, res, rect, grid, pysgrid, key):
+        """Draws text label of cell"""
+        
+        row, col, _ = key
+        
+        res_text = str(res)
+        
+        textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
+        
+        textfont = get_font_from_data( \
+            pysgrid.get_sgrid_attr(key, "textfont"))
+        
+        self.set_font(dc, textfont, textattributes, grid.zoom)
+        
+        text_pos = self.get_text_position(dc, rect, res_text, 
+                                          textattributes)
+        
+        if res is not None and res_text:
+            dc.DrawRotatedText(res_text, *text_pos)
+        
+        self.text_extent = dc.GetTextExtent(res_text)
+        
+        self._draw_strikethrough_line(grid, dc, rect, text_pos, 
+                textattributes)
+        
     def _draw_strikethrough_line(self, grid, dc, rect, 
-                                 textpos, textattributes, text_extent):
+                                 textpos, textattributes):
         """Draws a strikethrough line if needed"""
         
         try:
@@ -380,6 +405,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             return
             
         string_x, string_y, angle = textpos
+        text_extent = self.text_extent
         
         strikethroughwidth = max(1, int(round(1.5 * grid.zoom)))
         dc.SetPen(wx.Pen(wx.BLACK, strikethroughwidth, wx.SOLID))
@@ -491,30 +517,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             raise ValueError, "Cell justification must be left or right"
     
         return string_x, string_y, angle
-    
-    def draw_text_label(self, dc, rect, grid, pysgrid, key):
-        """Draws text label of cell"""
         
-        row, col, _ = key
-        
-        textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
-        
-        textfont = get_font_from_data( \
-            pysgrid.get_sgrid_attr(key, "textfont"))
-        
-        self.set_font(dc, textfont, textattributes, grid.zoom)
-        
-        res_text = grid.GetCellValue(row, col)
-        
-        text_pos = self.get_text_position(dc, rect, res_text, textattributes)
-        
-        if res_text:
-            dc.DrawRotatedText(res_text, *text_pos)
-            print text_pos, dc.GetTextExtent(res_text)
-        
-        self._draw_strikethrough_line(grid, dc, rect, text_pos, 
-                textattributes, dc.GetTextExtent(res_text))
-    
     def Draw(self, grid, attr, dc, rect, row, col, isSelected):
         """Draws the cell border and content"""
         
@@ -557,6 +560,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         # Check if the dc is drawn manually be a return func
         
         res = grid.pysgrid[row, col, grid.current_table]
+        
         if type(res) is types.FunctionType:
             # Add func_dict attribute 
             # so that we are sure that it uses a dc
@@ -566,8 +570,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             # so we return
             return
         
-        # Text label
-        self.draw_text_label(dc, rect, grid, pysgrid, key)
+        self.draw_text_label(dc, res, rect, grid, pysgrid, key)
         
 # end of class TextRenderer
         
@@ -1188,7 +1191,7 @@ class Background(object):
         self.mask.SetDeviceOrigin(0,0)
         
         self.draw()
-    
+        
     def draw(self):
         """Does the actual background drawing"""
         
@@ -1352,6 +1355,10 @@ class MainGrid(wx.grid.Grid,
         # Background key is (width, height, bgbrush, 
         # borderpen_bottom, borderpen_right)
         self.backgrounds = {} 
+        
+        # Textlabel key is (resultstring, width, height
+        # textfont, textattributes)
+        self.textlabels = {}
         
         # Event bindings
         
