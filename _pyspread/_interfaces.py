@@ -196,6 +196,7 @@ def fill_numpyarray(target, src_it, digest_types, key=(0, 0, 0), \
             
         for j, value in enumerate(line):
             col = j + key[1]
+            
             if col > target.shape[1] - 1:
                 errormessages += ["Too many columns to fit into table!"]
                 break
@@ -218,8 +219,9 @@ def fill_numpyarray(target, src_it, digest_types, key=(0, 0, 0), \
                     digest_res = repr(digest_res)
                 elif digest_res == "\b":
                     digest_res = None
-                    
+                
             except Exception, err:
+                
                 digest_res = str(err)
             
             if digest_res is not None:

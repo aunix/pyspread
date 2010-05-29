@@ -91,6 +91,9 @@ CSV import options
 # Number of bytes for the sniffer (should be larger than 1st+2nd line)
 SNIFF_SIZE = 65536 
 
+# Maximum undo / redo size
+
+MAX_UNREDO = 10000
 
 """
 Key press behavior
@@ -175,15 +178,15 @@ default_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
 
 default_cell_attributes = {
     "borderpen_bottom": \
-        lambda: [wx.Colour(200, 200, 200).GetRGB(), 1, int(wx.SOLID)],
+        [wx.Colour(200, 200, 200).GetRGB(), 1, int(wx.SOLID)],
     "borderpen_right": \
-        lambda: [wx.Colour(200, 200, 200).GetRGB(), 1, int(wx.SOLID)],
-    "bgbrush": lambda: [int(default_color.GetRGB()), int(wx.SOLID)],
-    "textattributes": lambda: {},
-    "textfont": lambda: unicode(wx.Font(faces['size'], wx.DEFAULT, wx.NORMAL, 
+        [wx.Colour(200, 200, 200).GetRGB(), 1, int(wx.SOLID)],
+    "bgbrush": [int(default_color.GetRGB()), int(wx.SOLID)],
+    "textattributes": {},
+    "textfont": unicode(wx.Font(faces['size'], wx.DEFAULT, wx.NORMAL, 
                         wx.NORMAL, False, faces['helv']).GetNativeFontInfo()),
-    "column-width": lambda: 150,
-    "row-height": lambda: 25,
+    "column-width": 150,
+    "row-height": 25,
 }
 
 """

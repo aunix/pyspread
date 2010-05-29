@@ -41,7 +41,7 @@ import numpy
 
 from _pyspread.irange import irange, slice_range
 from _pyspread._interfaces import sorted_keys, string_match, Digest, UserString
-from _pyspread.config import default_cell_attributes
+from _pyspread.config import default_cell_attributes, MAX_UNREDO
 
 S = None
 
@@ -287,7 +287,8 @@ class PyspreadGrid(object):
         attr_names = default_cell_attributes.keys()
         
         attr_data = [self.get_sgrid_attr(pos, name) for name in attr_names]
-        default_data = [default_cell_attributes[name]() for name in attr_names]
+        
+        default_data = [default_cell_attributes[name] for name in attr_names]
         
         if attr_data == default_data:
             self.sgrid[pos] = unicode(value)
@@ -298,11 +299,9 @@ class PyspreadGrid(object):
         olditem = self.sgrid[pos]
         if type(olditem) is types.UnicodeType:
             olditem = UserString(olditem)
-        
         self._copy_attributes(olditem, newitem)
 
         # Now replace item in grid
-
         self.sgrid[pos] = newitem
 
         
@@ -602,7 +601,7 @@ class PyspreadGrid(object):
             
             sgrid[key] = UserString(u"")
             setattr(sgrid[key], attribute, 
-                    default_cell_attributes[attribute]())
+                    default_cell_attributes[attribute])
             return
             
         try:
@@ -615,7 +614,7 @@ class PyspreadGrid(object):
         if not has_textattributes:
             try:
                 setattr(sgrid_ele, attribute, 
-                        default_cell_attributes[attribute]())
+                        default_cell_attributes[attribute])
 
             except AttributeError:
                 if sgrid_ele != 0:
@@ -624,7 +623,7 @@ class PyspreadGrid(object):
                     sgrid[key] = UserString(u"")
                     
                 setattr(sgrid[key], attribute, 
-                        default_cell_attributes[attribute]())
+                        default_cell_attributes[attribute])
 
     def get_sgrid_attr(self, key, attr):
         """Get attribute attr of obj, returns defaultattr on fail"""
@@ -635,7 +634,7 @@ class PyspreadGrid(object):
             return getattr(obj, attr)
 
         except AttributeError:
-            return default_cell_attributes[attr]()
+            return default_cell_attributes[attr]
 
 # end of class PyspreadGrid
 
@@ -735,6 +734,11 @@ class UnRedo(object):
         operation: (redo_function, [redo_function_attribute_1, ...])
         
         """
+        
+        # If the lists grow too large they are emptied
+        if len(self.undolist) > MAX_UNREDO or \
+           len(self.redolist) > MAX_UNREDO:
+            self.reset()
         
         # Check attribute types
         for unredo_operation in [undo_operation, operation]:

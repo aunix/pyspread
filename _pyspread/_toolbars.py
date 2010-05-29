@@ -746,7 +746,7 @@ class AttributesToolbar(wx.ToolBar):
                 sgrid[key].borderpen_bottom[0] = color.GetRGB()
             except KeyError:
                 sgrid[key].borderpen_bottom = \
-                    default_cell_attributes["borderpen_bottom"]()
+                    default_cell_attributes["borderpen_bottom"]
                 sgrid[key].borderpen_bottom[0] = color.GetRGB()
         
         for key in right_keys:
@@ -757,7 +757,7 @@ class AttributesToolbar(wx.ToolBar):
                 sgrid[key].borderpen_right[0] = color.GetRGB()
             except KeyError:
                 sgrid[key].borderpen_right = \
-                    default_cell_attributes["borderpen_right"]()
+                    default_cell_attributes["borderpen_right"]
                 sgrid[key].borderpen_right[0] = color.GetRGB()
         
         self.grid.ForceRefresh()
@@ -792,7 +792,7 @@ class AttributesToolbar(wx.ToolBar):
                 sgrid[key].borderpen_right[2] = int(penstyle)
             except KeyError:
                 sgrid[key].borderpen_right = \
-                    default_cell_attributes["borderpen_right"]()
+                    default_cell_attributes["borderpen_right"]
                 sgrid[key].borderpen_right[1] = line_width
                 sgrid[key].borderpen_right[2] = int(penstyle)
 
@@ -806,7 +806,7 @@ class AttributesToolbar(wx.ToolBar):
                 sgrid[key].borderpen_bottom[2] = int(penstyle)
             except KeyError:
                 sgrid[key].borderpen_bottom = \
-                    default_cell_attributes["borderpen_bottom"]()
+                    default_cell_attributes["borderpen_bottom"]
                 sgrid[key].borderpen_bottom[1] = line_width
                 sgrid[key].borderpen_bottom[2] = int(penstyle)
         
@@ -830,10 +830,11 @@ class AttributesToolbar(wx.ToolBar):
                 sgrid[key].bgbrush[0] = int(bgcolor.GetRGB())
             except KeyError:
                 try:
-                    sgrid[key].bgbrush = default_cell_attributes["bgbrush"]()
+                    sgrid[key].bgbrush = default_cell_attributes["bgbrush"]
                 except KeyError:
                     sgrid[key] = None
-                    sgrid[key].bgbrush = default_cell_attributes["bgbrush"]()
+                    sgrid[key].bgbrush = default_cell_attributes["bgbrush"]
+                    
                 sgrid[key].bgbrush[0] = int(bgcolor.GetRGB())
         
         self.grid.ForceRefresh()
@@ -882,7 +883,7 @@ class AttributesToolbar(wx.ToolBar):
             try:
                 old_font_string = sgrid[key].textfont
             except KeyError:
-                old_font_string = default_cell_attributes["textfont"]()
+                old_font_string = default_cell_attributes["textfont"]
             
             nativefontinfo = wx.NativeFontInfo()
             nativefontinfo.FromString(old_font_string)
@@ -926,7 +927,7 @@ class AttributesToolbar(wx.ToolBar):
             try:
                 old_font_string = sgrid[key].textfont
             except KeyError:
-                old_font_string = default_cell_attributes["textfont"]()
+                old_font_string = default_cell_attributes["textfont"]
             
             textfont = wx.Font(10, wx.NORMAL, wx.NORMAL, 
                                wx.NORMAL, False, 'Arial')
@@ -968,7 +969,7 @@ class AttributesToolbar(wx.ToolBar):
             try:
                 old_font_string = sgrid[key].textfont
             except KeyError:
-                old_font_string = default_cell_attributes["textfont"]()
+                old_font_string = default_cell_attributes["textfont"]
 
             nativefontinfo = wx.NativeFontInfo()
             nativefontinfo.FromString(old_font_string)
