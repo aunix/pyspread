@@ -81,12 +81,16 @@ class _filledMenu(wx.Menu):
             if obj == wx.Menu:
                 menuname = item[1]
                 submenu = item[2]
+                try:
+                    menu_id = item[3]
+                except IndexError:
+                    menu_id = -1
                 menu = obj()
                 self._add_submenu(menu, submenu)
                 if parent == self:
                     self.menubar.Append(menu, menuname)
                 else:
-                    parent.AppendMenu(wx.NewId(), menuname, menu)
+                    parent.AppendMenu(menu_id, menuname, menu)
             elif obj == wx.MenuItem:
                 methodname = item[1][0]
                 
@@ -96,9 +100,12 @@ class _filledMenu(wx.Menu):
                 else:
                     style = wx.ITEM_NORMAL
                 
-                item_id = wx.NewId()
+                try:
+                    item_id = item[1][3]
+                except IndexError:
+                    item_id = -1
                 
-                params = [parent, item_id] + item[1][1:] + [style]
+                params = [parent, item_id] + item[1][1:3] + [style]
                 
                 menuitem = obj(*params)
                 parent.AppendItem(menuitem)
@@ -141,12 +148,13 @@ class MainMenu(_filledMenu):
     menudata = [ \
         [wx.Menu, "&File", [\
             [item, ["OnFileNew", "&New\tCtrl+n", 
-                "Create a new, empty spreadsheet"]], \
-            [item, ["OnFileOpen", "&Open\tCtrl+o", 
-                "Open spreadsheet from file"]], \
-            [item, ["OnFileSave", "&Save\tCtrl+s", "Save spreadsheet"]], \
+                "Create a new, empty spreadsheet", wx.ID_NEW]], \
+            [item, ["OnFileOpen", "&Open", 
+                "Open spreadsheet from file", wx.ID_OPEN]], \
+            [item, ["OnFileSave", "&Save\tCtrl+s", 
+                    "Save spreadsheet", wx.ID_SAVE]], \
             [item, ["OnFileSaveAs", "Save &As\tShift+Ctrl+s", 
-                "Save spreadsheet to a new file"]], \
+                "Save spreadsheet to a new file"], wx.ID_SAVEAS], \
             ["Separator"], \
             [item, ["OnFileImport", "&Import", "Import a file " + \
                 "(Supported formats: CSV, Tab separated text)"]], \
@@ -157,14 +165,14 @@ class MainMenu(_filledMenu):
                 "Approve, unfreeze and sign the curretn file"]], \
             ["Separator"], \
             [item, ["OnFilePrint", "&Print...\tCtrl+p", 
-                "Print current spreadsheet"]], \
+                "Print current spreadsheet", wx.ID_PRINT]], \
             ["Separator"], \
-            [item, ["OnExit", "E&xit\tCtrl+q", "Exit Program"]]] \
+            [item, ["OnExit", "E&xit\tCtrl+q", "Exit Program", wx.ID_EXIT]]] \
         ], \
         [wx.Menu, "&Edit", [\
-            [item, ["OnUndo", "&Undo\tCtrl+z", "Undo last step"]], \
+            [item, ["OnUndo", "&Undo\tCtrl+z", "Undo last step", wx.ID_UNDO]], \
             [item, ["OnRedo", "&Redo\tShift+Ctrl+z", 
-                "Redo last undone step"]], \
+                "Redo last undone step", wx.ID_REDO]], \
             ["Separator"], \
             [item, ["OnCut", "Cu&t\tCtrl+x", "Cut cell to clipboard"]], \
             [item, ["OnCopy", "&Copy\tCtrl+c", 
@@ -172,7 +180,7 @@ class MainMenu(_filledMenu):
             [item, ["OnCopyResult", "Copy &Results\tShift+Ctrl+c", 
                 "Copy the result strings of the cells to the clipboard"]], \
             [item, ["OnPaste", "&Paste\tCtrl+v", 
-                "Paste cells from clipboard"]], \
+                "Paste cells from clipboard", wx.ID_PASTE]], \
             ["Separator"], \
             [item, ["OnShowFind", "&Find\tCtrl+f", "Find cell by content"]], \
             [item, ["OnShowFindReplace", "Replace\tCtrl+Shift+f", 
@@ -215,7 +223,7 @@ class MainMenu(_filledMenu):
             [item, ["OnTutorial", "&Tutorial", "Launch tutorial"]],
             [item, ["OnFAQ", "&FAQ", "Launch frequently asked questions"]],
             ["Separator"], \
-            [item, ["OnAbout", "&About", "About this program"]],
+            [item, ["OnAbout", "&About", "About this program", wx.ID_ABOUT]],
             ] \
         ] \
     ]
