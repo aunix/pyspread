@@ -89,14 +89,6 @@ class MainGridTable(wx.grid.PyGridTableBase):
         
         return str(col)
     
-#    def IsEmptyCell(self, row, col):
-#        """Return True if the cell is empty"""
-#        
-#        if self.pysgrid.sgrid[row, col, self.grid.current_table] is None:
-#            return True
-#        else:
-#            return False
-    
     def GetSource(self, row, col, table=None):
         """Return the source string of a cell"""
         
@@ -231,7 +223,7 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
         self._tc.SetFocus()
 
         # For this example, select the text
-        self._tc.SetSelection(0, self._tc.GetLastPosition())
+        self._tc.SetSelection(-1, -1)
 
     def EndEdit(self, row, col, grid):
         """Complete the editing of the current cell.
@@ -288,10 +280,11 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
             char = chr(key)
 
         if char is not None:
-            self._tc.AppendText(char)
-            #self._tc.SetValue(char) # Replace
+            #self._tc.AppendText(char)
+            self._tc.ChangeValue(char) # Replace
             self._tc.SetInsertionPointEnd()
         else:
+            self._tc.SetSelection(-1, -1)
             evt.Skip()
 
     def StartingClick(self):
@@ -1521,7 +1514,7 @@ class MainGrid(wx.grid.Grid,
         code = event.GetString()
         
         if code != "":
-            try: 
+            try:
                 self.entry_line.SetValue(code)
             except TypeError: 
                 self.entry_line.SetValue("")
@@ -1548,18 +1541,16 @@ class MainGrid(wx.grid.Grid,
         event.Skip()
     
     def OnCellSelected(self, event):
-        """Cell selection event method 
-        
-        1) Sets cell editor
-        2) Puts code into entry line
-        3) Updates Attribute toolbar
-        
-        """
+        """Cell selection event method"""
         
         row, col, tab = event.Row, event.Col, self.current_table
         self.key = row, col, tab
         
+        # Set cell editor
+        
         self.SetCellEditor(row, col, TextCellEditor(parent=self)) 
+        
+        # Put code into entry line
         
         try: 
             currstr = self.table.GetSource(*self.key)
@@ -1571,9 +1562,11 @@ class MainGrid(wx.grid.Grid,
         except TypeError: 
             self.entry_line.SetValue("")
         
+        self.entry_line.SetSelection(-1, -1)
         self.ForceRefresh()
         
-        # Attributes Toolbar update
+        # Update Attribute toolbar
+        
         pysgrid = self.pysgrid
         
         nativefontinfo = wx.NativeFontInfo()
