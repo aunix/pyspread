@@ -266,43 +266,49 @@ class PyspreadGrid(object):
         
         return result
     
-    def __setitem__(self, pos, value):
+    def __setitem__(self, pos, value, fast=False):
         self._resultcache = {}
         
-        _old_content = self.sgrid[pos]
-        try:
-            if _old_content == 0:
+        if fast:
+            # It is assumed that the undolist is empty!
+            # Always call unredo.reset before using fast
+            self.sgrid[pos] = value
+        else:
+            # Make sure step can be undone
+            _old_content = self.sgrid[pos]
+            try:
+                if _old_content == 0:
+                    _old_content = u""
+            except ValueError:
                 _old_content = u""
-        except ValueError:
-            _old_content = u""
-        
-        if _old_content != value:
-            undo_operation = (self.__setitem__, [pos, _old_content])
-            redo_operation = (self.__setitem__, [pos, value])
-        
-            self.unredo.append(undo_operation, redo_operation)
-        
-        # Test self.sgrid[pos] for already having attributes
-        
-        attr_names = default_cell_attributes.keys()
-        
-        attr_data = [self.get_sgrid_attr(pos, name) for name in attr_names]
-        
-        default_data = [default_cell_attributes[name] for name in attr_names]
-        
-        if attr_data == default_data:
-            self.sgrid[pos] = unicode(value)
-            return
-        
-        newitem = UserString(value)
-            
-        olditem = self.sgrid[pos]
-        if type(olditem) is types.UnicodeType:
-            olditem = UserString(olditem)
-        self._copy_attributes(olditem, newitem)
 
-        # Now replace item in grid
-        self.sgrid[pos] = newitem
+            if _old_content != value:
+                undo_operation = (self.__setitem__, [pos, _old_content])
+                redo_operation = (self.__setitem__, [pos, value])
+
+                self.unredo.append(undo_operation, redo_operation)
+        
+            # Test self.sgrid[pos] for already having attributes
+
+            attr_names = default_cell_attributes.keys()
+
+            attr_data = [self.get_sgrid_attr(pos, name) for name in attr_names]
+
+            default_data = [default_cell_attributes[name] for name in attr_names]
+
+            if attr_data == default_data:
+                self.sgrid[pos] = unicode(value)
+                return
+
+            newitem = UserString(value)
+
+            olditem = self.sgrid[pos]
+            if type(olditem) is types.UnicodeType:
+                olditem = UserString(olditem)
+            self._copy_attributes(olditem, newitem)
+
+            # Now replace item in grid
+            self.sgrid[pos] = newitem
 
         
     def _copy_attributes(self, olditem, newitem):

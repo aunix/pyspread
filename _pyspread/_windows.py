@@ -43,6 +43,12 @@ import wx.grid
 import wx.html
 import wx.lib.agw.genericmessagedialog as gmd
 
+try:
+    from agw import genericmessagedialog as gmd
+except ImportError: 
+    # If it's not there locally, try the wxPython lib.
+    import wx.lib.agw.genericmessagedialog as gmd
+
 import _pyspread._printout as printout
 
 import _pyspread._grid as _grid
@@ -51,7 +57,7 @@ from _pyspread._menubars import MainMenu
 from _pyspread._toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _pyspread._dialogs import MacroDialog, CsvImportDialog, CsvExportDialog, \
             DimensionsEntryDialog, AboutDialog
-from _pyspread._interfaces import CsvInterfaces, PysInterfaces, \
+from _pyspread._interfaces import CsvInterfaces, PysInterfaces, TxtInterfaces, \
             string_match, is_pyme_present, sign, verify
 from _pyspread.config import ICONPREFIX, icon_size, KEYFUNCTIONS
             
@@ -425,23 +431,11 @@ class MainWindow(wx.Frame):
                 self.main_window_statusbar.SetStatusText( \
                     "File saved and sigend")
     
-    def OnFileImport(self, event): # wxGlade: MainWindow.<event_handler>
-        """Imports files. Currently only CSV files supported"""
-        
-        # File choice
-        try:
-            path, filterindex = self._get_filename( \
-                    message="Import file", \
-                    defaultDir=os.getcwd(), \
-                    defaultFile="", \
-                    wildcard=" CSV file|*.*|Tab-delimited text file|*.*", \
-                    style=wx.OPEN | wx.CHANGE_DIR)
-        except TypeError:
-            return 0
+    def csv_import(self, path):
+        """CSV import workflow"""
         
         csvfilename = os.path.split(path)[1]
         
-        # CSV import option choice
         try:
             filterdlg = CsvImportDialog(self, csvfilepath=path)
         except csv.Error, err:
@@ -449,24 +443,18 @@ class MainWindow(wx.Frame):
                 '\n \nOpening it yielded the error:\n' + str(err)
                 
             dlg = gmd.GenericMessageDialog(self, msg, 
-                'Error opening CSV file', style=wx.ID_CANCEL | wx.ICON_ERROR)
+                'Error opening CSV file', style=wx.CANCEL | wx.ICON_ERROR)
             
             dlg.ShowModal()
             dlg.Destroy()
             return False
         
-        # Get target types
-        if filterindex == 0:
-            if filterdlg.ShowModal() == wx.ID_OK:
-                dialect, has_header = filterdlg.csvwidgets.get_dialect()
-                digest_types = filterdlg.grid.dtypes
-            else:
-                filterdlg.Destroy()
-                return 0
-        elif filterindex == 1:
-            dialect = csv.get_dialect('excel-tab')
-            digest_types = [types.StringType]
-            has_header = False
+        if filterdlg.ShowModal() == wx.ID_OK:
+            dialect, has_header = filterdlg.csvwidgets.get_dialect()
+            digest_types = filterdlg.grid.dtypes
+        else:
+            filterdlg.Destroy()
+            return 0
         
         filterdlg.Destroy()
         
@@ -481,12 +469,55 @@ class MainWindow(wx.Frame):
                 'partly. \n \nError message:\n' + str(err)
                 
             dlg = gmd.GenericMessageDialog(self, msg, 
-                'Error reading CSV file', style=wx.ID_OK | wx.ICON_INFORMATION)
-            
+                'Error reading CSV file', style=wx.OK | wx.ICON_WARNING)
+                    
             dlg.ShowModal()
             dlg.Destroy()
         self.MainGrid.ForceRefresh()
-    
+
+    def txt_import(self, path):
+        """Whitespace-delimited txt import workflow. This should be fast."""
+        
+        topleftcell = tuple(list(self.MainGrid.get_currentcell()) + \
+                            [self.MainGrid.current_table])
+        txt_interface = TxtInterfaces(path)
+        txt_interface.read(self.MainGrid.pysgrid, key=topleftcell)
+
+    def OnFileImport(self, event):
+        """Imports files. Currently only CSV files supported"""
+        
+        # File choice
+        try:
+            path, filterindex = self._get_filename( \
+                    message="Import file", \
+                    defaultDir=os.getcwd(), \
+                    defaultFile="", \
+                    wildcard=" CSV file|*.*|Tab-delimited text file|*.*", \
+                    style=wx.OPEN | wx.CHANGE_DIR)
+        except TypeError:
+            self.main_window_statusbar.SetStatusText("Error opening " + \
+                "directory" + os.getcwd())
+            return 0
+        
+        
+        if filterindex == 0:
+            # CSV import option choice
+            self.csv_import(path)
+        elif filterindex == 1:
+            # TXT import option choice
+            self.txt_import(path)
+        else:
+            self.main_window_statusbar.SetStatusText("Unknown import choice" + \
+                str(filterindex))
+            
+            msg = "Unknown import choice" + str(filterindex)
+                
+            dlg = gmd.GenericMessageDialog(self, msg, 
+                'Error reading CSV file', style=wx.OK | wx.ICON_ERROR)
+                    
+            dlg.ShowModal()
+            dlg.Destroy()
+            
     def OnFileExport(self, event):
         """Exports files. Currently only CSV files supported"""
         
@@ -536,7 +567,7 @@ class MainWindow(wx.Frame):
                   '\n \nError message:\n' + str(err)
                   
             dlg = gmd.GenericMessageDialog(self, msg, 
-                'Error writing CSV file', style=wx.ID_OK | wx.ICON_ERROR)
+                'Error writing CSV file', style=wx.OK | wx.ICON_ERROR)
                 
             dlg.ShowModal()
             dlg.Destroy()

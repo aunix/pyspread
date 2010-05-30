@@ -68,6 +68,7 @@ import sys
 import types
 import cStringIO as StringIO
 
+import numpy
 import wx
 
 try:
@@ -188,16 +189,19 @@ def fill_numpyarray(target, src_it, digest_types, key=(0, 0, 0), \
     """
     errormessages = []
     
+    tl_row, tl_col, tl_tab = key
+    maxrows, maxcols, maxtabs = target.shape
+    
     for i, line in enumerate(src_it):
-        row = i + key[0]
-        if row > target.shape[0] - 1:
+        row = i + tl_row
+        if row >= maxrows:
             errormessages += ["Too many lines to fit into table!"]
             break
             
         for j, value in enumerate(line):
-            col = j + key[1]
+            col = j + tl_col
             
-            if col > target.shape[1] - 1:
+            if col >= maxcols:
                 errormessages += ["Too many columns to fit into table!"]
                 break
             try:
@@ -225,7 +229,7 @@ def fill_numpyarray(target, src_it, digest_types, key=(0, 0, 0), \
                 digest_res = str(err)
             
             if digest_res is not None:
-                target[row, col, key[2]] = digest_res
+                target.__setitem__((row, col, tl_tab), digest_res, fast=True)
         
     if errormessages:
         raise ValueError, '\n'.join(set(errormessages))
@@ -652,6 +656,52 @@ class CsvInterfaces(object):
         self._close_csv()
 
 # end of class CsvInterfaces
+
+class TxtInterfaces(object):
+    """Whitespace separated txt file handling class
+    
+    Parameters:
+    -----------
+    filename: string
+    \tFilename of txt input file
+    
+    Methods
+    -------
+    read: Fills target with values.
+    
+    """
+    def __init__(self, filename):
+        self.filename = filename
+
+    def read(self, target, key=(0, 0, 0)):
+        """Fills target with csv values.
+        
+        The targets dimensions are assumed as default limits
+        unless specified otherwise.
+        
+        Parameters:
+        -----------
+        target: Mutable array or list with 2 dimensions
+        \tIn this array, the csv values are stored
+        
+        key: 3-tuple, defaults to (0, 0, 0)
+        \tTop-left insertion position
+        
+        """
+        
+        tl_row, tl_col, tl_tab = key
+        maxrows, maxcols, _ = target.shape
+        
+        infile = open(self.filename)
+        
+        for row, line in enumerate(infile):
+            if row >= maxrows - tl_row:
+                break
+            sline = line.split()[:maxcols-tl_col]
+            for col, ele in enumerate(sline):
+                target_key = (row + tl_row, col + tl_col, tl_tab)
+                target.__setitem__(target_key, ele, fast=True)
+        infile.close()
 
 class Clipboard(object):
     """Clipboard access
