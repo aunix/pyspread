@@ -35,6 +35,7 @@ import sys
 import types
 import UserDict
 
+from copy import copy
 from itertools import imap, tee, izip
 
 import numpy
@@ -607,9 +608,9 @@ class PyspreadGrid(object):
             
             sgrid[key] = UserString(u"")
             setattr(sgrid[key], attribute, 
-                    default_cell_attributes[attribute])
+                    copy(default_cell_attributes[attribute]))
             return
-            
+        
         try:
             getattr(sgrid_ele, attribute)
             has_textattributes = True
@@ -620,7 +621,7 @@ class PyspreadGrid(object):
         if not has_textattributes:
             try:
                 setattr(sgrid_ele, attribute, 
-                        default_cell_attributes[attribute])
+                        copy(default_cell_attributes[attribute]))
 
             except AttributeError:
                 if sgrid_ele != 0:
@@ -629,7 +630,7 @@ class PyspreadGrid(object):
                     sgrid[key] = UserString(u"")
                     
                 setattr(sgrid[key], attribute, 
-                        default_cell_attributes[attribute])
+                        copy(default_cell_attributes[attribute]))
 
     def get_sgrid_attr(self, key, attr):
         """Get attribute attr of obj, returns defaultattr on fail"""
