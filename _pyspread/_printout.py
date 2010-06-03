@@ -7,14 +7,13 @@ class MyCanvas(wx.ScrolledWindow):
                                    style=wx.SUNKEN_BORDER)
         
         self.lines = []
-        self.width  = 1280
-        self.height = 1024
+        self.width  = grid.GetSize()[0]
+        self.height = grid.GetSize()[1]
         self.x = self.y = 0
         self.curLine = []
         
         self.grid = grid
         self.grid_attr = wx.grid.GridCellAttr()
-        self._draw_func = self.grid.text_renderer.Draw
         
         self.rowslice = rowslice
         self.colslice = colslice
@@ -33,9 +32,8 @@ class MyCanvas(wx.ScrolledWindow):
         """Redirected Draw function from Maingrid"""
         
         #print row, col, rect.x, rect.y
-        
-        return self._draw_func(self.grid, self.grid_attr, dc, 
-                               rect, row, col, False)
+        return self.grid.text_renderer.Draw(self.grid, self.grid_attr, dc, 
+                                      rect, row, col, False, printing=True)
 
     def DoDrawing(self, dc):
         """Main drawing method"""
@@ -44,13 +42,22 @@ class MyCanvas(wx.ScrolledWindow):
         
         self.grid.text_renderer.redraw_imminent = True
         
-        for row in xrange(self.rowslice.stop, self.rowslice.start, -1):
-            for col in xrange(self.colslice.stop, self.colslice.start, -1):
+        for row in xrange(self.rowslice.stop-1, self.rowslice.start-1, -1):
+            for col in xrange(self.colslice.stop-1, self.colslice.start-1, -1):
                 rect = self.grid.CellToRect(row, col)
                 self.draw_func(dc, rect, row, col)
                 
                 self.grid.text_renderer.redraw_imminent = False
-        
+                if col == self.colslice.start:
+                    dc.DrawLine(rect.x, rect.y, rect.x, rect.y + rect.height)
+                elif col == self.colslice.stop-1:
+                    dc.DrawLine(rect.x + rect.width, rect.y, 
+                                rect.x + rect.width, rect.y + rect.height)
+                if row == self.rowslice.start:
+                    dc.DrawLine(rect.x, rect.y, rect.x + rect.width, rect.y)
+                elif row == self.rowslice.stop-1:
+                    dc.DrawLine(rect.x,              rect.y + rect.height, 
+                            rect.x + rect.width, rect.y + rect.height)
         dc.EndDrawing()
 
 

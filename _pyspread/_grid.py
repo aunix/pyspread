@@ -511,7 +511,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
     
         return string_x, string_y, angle
         
-    def Draw(self, grid, attr, dc, rect, row, col, isSelected):
+    def Draw(self, grid, attr, dc, rect, row, col, isSelected, printing=False):
         """Draws the cell border and content"""
         
         pysgrid = self.table.pysgrid
@@ -542,6 +542,8 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
                 bg = self.table.backgrounds[bg_key] = Background(grid, *key)
             
         if wx.Platform == "__WXMSW__":
+            mask_type = wx.COPY
+        elif printing:
             mask_type = wx.COPY
         else:
             mask_type = wx.AND
