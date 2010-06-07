@@ -33,7 +33,10 @@ Provides:
   4. GridIndexMixin: Grid mixin for indexing and __len__
   5. GridSelectionMixin: Grid mixin for handling selections
   6. GridClipboardMixin: Grid mixin for handling selections
-  7. MainGrid: Main grid
+  7. GridManipulationMixin: Grid mixin for manipulating rows, columns and tables
+  8. Background: Memory DC with background content for given cell
+  9. MainGrid: Main grid
+  10. EntryLine: The line for entering cell code
 
 """
 
@@ -1376,7 +1379,8 @@ class MainGrid(wx.grid.Grid,
         
         self.GetGridWindow().Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
         self.GetGridWindow().Bind(wx.EVT_KEY_UP, self.OnKeyUp)
-
+        
+        self.scrollpos = 0, 0 # Remember scroll position
         
     def create_rowcol(self):
         """Creates a new grid"""
@@ -1526,10 +1530,16 @@ class MainGrid(wx.grid.Grid,
     def OnScroll(self, event):
         """Scroll event method updates the grid"""
         
+        self.scrollpos = self.GetScrollPos(wx.HORIZONTAL), \
+                         self.GetScrollPos(wx.VERTICAL)
+                         
         event.Skip()
     
     def OnCellEditorShown(self, event):
         """CellEditor event method sets editor content to Python code"""
+        
+        if wx.Platform == '__WXGTK__':
+            self.Scroll(self.scrollpos[0] + 1, self.scrollpos[1] + 1)
         
         row, col = event.Row, event.Col
         self.key = (row, col, self.current_table)
@@ -1539,7 +1549,7 @@ class MainGrid(wx.grid.Grid,
     def OnCellEditorHidden(self, event):
         """When a cell editor is hidden, the grid is refreshed"""
         
-        self.ForceRefresh()
+        self.Refresh()
         event.Skip()
     
     def OnCellSelected(self, event):
@@ -1547,6 +1557,9 @@ class MainGrid(wx.grid.Grid,
         
         row, col, tab = event.Row, event.Col, self.current_table
         self.key = row, col, tab
+        
+        self.scrollpos = self.GetScrollPos(wx.HORIZONTAL), \
+                         self.GetScrollPos(wx.VERTICAL)
         
         # Set cell editor
         
@@ -1565,7 +1578,7 @@ class MainGrid(wx.grid.Grid,
             self.entry_line.SetValue("")
         
         self.entry_line.SetSelection(-1, -1)
-        self.ForceRefresh()
+        self.Refresh()
         
         # Update Attribute toolbar
         
