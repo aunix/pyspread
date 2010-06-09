@@ -544,12 +544,10 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
                 
                 bg = self.table.backgrounds[bg_key] = Background(grid, *key)
             
-        if wx.Platform == "__WXMSW__":
-            mask_type = wx.COPY
-        elif printing:
-            mask_type = wx.COPY
-        else:
+        if wx.Platform == "__WXGTK__" and not printing:
             mask_type = wx.AND
+        else:
+            mask_type = wx.COPY
             
         dc.Blit(rect.x, rect.y, rect.width, rect.height,
                 bg.mask, 0, 0, mask_type)
