@@ -1,3 +1,16 @@
+0.1.2
+-----
++ Grid flicker reduced
++ Printing works again
++ Entering text in a cell now deletes old text
+
+0.1.1
+-----
++ Grid is faster.
++ Copying only partly filled cells works now.
++ Cells that get attributes but no string no longer display None.
+
+
 0.1
 ---
 + New macro editor dialog. (done)

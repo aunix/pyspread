@@ -1,6 +1,6 @@
 [Desktop Entry]
 Encoding=UTF-8
-Icon=/usr/share/pyspread/icons/pyspread.png
+Icon=/usr/share/pyshared/_pyspread/icons/pyspread.png
 Name=pyspread
 Comment=A Python based spreadsheet
 Exec=/usr/bin/pyspread

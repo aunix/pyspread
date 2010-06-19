@@ -318,52 +318,6 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         wx.grid.PyGridCellRenderer.__init__(self)
         
         self.table = table
-
-    def Clip(self, dc, rect):
-        """Setup the clipping rectangle"""
-        
-        dc.SetClippingRegion(rect.x, rect.y, rect.width, rect.height)
-    
-    def Unclip(self, dc):
-        """Destroy the clippinmg rectangle"""
-        
-        dc.DestroyClippingRegion()
-    
-    def get_visible_rows(self, grid):
-        """Returns a lists of the visible rows
-        
-        Parameters
-        ----------
-        grid: wx.Grid
-        \tCurrent grid
-        
-        """
-        
-        pos = grid.GetPosition()
-        size = grid.Size
-        
-        upper_cell = grid.YToRow(pos[1])
-        lower_cell = grid.YToRow(pos[1] + size[1] - 1)
-        
-        return xrange(upper_cell, lower_cell)
-        
-    def get_visible_cols(self, grid):
-        """Returns a lists of the visible rows
-        
-        Parameters
-        ----------
-        grid: wx.Grid
-        \tCurrent grid
-        
-        """
-        
-        pos = grid.GetPosition()
-        size = grid.Size
-        
-        left_cell = grid.XToCol(pos[0])
-        right_cell = grid.XToCol(pos[0] + size[0] - 1)
-        
-        return xrange(left_cell, right_cell)
         
     def draw_text_label(self, dc, res, rect, grid, pysgrid, key):
         """Draws text label of cell"""
@@ -550,7 +504,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             mask_type = wx.COPY
             
         dc.Blit(rect.x, rect.y, rect.width, rect.height,
-                bg.mask, 0, 0, mask_type)
+                bg.dc, 0, 0, mask_type)
         
         
         # Check if the dc is drawn manually be a return func
@@ -1175,24 +1129,24 @@ class Background(object):
         self.grid = grid
         self.key = row, col, tab
         
-        self.mask = wx.MemoryDC() 
+        self.dc = wx.MemoryDC() 
         self.rect = grid.CellToRect(row, col)
-        self.maskbitmap=wx.EmptyBitmap(self.rect.width,self.rect.height)
+        self.bmp = wx.EmptyBitmap(self.rect.width,self.rect.height)
         
         self.selection = selection
         
-        self.mask.SelectObject(self.maskbitmap)
-        self.mask.SetBackgroundMode(wx.TRANSPARENT)
+        self.dc.SelectObject(self.bmp)
+        self.dc.SetBackgroundMode(wx.TRANSPARENT)
 
-        self.mask.SetDeviceOrigin(0,0)
+        self.dc.SetDeviceOrigin(0,0)
         
         self.draw()
         
     def draw(self):
         """Does the actual background drawing"""
         
-        self.draw_background(self.mask)
-        self.draw_border_lines(self.mask)
+        self.draw_background(self.dc)
+        self.draw_border_lines(self.dc)
 
     def draw_background(self, dc):
         """Draws the background of the background"""
@@ -1203,9 +1157,9 @@ class Background(object):
             bgbrush = get_brush_from_data( \
                 self.grid.pysgrid.get_sgrid_attr(self.key, "bgbrush"))
         
-        self.mask.SetBrush(bgbrush)
-        self.mask.SetPen(wx.TRANSPARENT_PEN)
-        self.mask.DrawRectangle(0, 0, self.rect.width, self.rect.height)
+        dc.SetBrush(bgbrush)
+        dc.SetPen(wx.TRANSPARENT_PEN)
+        dc.DrawRectangle(0, 0, self.rect.width, self.rect.height)
 
     def draw_border_lines(self, dc):
         """Draws lines"""
@@ -1372,7 +1326,7 @@ class MainGrid(wx.grid.Grid,
         self.Bind(wx.EVT_SCROLLWIN, self.OnScroll)
         self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
         
-        # When selection procwess ends, 
+        # When selection process ends, 
         # the shiftkey or the left mouse button are released
         
         self.GetGridWindow().Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
@@ -1391,6 +1345,28 @@ class MainGrid(wx.grid.Grid,
             self.CreateGrid(*self.pysgrid.shape[:2])
         except:
             pass
+
+    def get_visible_rows(self):
+        """Returns a lists of the visible rows"""
+        
+        pos = self.GetPosition()
+        size = self.Size
+        
+        upper_cell = self.YToRow(pos[1])
+        lower_cell = self.YToRow(pos[1] + size[1] - 1)
+        
+        return xrange(upper_cell, lower_cell)
+        
+    def get_visible_cols(self):
+        """Returns a lists of the visible rows"""
+        
+        pos = self.GetPosition()
+        size = self.Size
+        
+        left_cell = self.XToCol(pos[0])
+        right_cell = self.XToCol(pos[0] + size[0] - 1)
+        
+        return xrange(left_cell, right_cell)
 
     def _update_row_sizes(self, interface):
         """Sets the row sizes according to interface data"""
@@ -1537,7 +1513,10 @@ class MainGrid(wx.grid.Grid,
         """CellEditor event method sets editor content to Python code"""
         
         if wx.Platform == '__WXGTK__':
-            self.Scroll(self.scrollpos[0] + 1, self.scrollpos[1] + 1)
+            pos = (self.GetScrollPos(wx.HORIZONTAL), 
+                   self.GetScrollPos(wx.VERTICAL))
+            if  pos != (0, 0):
+                self.Scroll(self.scrollpos[0] + 1, self.scrollpos[1] + 1)
         
         row, col = event.Row, event.Col
         self.key = (row, col, self.current_table)

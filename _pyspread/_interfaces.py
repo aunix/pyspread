@@ -229,7 +229,11 @@ def fill_numpyarray(target, src_it, digest_types, key=(0, 0, 0), \
                 digest_res = str(err)
             
             if digest_res is not None:
-                target.__setitem__((row, col, tl_tab), digest_res, fast=True)
+                try:
+                    target.__setitem__((row, col, tl_tab), digest_res, 
+                                        fast=True)
+                except TypeError:
+                    target.__setitem__((row, col, tl_tab), digest_res)
         
     if errormessages:
         raise ValueError, '\n'.join(set(errormessages))
