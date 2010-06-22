@@ -1332,7 +1332,7 @@ class MainGrid(wx.grid.Grid,
         self.GetGridWindow().Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
         self.GetGridWindow().Bind(wx.EVT_KEY_UP, self.OnKeyUp)
         
-        self.scrollpos = 0, 0 # Remember scroll position
+        ##self.scrollpos = 0, 0 # Remember scroll position
         
     def create_rowcol(self):
         """Creates a new grid"""
@@ -1504,19 +1504,19 @@ class MainGrid(wx.grid.Grid,
     def OnScroll(self, event):
         """Scroll event method updates the grid"""
         
-        self.scrollpos = self.GetScrollPos(wx.HORIZONTAL), \
-                         self.GetScrollPos(wx.VERTICAL)
+        ##self.scrollpos = self.GetScrollPos(wx.HORIZONTAL), \
+        ##                 self.GetScrollPos(wx.VERTICAL)
                          
         event.Skip()
     
     def OnCellEditorShown(self, event):
         """CellEditor event method sets editor content to Python code"""
         
-        if wx.Platform == '__WXGTK__':
-            pos = (self.GetScrollPos(wx.HORIZONTAL), 
-                   self.GetScrollPos(wx.VERTICAL))
-            if  pos != (0, 0):
-                self.Scroll(self.scrollpos[0] + 1, self.scrollpos[1] + 1)
+        ##if wx.Platform == '__WXGTK__':
+        ##    pos = (self.GetScrollPos(wx.HORIZONTAL), 
+        ##           self.GetScrollPos(wx.VERTICAL))
+        ##    if  pos != (0, 0):
+        ##        self.Scroll(self.scrollpos[0] + 1, self.scrollpos[1] + 1)
         
         row, col = event.Row, event.Col
         self.key = (row, col, self.current_table)
