@@ -40,11 +40,21 @@ class MyCanvas(wx.ScrolledWindow):
         
         dc.BeginDrawing()
         
-        self.grid.text_renderer.redraw_imminent = True
+        #self.grid.text_renderer.redraw_imminent = True
         
         for row in xrange(self.rowslice.stop-1, self.rowslice.start-1, -1):
             for col in xrange(self.colslice.stop-1, self.colslice.start-1, -1):
                 rect = self.grid.CellToRect(row, col)
+                
+                rect = wx.Rect(rect.x - \
+                               self.grid.GetScrollPos(wx.HORIZONTAL) * \
+                               self.grid.GetScrollLineX(), 
+                               rect.y - \
+                               self.grid.GetScrollPos(wx.VERTICAL) * \
+                               self.grid.GetScrollLineY(), 
+                               rect.width, 
+                               rect.height)
+                
                 self.draw_func(dc, rect, row, col)
                 
                 self.grid.text_renderer.redraw_imminent = False
