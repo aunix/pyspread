@@ -324,7 +324,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         row, col, _ = key
         
-        res_text = str(res)
+        res_text = unicode(res)
         
         textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
         
