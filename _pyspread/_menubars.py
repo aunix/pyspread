@@ -204,6 +204,8 @@ class MainMenu(_filledMenu):
                     "The buttom right lowermost cells are deleted first."]]] \
         ], \
         [wx.Menu, "&View", [ \
+            [item, ["OnRefreshSelectedCells", "Refresh selected cells\tF5", 
+                        "Refresh selected cells even when frozen"]],
             [wx.Menu, "Zoom", [ \
                 [item, ["OnZoom", str(int(zoom)) + "%", 
                         "Zoom " + str(int(zoom)) + "%"] \

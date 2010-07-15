@@ -989,6 +989,26 @@ class MainWindow(wx.Frame):
         dlg.Show(True)
         event.Skip()
         
+    def OnRefreshSelectedCells(self, event):
+        """Event handler for refreshing the selected cells via menu"""
+        
+        # Get selected cells
+        selected_cells = self.MainGrid.get_selection()
+        
+        # Update each selected cell regardless of frozen state
+        frozen_cache = {}  
+        for key in selected_cells:
+            key = tuple(list(key) + [self.MainGrid.current_table])
+            try:
+                frozen_cache[key] = self.MainGrid.pysgrid.frozen_cells.pop(key)
+            except KeyError:
+                pass
+                
+        self.MainGrid.ForceRefresh()
+        
+        for key in frozen_cache:
+            self.MainGrid.pysgrid.frozen_cells[key] = self.MainGrid.pysgrid[key]
+        
     def OnZoom(self, event):
         """Event handler for setting grid zoom via menu"""
         

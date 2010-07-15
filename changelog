@@ -3,6 +3,7 @@
 + Grid flicker reduced
 + Printing works again
 + Entering text in a cell now deletes old text
++ Function F5 (in menu View) for refreshing selected cells added
 
 0.1.1
 -----
