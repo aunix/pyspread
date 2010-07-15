@@ -1619,6 +1619,9 @@ class MainGrid(wx.grid.Grid,
         
         if newtable in xrange(self.pysgrid.shape[2]):
             # Update the whole grid including the empty cells
+            
+            self.current_table = None
+            
             self.current_table = newtable
             
             self.ClearGrid()
@@ -1628,15 +1631,10 @@ class MainGrid(wx.grid.Grid,
             self.zoom_cols()
             self.zoom_labels()
             
-            # Now update the EntryLine to the current string
-            pos = tuple(list(self.get_currentcell())+[self.current_table])
+            self.entry_line.ignore_changes = True
+            self.entry_line.Clear()
+            self.entry_line.ignore_changes = False
             
-            currstr = self.table.GetSource(*pos)
-            
-            try:
-                self.entry_line.SetValue(currstr)
-            except TypeError:
-                self.entry_line.SetValue("")
     
     def OnRowSize(self, event):
         """Stores the size of a currently changed row in 1st col"""
@@ -1797,11 +1795,16 @@ class EntryLine(wx.TextCtrl):
         
         super(EntryLine, self).__init__(*args, **kwargs)
         
+        self.ignore_changes = False
+        
         self.Bind(wx.EVT_TEXT, self.OnText)
         self.Bind(wx.EVT_CHAR, self.EvtChar)
 
     def OnText(self, event):
         """Text event method evals the cell and updates the grid"""
+        
+        if self.ignore_changes:
+            return
         
         key = self.grid.key
         
@@ -1816,6 +1819,9 @@ class EntryLine(wx.TextCtrl):
          * Handles insertion of cell access code
         
         """
+        
+        if self.ignore_changes:
+            return
         
         if event.GetKeyCode() == 13:
             self.grid.ForceRefresh()

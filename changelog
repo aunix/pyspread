@@ -4,6 +4,8 @@
 + Printing works again
 + Entering text in a cell now deletes old text
 + Function F5 (in menu View) for refreshing selected cells added
++ Changing the table now empties the entry line and does not mess up
+  data any more (BUG 3030172)
 
 0.1.1
 -----
