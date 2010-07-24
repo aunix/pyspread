@@ -55,6 +55,7 @@ Provides
  * Commandline: Gets command line options and parameters
  * Digest: Converts any object to target type as goog as possible
  * UserString: Unicode wrapper class
+ * Validator: Validator for text and digti textctrl
 
 """
 
@@ -65,6 +66,7 @@ from itertools import ifilter
 import optparse
 import re
 import sys
+import string
 import types
 import cStringIO as StringIO
 
@@ -965,3 +967,62 @@ class UserString(unicode):
     pass
 
 # end of class UserString
+
+ALPHA_ONLY = 1
+DIGIT_ONLY = 2
+
+class Validator(wx.PyValidator):
+    def __init__(self, flag=None, pyVar=None):
+        wx.PyValidator.__init__(self)
+        self.flag = flag
+        self.Bind(wx.EVT_CHAR, self.OnChar)
+
+    def TransferToWindow(self):
+            return True
+    def TransferFromWindow(self):
+            return True
+
+    def Clone(self):
+        return Validator(self.flag)
+
+    def Validate(self, win):
+        tc = self.GetWindow()
+        val = tc.GetValue()
+        
+        if self.flag == ALPHA_ONLY:
+            for x in val:
+                if x not in string.letters:
+                    return False
+
+        elif self.flag == DIGIT_ONLY:
+            for x in val:
+                if x not in string.digits:
+                    return False
+
+        return True
+
+
+    def OnChar(self, event):
+        key = event.GetKeyCode()
+
+        if key < wx.WXK_SPACE or key == wx.WXK_DELETE or key > 255:
+            event.Skip()
+            return
+
+        if self.flag == ALPHA_ONLY and chr(key) in string.letters:
+            event.Skip()
+            return
+
+        if self.flag == DIGIT_ONLY and chr(key) in string.digits:
+            event.Skip()
+            return
+
+        if not wx.Validator_IsSilent():
+            wx.Bell()
+
+        # Returning without calling even.Skip eats the event
+        #  before it gets to the text control
+        return
+
+
+# end of class Validator

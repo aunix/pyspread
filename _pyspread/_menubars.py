@@ -206,6 +206,8 @@ class MainMenu(_filledMenu):
         [wx.Menu, "&View", [ \
             [item, ["OnRefreshSelectedCells", "Refresh selected cells\tF5", 
                         "Refresh selected cells even when frozen"]],
+            [item, ["OnGoToCell", "Go to cell ...", 
+                        "Moves the grid to a cell."]],
             [wx.Menu, "Zoom", [ \
                 [item, ["OnZoom", str(int(zoom)) + "%", 
                         "Zoom " + str(int(zoom)) + "%"] \

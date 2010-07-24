@@ -57,7 +57,7 @@ from _pyspread.irange import irange
 from _pyspread._menubars import MainMenu
 from _pyspread._toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _pyspread._dialogs import MacroDialog, CsvImportDialog, CsvExportDialog, \
-            DimensionsEntryDialog, AboutDialog
+            DimensionsEntryDialog, CellEntryDialog, AboutDialog
 from _pyspread._interfaces import CsvInterfaces, PysInterfaces, TxtInterfaces, \
             string_match, is_pyme_present, sign, verify
 from _pyspread.config import ICONPREFIX, icon_size, KEYFUNCTIONS
@@ -671,6 +671,25 @@ class MainWindow(wx.Frame):
         self.MainGrid.paste()
         self.MainGrid.pysgrid.unredo.mark()
         event.Skip()
+    
+    def OnGoToCell(self, event):
+        """Shift a given cell into view"""
+        
+        dlg = CellEntryDialog(self)
+        
+        if dlg.ShowModal() == wx.ID_OK:
+            row = int(dlg.row_textctrl.GetValue())
+            col = int(dlg.col_textctrl.GetValue())
+            tab = int(dlg.tab_textctrl.GetValue())
+            
+            if tab != self.MainGrid.current_table:
+                # Switch to target table
+                self.MainGrid.cbox_z.SetValue(str(tab))
+                self.MainGrid.switch_to_table(tab)
+            
+            self.MainGrid.MakeCellVisible(row, col)
+        
+        dlg.Destroy()
     
     def _launch_help(self, filename):
         """Generix help launcher"""

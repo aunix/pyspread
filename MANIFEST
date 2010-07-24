@@ -67,8 +67,12 @@ _pyspread/icons/toggles/border_right.xpm
 _pyspread/icons/toggles/border_top_n_bottom.xpm
 _pyspread/icons/toggles/border_top.xpm
 _pyspread/examples/new_wagner.pys
-_pyspread/examples/test.pys
+_pyspread/examples/unicode.pys
 _pyspread/examples/__init__.py
+_pyspread/examples/large_example.pys
+_pyspread/examples/logwindow.m
+_pyspread/examples/macrotest.m
+_pyspread/examples/dcmacros.m
 _pyspread/doc/manual.html
 _pyspread/doc/tutorial.html
 _pyspread/doc/faq.html

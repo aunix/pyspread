@@ -1,11 +1,13 @@
 0.1.2
 -----
++ Added function to make a cell visible
 + Grid flicker reduced
 + Printing works again
 + Entering text in a cell now deletes old text
-+ Function F5 (in menu View) for refreshing selected cells added
++ Added function F5 (in menu View) for refreshing selected cells
 + Changing the table now empties the entry line and does not mess up
   data any more (BUG 3030172)
++ 1D printing bug fixed (BUG 2790444)
 
 0.1.1
 -----

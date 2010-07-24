@@ -35,6 +35,7 @@ Provides:
   - CsvExportDialog:  Dialog for CSV export parameter choice
   - MacroDialog: Dialog for macro management
   - DimensionsEntryDialog
+  - CellEntryDialog
   - AboutDialog
 
 """
@@ -53,6 +54,7 @@ import wx.stc as stc
 from _pyspread._grid import GridIndexMixin
 from _pyspread._widgets import PythonSTC
 from _pyspread._interfaces import Digest, sniff, fill_wxgrid
+from _pyspread._interfaces import ALPHA_ONLY, DIGIT_ONLY, Validator
 from _pyspread.config import VERSION
 
 class ChoiceRenderer(wx.grid.PyGridCellRenderer):
@@ -917,6 +919,58 @@ class DimensionsEntryDialog(wx.Dialog):
         
 # end of class DimensionsEntryDialog
 
+class CellEntryDialog(wx.Dialog):
+    """Allows entring three digits"""
+    
+    def __init__(self, parent):
+        wx.Dialog.__init__(self, parent, -1, "Cell Entry")
+
+        self.SetAutoLayout(True)
+        VSPACE = 10
+
+        fgs = wx.FlexGridSizer(0, 2)
+
+        fgs.Add((1,1))
+        fgs.Add(wx.StaticText(self, -1,
+                             "Enter a cell to be put into view."))
+
+        fgs.Add((1,VSPACE)); fgs.Add((1,VSPACE))
+
+        label = wx.StaticText(self, -1, "Row: ")
+        fgs.Add(label, 0, wx.ALIGN_RIGHT|wx.CENTER)
+        self.row_textctrl = \
+            wx.TextCtrl(self, -1, "0", validator=Validator(DIGIT_ONLY))
+        fgs.Add(self.row_textctrl)
+
+        fgs.Add((1,VSPACE)); fgs.Add((1,VSPACE))
+
+        label = wx.StaticText(self, -1, "Column: ")
+        fgs.Add(label, 0, wx.ALIGN_RIGHT|wx.CENTER)
+        self.col_textctrl = \
+            wx.TextCtrl(self, -1, "0", validator=Validator(DIGIT_ONLY))
+        
+        fgs.Add(self.col_textctrl)
+        fgs.Add((1,VSPACE)); fgs.Add((1,VSPACE))
+        label = wx.StaticText(self, -1, "Table: ")
+        fgs.Add(label, 0, wx.ALIGN_RIGHT|wx.CENTER)
+        self.tab_textctrl = \
+            wx.TextCtrl(self, -1, "0", validator=Validator(DIGIT_ONLY))
+        
+        fgs.Add(self.tab_textctrl)
+
+        buttons = wx.StdDialogButtonSizer() #wx.BoxSizer(wx.HORIZONTAL)
+        b = wx.Button(self, wx.ID_OK, "OK")
+        b.SetDefault()
+        buttons.AddButton(b)
+        buttons.AddButton(wx.Button(self, wx.ID_CANCEL, "Cancel"))
+        buttons.Realize()
+
+        border = wx.BoxSizer(wx.VERTICAL)
+        border.Add(fgs, 1, wx.GROW|wx.ALL, 25)
+        border.Add(buttons)
+        self.SetSizer(border)
+        border.Fit(self)
+        self.Layout()
 
 class AboutDialog(object):
     """Displays information about pyspread"""

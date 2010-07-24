@@ -1608,14 +1608,9 @@ class MainGrid(wx.grid.Grid,
             except TypeError:
                 pass
         event.Skip()
-        
-    def OnCombo(self, event):
-        """Combo box event method that updates the current table"""
-        
-        try:
-            newtable = int(event.GetString())
-        except ValueError:
-            newtable = 0
+    
+    def switch_to_table(self, newtable):
+        """Switches grid to table"""
         
         if newtable in xrange(self.pysgrid.shape[2]):
             # Update the whole grid including the empty cells
@@ -1634,6 +1629,16 @@ class MainGrid(wx.grid.Grid,
             self.entry_line.ignore_changes = True
             self.entry_line.Clear()
             self.entry_line.ignore_changes = False
+    
+    def OnCombo(self, event):
+        """Combo box event method that updates the current table"""
+        
+        try:
+            newtable = int(event.GetString())
+        except ValueError:
+            newtable = 0
+            
+        self.switch_to_table(newtable)
             
     
     def OnRowSize(self, event):
