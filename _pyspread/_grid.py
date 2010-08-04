@@ -1404,7 +1404,7 @@ class MainGrid(wx.grid.Grid,
             self.pysgrid.create_sgrid_attribute(key, tag)
             setattr(self.pysgrid.sgrid[key], tag, dpi_adjusted_size)
         
-    def loadfile(self, filename, interface = None):
+    def loadfile(self, filename, interface=None):
         """Load file named filename into spreadsheet"""
         
         if interface is None:

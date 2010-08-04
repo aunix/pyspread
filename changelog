@@ -8,6 +8,7 @@
 + Changing the table now empties the entry line and does not mess up
   data any more (BUG 3030172)
 + 1D printing bug fixed (BUG 2790444)
++ Loading a file from command line no longer deletes cell 0,0,0 (BUG 3030880)
 
 0.1.1
 -----

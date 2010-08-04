@@ -73,14 +73,16 @@ class MainApplication(App):
         if is_pyme_present():
             from _pyspread._interfaces import genkey
             genkey()
-        
-        # Load filename if provided
-        if self.filename is not None:
-            self.main_window.MainGrid.loadfile(self.filename)
             
         # Show application window
         self.SetTopWindow(self.main_window)
         self.main_window.Show()
+
+        self.main_window.MainGrid.SetGridCursor(0, 0)
+
+        # Load filename if provided
+        if self.filename is not None:
+            self.main_window.loadfile(self.filename)
         
         return True
 

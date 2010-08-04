@@ -370,20 +370,32 @@ class MainWindow(wx.Frame):
         """Opens file dialog and loads file"""
         
         filepath, _ = self._get_filepath(style=wx.OPEN|wx.CHANGE_DIR, safe=True)
+        self.loadfile(filepath)
+    
+    def loadfile(self, filepath):
+        """Loads a file from filepath"""
         
-        if filepath is not None:
-            self.filepath = filepath
-            try:
-                self.MainGrid.loadfile(self.filepath, self.wildcard_interface)
-            except IOError:
-                msg =  "Could not read file " + self.filepath
-                dlg = gmd.GenericMessageDialog(self, msg, 'File read error',
-                    wx.CANCEL | wx.ICON_ERROR)
-                dlg.ShowModal()
-                dlg.Destroy()
+        if filepath is None:
+            return
+        
+        self.filepath = filepath
+        try:
+            self.MainGrid.loadfile(self.filepath)
+        except IOError:
+            msg =  "Could not read file " + self.filepath
+            dlg = gmd.GenericMessageDialog(self, msg, 'File read error',
+                wx.CANCEL | wx.ICON_ERROR)
+            dlg.ShowModal()
+            dlg.Destroy()
+        
+        class Dummyevent(object):
+            """Just a dummy"""
             
-            self.MainGrid.OnCombo(event)
-            self.MainGrid.ForceRefresh()
+            def GetString(self):
+                return "0"
+        
+        self.MainGrid.OnCombo(Dummyevent())
+        self.MainGrid.ForceRefresh()
     
     def sign_file(self):
         """Signs file if possible"""
