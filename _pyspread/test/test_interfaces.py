@@ -74,6 +74,18 @@ class Test(object):
 #        assert dialect.lineterminator == "\r\n"
 #        assert dialect.skipinitialspace == 0
     
+    def test_sorted_keys(self):
+        keys = [(1, 0, 0), (2, 0, 0), (0, 1, 0), (0, 99, 0), (0, 0, 0), 
+                (0, 0, 99), (1, 2, 3)]
+        assert \
+            list(_interfaces.sorted_keys(keys, (0, 1, 0))) == \
+             [(0, 1, 0), (0, 99, 0), (1, 2, 3), (0, 0, 99), (0, 0, 0), 
+              (1, 0, 0), (2, 0, 0)]
+        assert \
+            list(_interfaces.sorted_keys(keys, (0, 3, 0), reverse=True)) == \
+             [(2, 0, 0), (1, 0, 0), (0, 0, 0), (0, 0, 99), (1, 2, 3), 
+              (0, 99, 0), (0, 1, 0)]
+    
     def test_fill_numpyarray(self):
         """Fill the target with values from an array"""
         
