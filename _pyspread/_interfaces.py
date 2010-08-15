@@ -169,7 +169,7 @@ def sniff(csvfilepath):
     return dialect, has_header
 
 def fill_numpyarray(target, src_it, digest_types, key=(0, 0, 0), \
-                    has_header = False):
+                    has_header = False, fast=False):
     """
     Fills the target array with data from src_it at position key
     
@@ -186,7 +186,9 @@ def fill_numpyarray(target, src_it, digest_types, key=(0, 0, 0), \
     key: 3-tuple of int
     \tInsertion point
     has_header: bool
-    \t True if the first line shall be treated as a header line
+    \tTrue if the first line shall be treated as a header line
+    fast: bool
+    \tAllow fast insertion (only for imports without undo!)
     
     """
     errormessages = []
@@ -231,10 +233,13 @@ def fill_numpyarray(target, src_it, digest_types, key=(0, 0, 0), \
                 digest_res = str(err)
             
             if digest_res is not None:
-                try:
-                    target.__setitem__((row, col, tl_tab), digest_res, 
-                                        fast=True)
-                except TypeError:
+                if fast:
+                    try:
+                        target.__setitem__((row, col, tl_tab), digest_res, 
+                                            fast=True)
+                    except TypeError:
+                        target.__setitem__((row, col, tl_tab), digest_res)
+                else:
                     target.__setitem__((row, col, tl_tab), digest_res)
         
     if errormessages:
@@ -647,7 +652,7 @@ class CsvInterfaces(object):
         
         csv_reader = self._open_csv_reader()
         fill_numpyarray(target, csv_reader, digest_types=self.digest_types, \
-                        key=key, has_header=self.has_header)
+                        key=key, has_header=self.has_header, fast=True)
         
         self._close_csv()
     
