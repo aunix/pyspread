@@ -51,6 +51,18 @@ class TestPyspreadGrid(object):
             self.grid = _datastructures.PyspreadGrid(dimensions=dim)
             del self.grid
     
+    def test_sorted_keys(self):
+        keys = [(1, 0, 0), (2, 0, 0), (0, 1, 0), (0, 99, 0), (0, 0, 0), 
+                (0, 0, 99), (1, 2, 3)]
+        assert \
+            list(self.sorted_keys(keys, (0, 1, 0))) == \
+             [(0, 1, 0), (0, 99, 0), (1, 2, 3), (0, 0, 99), (0, 0, 0), 
+              (1, 0, 0), (2, 0, 0)]
+        assert \
+            list(self.sorted_keys(keys, (0, 3, 0), reverse=True)) == \
+             [(2, 0, 0), (1, 0, 0), (0, 0, 0), (0, 0, 99), (1, 2, 3), 
+              (0, 99, 0), (0, 1, 0)]
+    
     def test_getitem(self):
         """Test for item getting, slicing, basic evaluation correctness."""
         
