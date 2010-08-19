@@ -502,7 +502,7 @@ class AttributesToolbar(wx.ToolBar):
         
         # Check if cell is frozen and adjust frozen cell button
         
-        if key in self.pysgrid.frozen_cells:
+        if key in self.pysgrid.sgrid.frozen_cells:
             # Toggle down
             self.ToggleTool(wx.FONTFLAG_MASK, 1)
         else:
@@ -1030,10 +1030,10 @@ class AttributesToolbar(wx.ToolBar):
             
             if event.GetId() == wx.wx.FONTFLAG_MASK and istoggled:
                 res = self.pysgrid[key]
-                self.pysgrid.frozen_cells[key] = res
+                self.pysgrid.sgrid.frozen_cells[key] = res
             elif event.GetId() == wx.wx.FONTFLAG_MASK and not istoggled:
                 try:
-                    self.pysgrid.frozen_cells.pop(key)
+                    self.pysgrid.sgrid.frozen_cells.pop(key)
                 except KeyError:
                     pass
 

@@ -1034,14 +1034,16 @@ class MainWindow(wx.Frame):
         for key in selected_cells:
             key = tuple(list(key) + [self.MainGrid.current_table])
             try:
-                frozen_cache[key] = self.MainGrid.pysgrid.frozen_cells.pop(key)
+                frozen_cache[key] = \
+                    self.MainGrid.pysgrid.sgrid.frozen_cells.pop(key)
             except KeyError:
                 pass
                 
         self.MainGrid.ForceRefresh()
         
         for key in frozen_cache:
-            self.MainGrid.pysgrid.frozen_cells[key] = self.MainGrid.pysgrid[key]
+            self.MainGrid.pysgrid.sgrid.frozen_cells[key] = \
+                self.MainGrid.pysgrid[key]
         
     def OnZoom(self, event):
         """Event handler for setting grid zoom via menu"""

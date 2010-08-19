@@ -89,8 +89,6 @@ class PyspreadGrid(object):
         self.safe_mode = False # Values are results for all cells 
                                # if True
         
-        self.frozen_cells = {} # Values are results for frozen cells
-        
         self._resultcache = {}
     
     def _getshape(self):
@@ -145,8 +143,8 @@ class PyspreadGrid(object):
             return self.sgrid[key]
         
         # Frozen cell cache access
-        if key in self.frozen_cells:
-            return self.frozen_cells[key]
+        if key in self.sgrid.frozen_cells:
+            return self.sgrid.frozen_cells[key]
         
         if self._resultcache.has_key(key):
             result = self._resultcache[key]
@@ -777,6 +775,8 @@ class DictGrid(UserDict.IterableUserDict):
         self.rows = {}
         self.cols = {}
         self.tabs = {}
+        
+        self.frozen_cells = {} # Values are results for frozen cells
         
     def __getitem__(self, key):
         
