@@ -500,8 +500,13 @@ class AttributesToolbar(wx.ToolBar):
         
         key = self.grid.key
         
-        # Check if cell is frozen and adjust frozen cell button
+        # Compatibility: Create frozen_cells if missing
         
+        if not hasattr(self.pysgrid.sgrid, "frozen_cells"):
+            self.pysgrid.sgrid.frozen_cells = {}
+        
+        # Check if cell is frozen and adjust frozen cell button
+            
         if key in self.pysgrid.sgrid.frozen_cells:
             # Toggle down
             self.ToggleTool(wx.FONTFLAG_MASK, 1)
