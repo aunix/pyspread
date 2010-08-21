@@ -470,7 +470,7 @@ class BitmapToggleButton(wx.BitmapButton):
         # For compatibility with toggle buttons
         setattr(self, "GetToolState", lambda x: self.state)
         
-        self.Bind(wx.EVT_BUTTON, self.toggle, self)
+        self.Bind(wx.EVT_LEFT_UP, self.toggle, self)
     
     def toggle(self, event):
         """Toggles state to next bitmap"""
