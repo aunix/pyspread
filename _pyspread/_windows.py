@@ -890,39 +890,50 @@ class MainWindow(wx.Frame):
             self.find_gui_feedback(event, event_find_string, findpos)
         
         if event_type in ["REPLACE", "REPLACE_ALL"]:
-            noreplaced = 0
-            while findpos is not None:
-                noreplaced += 1
-                cellstring = self.MainGrid.pysgrid.sgrid[findpos]
-                string_position = string_match(cellstring, \
-                                    event_find_string, event_flags)
-                newstring = cellstring[:string_position]
-                newstring += cellstring[string_position:].replace(\
-                                       event_find_string, \
-                                       event_replace_string, 1)
-                self.MainGrid.pysgrid[findpos] = newstring
-                if event_type == "REPLACE":
-                    self.main_window_statusbar.SetStatusText("'" +
-                                 cellstring + "' replaced by '" + \
-                                 newstring + "'.", 0)
-                    break
-                elif event_type == "REPLACE_ALL":
-                    findpos = self.MainGrid.pysgrid.findnextmatch( \
-                                 findpos, event_find_string, event_flags)
-                else:
-                    raise ValueError, "Event type " + event_type + " unknown."
+            self.replace_cell_content(event_type, event_flags, event_find_string,
+                                      event_replace_string, findpos)
             
-            self.MainGrid.ForceRefresh()
-            self.MainGrid.pysgrid.unredo.mark()
-            
-            if event_type == "REPLACE_ALL":
-                self.main_window_statusbar.SetStatusText(unicode(noreplaced) + \
-                                 " occurrences of '" + event_find_string + \
-                                 "' replaced by '" +  event_replace_string + \
-                                 "'.", 0)
-            else:
-                self.MainGrid.entry_line.SetValue(newstring)
         event.Skip()
+    
+    def replace_cell_content(self, event_type, event_flags, event_find_string,
+                             event_replace_string, findpos):
+        """Replace operation from Find & Replace menu"""
+        
+        noreplaced = 0
+        while findpos is not None:
+            noreplaced += 1
+            cellstring = self.MainGrid.pysgrid.sgrid[findpos]
+            string_position = string_match(cellstring, \
+                                event_find_string, event_flags)
+            newstring = cellstring[:string_position]
+            newstring += cellstring[string_position:].replace(\
+                                   event_find_string, \
+                                   event_replace_string, 1)
+            self.MainGrid.pysgrid[findpos] = newstring
+            if event_type == "REPLACE":
+                self.main_window_statusbar.SetStatusText("'" +
+                             cellstring + "' replaced by '" + \
+                             newstring + "'.", 0)
+                break
+            elif event_type == "REPLACE_ALL":
+                findpos = self.MainGrid.pysgrid.findnextmatch( \
+                             findpos, event_find_string, event_flags)
+            else:
+                raise ValueError, "Event type " + event_type + " unknown."
+
+        self.MainGrid.ForceRefresh()
+        self.MainGrid.pysgrid.unredo.mark()
+
+        if event_type == "REPLACE_ALL":
+            self.main_window_statusbar.SetStatusText(unicode(noreplaced) + \
+                             " occurrences of '" + event_find_string + \
+                             "' replaced by '" +  event_replace_string + \
+                             "'.", 0)
+        else:
+            try:
+                self.MainGrid.entry_line.SetValue(newstring)
+            except UnboundLocalError:
+                pass
     
     def find_position(self, event_find_string, event_flags):
         """Find position of event_find_string in MainGrid
@@ -1007,10 +1018,9 @@ class MainWindow(wx.Frame):
     def OnShowFind(self, event):
         """Calls the find dialog"""
         
-        data = wx.FindReplaceData()
-        dlg = wx.FindReplaceDialog(self, data, "Find")
-        dlg.data = data  # save a reference to it...
-        dlg.Show(True)
+        # Focus find toolbar
+        self.find_toolbar.search.SetFocus()
+        
         event.Skip()
     
     def OnShowFindReplace(self, event):

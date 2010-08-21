@@ -3,6 +3,7 @@
 + Added function to make a cell visible
 + Grid flicker reduced
 + 3rd cell justification "center" added
++ Ctrl-F now points to find toolbar instead of find dialog
 + Printing works again
 + Frozen state is now saved
 + Entering text in a cell now deletes old text
