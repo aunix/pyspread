@@ -344,7 +344,7 @@ class AttributesToolbar(wx.ToolBar):
     def _create_justification_button(self):
         """Creates horizontal justification button"""
         
-        iconnames = ["JustifyLeft", "JustifyRight"]
+        iconnames = ["JustifyLeft", "JustifyCenter", "JustifyRight"]
         bmplist = [wx.Bitmap(icons[iconname]) for iconname in iconnames]
         self.justify_tb = _widgets.BitmapToggleButton(self, bmplist)
         self.Bind(wx.EVT_BUTTON, self.OnToolClick, self.justify_tb)
@@ -535,11 +535,13 @@ class AttributesToolbar(wx.ToolBar):
             justification = "left"
         
         if justification == "left":
-            self.justify_tb.state = 1
-        elif justification == "right":
+            self.justify_tb.state = 2
+        elif justification == "center":
             self.justify_tb.state = 0
-        else:
+        elif justification == "right":
             self.justify_tb.state = 1
+        else:
+            self.justify_tb.state = 2
         
         self.justify_tb.toggle(None)
         self.justify_tb.Refresh()
@@ -1011,7 +1013,8 @@ class AttributesToolbar(wx.ToolBar):
                 textattr[odftags["underline"]] = "none"
             
             tb_state_map = {0: "left",
-                            1: "right",
+                            1: "center",
+                            2: "right",
                             }
             if event.GetEventObject() == self.justify_tb:
                 justification = tb_state_map[self.justify_tb.state]

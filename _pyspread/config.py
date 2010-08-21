@@ -336,6 +336,7 @@ icons = {"FileNew": _action_path + "filenew.png",
          "FormatTextStrikethrough": _action_path + \
                                             "format-text-strikethrough.png",
          "JustifyRight": _action_path + "format-justify-right.png",
+         "JustifyCenter": _action_path + "format-justify-center.png",
          "JustifyLeft": _action_path + "format-justify-left.png",
          "AlignTop": _action_path + "format-text-aligntop.png",
          "AlignCenter": _action_path + "format-text-aligncenter.png", 

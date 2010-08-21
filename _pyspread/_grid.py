@@ -455,6 +455,16 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         if justification == "left":
             string_x = rect.x + 2
+            
+        elif justification == "center":
+            # First calculate x value for unrotated text
+            string_x = rect.x + rect.width / 2 - 1
+            
+            # Now map onto rotated xy position
+            rot_angle = angle / 180.0 * pi
+            string_x = string_x - text_extent[0] / 2 * cos(rot_angle)
+            string_y = string_y + text_extent[0] / 2 * sin(rot_angle)
+
         elif justification == "right":
             # First calculate x value for unrotated text
             string_x = rect.x + rect.width - 2
@@ -464,7 +474,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             string_x = string_x - text_extent[0] * cos(rot_angle)
             string_y = string_y + text_extent[0] * sin(rot_angle)
         else:
-            raise ValueError, "Cell justification must be left or right"
+            raise ValueError, "Cell justification must be left, center or right"
     
         return string_x, string_y, angle
         
