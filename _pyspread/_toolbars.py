@@ -40,7 +40,7 @@ import wx.lib.colourselect as csel
 from _pyspread.config import odftags, border_toggles, default_cell_attributes
 from _pyspread.config import FONT_SIZES, DEFAULT_FONT, faces, icons, small_icon_size
 
-from _pyspread._interfaces import get_font_list
+from _pyspread._interfaces import get_font_list, textfont_from_string
 import _widgets
 
 class MainToolbar(wx.ToolBar):
@@ -732,6 +732,13 @@ class AttributesToolbar(wx.ToolBar):
         return (bottom_keys, right_keys)
     
     def OnLineColor(self, event):
+        """Line color choice event handler"""
+        
+        linecolor = event.GetValue()
+        self.change_linecolor(linecolor)
+        event.Skip()
+        
+    def change_linecolor(self, linecolor):
         """Change the line color of current cell/selection border"""
         
         pysgrid = self.pysgrid
@@ -740,38 +747,44 @@ class AttributesToolbar(wx.ToolBar):
         self.grid.backgrounds = {}
         
         keys = self._get_key_list()
-        
-        color = event.GetValue()
-        
         bottom_keys, right_keys = self.get_chosen_borders(keys)
         
-        for key in bottom_keys:
-            pysgrid.create_sgrid_attribute(key, "borderpen_bottom")
-            if key not in sgrid:
-                sgrid[key] = None
-            try:
-                sgrid[key].borderpen_bottom[0] = color.GetRGB()
-            except KeyError:
-                sgrid[key].borderpen_bottom = \
-                    default_cell_attributes["borderpen_bottom"]
-                sgrid[key].borderpen_bottom[0] = color.GetRGB()
-        
         for key in right_keys:
-            pysgrid.create_sgrid_attribute(key, "borderpen_right")
-            if key not in sgrid:
-                sgrid[key] = None
+            borderpen_right = pysgrid.get_sgrid_attr(key, "borderpen_right")
             try:
-                sgrid[key].borderpen_right[0] = color.GetRGB()
+                borderpen_right[0] = linecolor.GetRGB()
             except KeyError:
-                sgrid[key].borderpen_right = \
-                    default_cell_attributes["borderpen_right"]
-                sgrid[key].borderpen_right[0] = color.GetRGB()
+                borderpen_right = default_cell_attributes["borderpen_right"]
+                borderpen_right[0] = linecolor.GetRGB()
+            pysgrid.set_sgrid_attr(key, "borderpen_right", borderpen_right,
+                                   mark=False)
+        
+        for key in bottom_keys:
+            borderpen_bottom = pysgrid.get_sgrid_attr(key, "borderpen_bottom")
+            try:
+                borderpen_bottom[0] = linecolor.GetRGB()
+            except KeyError:
+                borderpen_bottom = default_cell_attributes["borderpen_bottom"]
+                borderpen_bottom[0] = linecolor.GetRGB()
+            pysgrid.set_sgrid_attr(key, "borderpen_bottom", borderpen_bottom, 
+                                   mark=False)
+                                   
+        pysgrid.unredo.mark()
         
         self.grid.ForceRefresh()
         
-        event.Skip()
     
     def OnLineWidth(self, event):
+        """Line width choice event handler"""
+        
+        linewidth_combobox = event.GetEventObject()
+        idx = event.GetInt()
+        linewidth  = int(linewidth_combobox.GetString(idx))
+        
+        self.change_linewidth(linewidth)
+        
+        
+    def change_linewidth(self, linewidth):
         """Change the line width of current cell/selection border"""
         
         pysgrid = self.pysgrid
@@ -782,100 +795,87 @@ class AttributesToolbar(wx.ToolBar):
         keys = self._get_key_list()
         bottom_keys, right_keys = self.get_chosen_borders(keys)
         
-        linewidth_combobox = event.GetEventObject()
-        idx = event.GetInt()
-        line_width  = int(linewidth_combobox.GetString(idx))
-        if line_width == 0:
-            penstyle = wx.TRANSPARENT
+        if linewidth == 0:
+            penstyle = int(wx.TRANSPARENT)
         else:
-            penstyle = wx.SOLID
+            penstyle = int(wx.SOLID)
         
         for key in right_keys:
-            pysgrid.create_sgrid_attribute(key, "borderpen_right")
-            if key not in sgrid:
-                sgrid[key] = None
+            borderpen_right = pysgrid.get_sgrid_attr(key, "borderpen_right")
             try:
-                sgrid[key].borderpen_right[1] = line_width
-                sgrid[key].borderpen_right[2] = int(penstyle)
+                borderpen_right[1] = linewidth
+                borderpen_right[2] = penstyle
             except KeyError:
-                sgrid[key].borderpen_right = \
-                    default_cell_attributes["borderpen_right"]
-                sgrid[key].borderpen_right[1] = line_width
-                sgrid[key].borderpen_right[2] = int(penstyle)
-
+                borderpen_right = default_cell_attributes["borderpen_right"]
+                borderpen_right[1] = linewidth
+                borderpen_right[2] = penstyle
+            pysgrid.set_sgrid_attr(key, "borderpen_right", borderpen_right,
+                                   mark=False)
         
         for key in bottom_keys:
-            pysgrid.create_sgrid_attribute(key, "borderpen_bottom")
-            if key not in sgrid:
-                sgrid[key] = None
+            borderpen_bottom = pysgrid.get_sgrid_attr(key, "borderpen_bottom")
             try:
-                sgrid[key].borderpen_bottom[1] = line_width
-                sgrid[key].borderpen_bottom[2] = int(penstyle)
+                borderpen_bottom[1] = linewidth
+                borderpen_bottom[2] = penstyle
             except KeyError:
-                sgrid[key].borderpen_bottom = \
-                    default_cell_attributes["borderpen_bottom"]
-                sgrid[key].borderpen_bottom[1] = line_width
-                sgrid[key].borderpen_bottom[2] = int(penstyle)
+                borderpen_bottom = default_cell_attributes["borderpen_bottom"]
+                borderpen_bottom[1] = linewidth
+                borderpen_bottom[2] = penstyle
+            pysgrid.set_sgrid_attr(key, "borderpen_bottom", borderpen_bottom, 
+                                   mark=False)
+        
+        pysgrid.unredo.mark()
         
         self.grid.ForceRefresh()
         
     def OnBGColor(self, event):
+        """Background color choice event handler"""
+
+        bgcolor = event.GetValue()
+        self.change_bgcolor(bgcolor)
+        event.Skip()
+    
+    def change_bgcolor(self, bgcolor):
         """Change the color of current cell/selection background"""
         
         pysgrid = self.pysgrid
-        sgrid = pysgrid.sgrid
-        
-        self.grid.backgrounds = {}
         
         keys = self._get_key_list()
         
-        bgcolor = event.GetValue()
-        
         for key in keys:
-            pysgrid.create_sgrid_attribute(key, "bgbrush")
+            bgbrush = pysgrid.get_sgrid_attr(key, "bgbrush")
             try:
-                sgrid[key].bgbrush[0] = int(bgcolor.GetRGB())
+                bgbrush[0] = int(bgcolor.GetRGB())
             except KeyError:
-                try:
-                    sgrid[key].bgbrush = default_cell_attributes["bgbrush"]
-                except KeyError:
-                    sgrid[key] = None
-                    sgrid[key].bgbrush = default_cell_attributes["bgbrush"]
-                    
-                sgrid[key].bgbrush[0] = int(bgcolor.GetRGB())
+                bgbrush = default_cell_attributes["bgbrush"]
+                bgbrush[0] = int(bgcolor.GetRGB())
+            pysgrid.set_sgrid_attr(key, "bgbrush", bgbrush)
         
         self.grid.ForceRefresh()
         
-        event.Skip()
-        
     def OnTextColor(self, event):
+        """Text color choice event handler"""
+        
+        textcolor = event.GetValue()
+        self.change_textcolor(textcolor)
+        event.Skip()
+    
+    def change_textcolor(self, textcolor):
         """Change the color of current cell/selection text"""
         
         pysgrid = self.pysgrid
-        sgrid = pysgrid.sgrid
         
         keys = self._get_key_list()
-        new_textcolor = event.GetValue()
         
         for key in keys:
-            pysgrid.create_sgrid_attribute(key, "textattributes")
-            
-            if key not in sgrid:
-                sgrid[key] = None
-                
-            sgrid[key].textattributes[odftags["fontcolor"]] = new_textcolor
+            textattr = pysgrid.get_sgrid_attr(key, "textattributes")
+            textattr[odftags["fontcolor"]] = textcolor
+            pysgrid.set_sgrid_attr(key, "textattributes", textattr)
         
         self.grid.ForceRefresh()
-        
-        event.Skip()
     
     def OnTextFont(self, event):
-        """Change the font of current cell/selection text"""
-        
-        pysgrid = self.pysgrid
-        sgrid = pysgrid.sgrid
-        
-        keys = self._get_key_list()
+        """Text font choice event handler"""
         
         fontchoice_combobox = event.GetEventObject()
         idx = event.GetInt()
@@ -885,29 +885,26 @@ class AttributesToolbar(wx.ToolBar):
         except AttributeError:
             font_string  = event.GetString()
         
-        for key in keys:
-            pysgrid.create_sgrid_attribute(key, "textfont")
-            try:
-                old_font_string = sgrid[key].textfont
-            except KeyError:
-                old_font_string = default_cell_attributes["textfont"]
-            
-            nativefontinfo = wx.NativeFontInfo()
-            nativefontinfo.FromString(old_font_string)
-            
-            textfont = wx.Font(10, wx.NORMAL, wx.NORMAL, 
-                               wx.NORMAL, False, 'Arial')
-            textfont.SetNativeFontInfo(nativefontinfo)
-            textfont.SetFaceName(font_string)
-            
-            if key not in sgrid:
-                sgrid[key] = None
-            
-            sgrid[key].textfont = str(textfont.GetNativeFontInfo())
-          
-        self.grid.ForceRefresh()
+        self.change_text_font(font_string)
         
         event.Skip()
+    
+    def change_text_font(self, font_string):
+        """Change the font of current cell/selection text"""
+        
+        pysgrid = self.pysgrid
+        
+        keys = self._get_key_list()
+        
+        for key in keys:
+            old_font_string = pysgrid.get_sgrid_attr(key, "textfont")
+            textfont = textfont_from_string(old_font_string)
+            textfont.SetFaceName(font_string)
+            
+            font_string = str(textfont.GetNativeFontInfo())
+            pysgrid.set_sgrid_attr(key, "textfont", font_string)
+          
+        self.grid.ForceRefresh()
     
     def OnTextSize(self, event):
         """Text size combo text event handler"""
@@ -920,34 +917,22 @@ class AttributesToolbar(wx.ToolBar):
         self.change_text_size(size)
         
         event.Skip()
-        
+    
     def change_text_size(self, size):
         """Change the size of current cell/selection text"""
         
         pysgrid = self.pysgrid
-        sgrid = pysgrid.sgrid
         
         keys = self._get_key_list()
         
         for key in keys:
-            pysgrid.create_sgrid_attribute(key, "textfont")
-            try:
-                old_font_string = sgrid[key].textfont
-            except KeyError:
-                old_font_string = default_cell_attributes["textfont"]
+            old_font_string = pysgrid.get_sgrid_attr(key, "textfont")
             
-            textfont = wx.Font(10, wx.NORMAL, wx.NORMAL, 
-                               wx.NORMAL, False, 'Arial')
-            nativefontinfo = wx.NativeFontInfo()
-            nativefontinfo.FromString(sgrid[key].textfont)
-
-            textfont.SetNativeFontInfo(nativefontinfo)
+            textfont = textfont_from_string(old_font_string)
             textfont.SetPointSize(size)
-            
-            if key not in sgrid:
-                sgrid[key] = None
                 
-            sgrid[key].textfont = str(textfont.GetNativeFontInfo())
+            font_string = str(textfont.GetNativeFontInfo())
+            pysgrid.set_sgrid_attr(key, "textfont", font_string)
         
         self.grid.ForceRefresh()
     
@@ -967,45 +952,30 @@ class AttributesToolbar(wx.ToolBar):
         # Font buttons
         
         for key in keys:
-        
-            if key not in sgrid:
-                sgrid[key] = None
-                
-            pysgrid.create_sgrid_attribute(key, "textfont")
+            old_font_string = pysgrid.get_sgrid_attr(key, "textfont")
             
-            try:
-                old_font_string = sgrid[key].textfont
-            except KeyError:
-                old_font_string = default_cell_attributes["textfont"]
-
-            nativefontinfo = wx.NativeFontInfo()
-            nativefontinfo.FromString(old_font_string)
-
-            font = wx.Font(10, wx.NORMAL, wx.NORMAL, 
-                           wx.NORMAL, False, 'Arial')
-            
-            font.SetNativeFontInfo(nativefontinfo)
-            font.SetPointSize(faces['size'])
+            textfont = textfont_from_string(old_font_string)
+            textfont.SetPointSize(faces['size'])
 
             istoggled = event.GetEventObject().GetToolState(event.GetId())
 
             if event.GetId() == wx.FONTWEIGHT_BOLD and istoggled:
-                font.SetWeight(wx.FONTWEIGHT_BOLD)
+                textfont.SetWeight(wx.FONTWEIGHT_BOLD)
             elif event.GetId() == wx.FONTWEIGHT_BOLD and not istoggled:
-                font.SetWeight(wx.FONTWEIGHT_NORMAL)
+                textfont.SetWeight(wx.FONTWEIGHT_NORMAL)
 
             if event.GetId() == wx.FONTSTYLE_ITALIC and istoggled:
-                font.SetStyle(wx.FONTSTYLE_ITALIC)
+                textfont.SetStyle(wx.FONTSTYLE_ITALIC)
             elif event.GetId() == wx.FONTSTYLE_ITALIC and not istoggled:
-                font.SetStyle(wx.FONTSTYLE_NORMAL)
-                
-            sgrid[key].textfont = str(font.GetNativeFontInfo())
-
+                textfont.SetStyle(wx.FONTSTYLE_NORMAL)
+            
+            font_string = str(textfont.GetNativeFontInfo())
+            
+            pysgrid.set_sgrid_attr(key, "textfont", font_string)
+            
             # Text attribute buttons
 
-            pysgrid.create_sgrid_attribute(key, "textattributes")
-
-            textattr = sgrid[key].textattributes
+            textattr = pysgrid.get_sgrid_attr(key, "textattributes")
 
             if event.GetId() == wx.FONTFLAG_STRIKETHROUGH and istoggled:
                 textattr[odftags["strikethrough"]] = "solid"
@@ -1033,21 +1003,20 @@ class AttributesToolbar(wx.ToolBar):
                 vert_align = tb_state_map[self.alignment_tb.state]
                 textattr[odftags["verticalalign"]] = vert_align
 
-            # Freeze goes directly into pysgrid
+            if event.GetEventObject() == self.rotation_spinctrl:
+                angle = self.rotation_spinctrl.GetValue()
+                textattr[odftags["rotationangle"]] = int(angle)
+            
+            pysgrid.set_sgrid_attr(key, "textattributes", textattr)
+            
+            # Freeze requires specific methods
             # eval is done at this time!
             
             if event.GetId() == wx.wx.FONTFLAG_MASK and istoggled:
                 res = self.pysgrid[key]
-                self.pysgrid.sgrid.frozen_cells[key] = res
+                self.pysgrid.freeze_cell(key, res)
             elif event.GetId() == wx.wx.FONTFLAG_MASK and not istoggled:
-                try:
-                    self.pysgrid.sgrid.frozen_cells.pop(key)
-                except KeyError:
-                    pass
-
-            if event.GetEventObject() == self.rotation_spinctrl:
-                angle = self.rotation_spinctrl.GetValue()
-                textattr[odftags["rotationangle"]] = int(angle)
+                self.pysgrid.unfreeze_cell(key)
 
         self.grid.ForceRefresh()
         

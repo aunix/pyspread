@@ -14,6 +14,8 @@
 + Loading a file from command line no longer deletes cell 0,0,0 (BUG 3030880)
 + Undoing paste operations now works (BUG 3019334)
 + Bitmap toggle buttons now work in Windows as well
++ Marks un undo and redo operation do not accumulate any more (open)
++ Undoing text font and textattribute changes works now (open)
 
 0.1.1
 -----

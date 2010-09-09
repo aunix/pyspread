@@ -630,16 +630,91 @@ class PyspreadGrid(object):
                 setattr(sgrid[key], attribute, 
                         copy(default_cell_attributes[attribute]))
 
+    def set_sgrid_attr(self, key, attr, value, mark=True):
+        """Set attribute attr of cell with key to value
+        
+        Parameters
+        ----------
+        
+        key: 3-Tuple of Integer
+        \tKey of cell for which the attribute is altered
+        attr: String
+        \tName of the attribute to be set
+        value: Object
+        \tNew attribute value
+        
+        """
+        
+        sgrid = self.sgrid
+        
+        try:
+            _old_content = getattr(sgrid[key], attr)
+        except (AttributeError, KeyError):
+            _old_content = default_cell_attributes[attr]
+            self.create_sgrid_attribute(key, attr)
+        
+        setattr(sgrid[key], attr, value)
+        
+        # Include operation in unredo
+        
+        if _old_content != value:
+            undo_operation = (self.set_sgrid_attr, [key, attr, _old_content, 
+                                                    False])
+            redo_operation = (self.set_sgrid_attr, [key, attr, value, False])
+
+            self.unredo.append(undo_operation, redo_operation)
+            if mark:
+                self.unredo.mark()
+
     def get_sgrid_attr(self, key, attr):
-        """Get attribute attr of obj, returns defaultattr on fail"""
+        """Get copy of attribute attr of obj, returns defaultattr on fail"""
         
         obj = self.sgrid[key]
         
         try:
-            return getattr(obj, attr)
+            return copy(getattr(obj, attr))
 
         except AttributeError:
-            return default_cell_attributes[attr]
+            return copy(default_cell_attributes[attr])
+
+    def freeze_cell(self, key, res, mark=True):
+        """Freezes given cell with result res
+        
+        Parameters
+        ----------
+        
+        key: 3-Tuple of Integer
+        \tKey of cell to be frozen
+        res: Object
+        \tResult object for frozen cell
+        
+        """
+        
+        self.sgrid.frozen_cells[key] = res
+        
+        undo_operation = (self.unfreeze_cell, [key, False])
+        redo_operation = (self.freeze_cell, [key, res, False])
+        
+        self.unredo.append(undo_operation, redo_operation)
+        if mark:
+            self.unredo.mark()
+        
+        
+    def unfreeze_cell(self, key, mark=True):
+        """Unfreezes given cell"""
+        
+        try:
+            _old_res = self.sgrid.frozen_cells.pop(key)
+            
+            undo_operation = (self.freeze_cell, [key, _old_res, False])
+            redo_operation = (self.unfreeze_cell, [key, False])
+            
+            self.unredo.append(undo_operation, redo_operation)
+            if mark:
+                self.unredo.mark()
+            
+        except KeyError:
+            pass
 
 # end of class PyspreadGrid
 

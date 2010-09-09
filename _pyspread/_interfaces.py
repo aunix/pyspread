@@ -30,7 +30,9 @@ Provides
  * SafeUnpickler: Basic security for loading pys files
  
  * sorted_keys:  Generator for sorting keys
-
+ 
+ * textfont_from_string: wx textfont from given font string
+ 
  * sniff: Sniffs CSV dialect and header info
  * fill_numpyarray: Fills the target array
  * fill_wxgrid: Fills the target grid
@@ -149,6 +151,18 @@ def sorted_keys(keys, startkey, reverse=False):
     for key in searchkeys:
         yield key
 
+
+def textfont_from_string(font_string):
+    """Returns wx textfont from given font string"""
+
+    textfont = wx.Font(10, wx.NORMAL, wx.NORMAL, 
+                       wx.NORMAL, False, 'Arial')
+    nativefontinfo = wx.NativeFontInfo()
+    nativefontinfo.FromString(font_string)
+
+    textfont.SetNativeFontInfo(nativefontinfo)
+
+    return textfont
 
 def sniff(csvfilepath):
     """
