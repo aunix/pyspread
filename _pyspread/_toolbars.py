@@ -756,8 +756,7 @@ class AttributesToolbar(wx.ToolBar):
             except KeyError:
                 borderpen_right = default_cell_attributes["borderpen_right"]
                 borderpen_right[0] = linecolor.GetRGB()
-            pysgrid.set_sgrid_attr(key, "borderpen_right", borderpen_right,
-                                   mark=False)
+            pysgrid.set_sgrid_attr(key, "borderpen_right", borderpen_right)
         
         for key in bottom_keys:
             borderpen_bottom = pysgrid.get_sgrid_attr(key, "borderpen_bottom")
@@ -766,8 +765,7 @@ class AttributesToolbar(wx.ToolBar):
             except KeyError:
                 borderpen_bottom = default_cell_attributes["borderpen_bottom"]
                 borderpen_bottom[0] = linecolor.GetRGB()
-            pysgrid.set_sgrid_attr(key, "borderpen_bottom", borderpen_bottom, 
-                                   mark=False)
+            pysgrid.set_sgrid_attr(key, "borderpen_bottom", borderpen_bottom)
                                    
         pysgrid.unredo.mark()
         
@@ -809,8 +807,7 @@ class AttributesToolbar(wx.ToolBar):
                 borderpen_right = default_cell_attributes["borderpen_right"]
                 borderpen_right[1] = linewidth
                 borderpen_right[2] = penstyle
-            pysgrid.set_sgrid_attr(key, "borderpen_right", borderpen_right,
-                                   mark=False)
+            pysgrid.set_sgrid_attr(key, "borderpen_right", borderpen_right)
         
         for key in bottom_keys:
             borderpen_bottom = pysgrid.get_sgrid_attr(key, "borderpen_bottom")
@@ -821,8 +818,7 @@ class AttributesToolbar(wx.ToolBar):
                 borderpen_bottom = default_cell_attributes["borderpen_bottom"]
                 borderpen_bottom[1] = linewidth
                 borderpen_bottom[2] = penstyle
-            pysgrid.set_sgrid_attr(key, "borderpen_bottom", borderpen_bottom, 
-                                   mark=False)
+            pysgrid.set_sgrid_attr(key, "borderpen_bottom", borderpen_bottom)
         
         pysgrid.unredo.mark()
         
@@ -851,6 +847,8 @@ class AttributesToolbar(wx.ToolBar):
                 bgbrush[0] = int(bgcolor.GetRGB())
             pysgrid.set_sgrid_attr(key, "bgbrush", bgbrush)
         
+        pysgrid.unredo.mark()
+        
         self.grid.ForceRefresh()
         
     def OnTextColor(self, event):
@@ -871,6 +869,8 @@ class AttributesToolbar(wx.ToolBar):
             textattr = pysgrid.get_sgrid_attr(key, "textattributes")
             textattr[odftags["fontcolor"]] = textcolor
             pysgrid.set_sgrid_attr(key, "textattributes", textattr)
+        
+        pysgrid.unredo.mark()
         
         self.grid.ForceRefresh()
     
@@ -903,7 +903,9 @@ class AttributesToolbar(wx.ToolBar):
             
             font_string = str(textfont.GetNativeFontInfo())
             pysgrid.set_sgrid_attr(key, "textfont", font_string)
-          
+        
+        pysgrid.unredo.mark()
+        
         self.grid.ForceRefresh()
     
     def OnTextSize(self, event):
@@ -933,6 +935,8 @@ class AttributesToolbar(wx.ToolBar):
                 
             font_string = str(textfont.GetNativeFontInfo())
             pysgrid.set_sgrid_attr(key, "textfont", font_string)
+        
+        pysgrid.unredo.mark()
         
         self.grid.ForceRefresh()
     
@@ -1017,7 +1021,9 @@ class AttributesToolbar(wx.ToolBar):
                 self.pysgrid.freeze_cell(key, res)
             elif event.GetId() == wx.wx.FONTFLAG_MASK and not istoggled:
                 self.pysgrid.unfreeze_cell(key)
-
+        
+        pysgrid.unredo.mark()
+        
         self.grid.ForceRefresh()
         
         event.Skip()

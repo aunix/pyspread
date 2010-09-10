@@ -630,7 +630,7 @@ class PyspreadGrid(object):
                 setattr(sgrid[key], attribute, 
                         copy(default_cell_attributes[attribute]))
 
-    def set_sgrid_attr(self, key, attr, value, mark=True):
+    def set_sgrid_attr(self, key, attr, value, mark=False):
         """Set attribute attr of cell with key to value
         
         Parameters
@@ -642,6 +642,8 @@ class PyspreadGrid(object):
         \tName of the attribute to be set
         value: Object
         \tNew attribute value
+        mark: Bool, defaults to False
+        \tMark operation as complete in unredo list
         
         """
         
