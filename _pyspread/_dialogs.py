@@ -396,9 +396,16 @@ class CSVPreviewGrid(wx.grid.Grid, GridIndexMixin):
         event.Skip()
     
     def OnGridEditorClosed(self, event):
-        """Updates the event"""
+        """Event handler for end of output type choice"""
         
-        self.parent.OnButtonApply(event)
+        try:
+            dialect, self.has_header = \
+                self.parent.csvwidgets.get_dialect()
+        except TypeError:
+            event.Skip()
+            return 0
+        
+        self.fill_cells(dialect, self.has_header)
         
     def fill_cells(self, dialect, has_header):
         """Fills the grid for preview of csv data
@@ -531,7 +538,6 @@ class CsvImportDialog(wx.Dialog):
                                    csvfilepath=self.csvfilepath)
         
         self.button_cancel = wx.Button(self, wx.ID_CANCEL, "")
-        self.button_apply = wx.Button(self, wx.ID_APPLY, "")
         self.button_ok = wx.Button(self, wx.ID_OK, "")
         
         self._set_properties()
@@ -540,7 +546,6 @@ class CsvImportDialog(wx.Dialog):
         
         self.grid.fill_cells(dialect, self.has_header)
         
-        self.Bind(wx.EVT_BUTTON, self.OnButtonApply, self.button_apply)
     
     def _set_properties(self):
         """Sets dialog title and size limitations of the widgets"""
@@ -548,7 +553,7 @@ class CsvImportDialog(wx.Dialog):
         self.SetTitle(" ".join(["CSV Import:", self.csvfilename]))
         self.SetSize((600, 600))
         
-        for button in [self.button_cancel, self.button_apply, self.button_ok]:
+        for button in [self.button_cancel, self.button_ok]:
             button.SetMinSize((80, 28))
         
     def _do_layout(self):
@@ -561,7 +566,7 @@ class CsvImportDialog(wx.Dialog):
         
         
         # Adding buttons to sizer_buttons
-        for button in [self.button_cancel, self.button_apply, self.button_ok]:
+        for button in [self.button_cancel, self.button_ok]:
             sizer_buttons.Add(button, 0, wx.ALL|wx.EXPAND, 5)
         
         sizer_buttons.AddGrowableRow(0)
@@ -582,18 +587,6 @@ class CsvImportDialog(wx.Dialog):
         self.Layout()
         self.Centre()
         
-    def OnButtonApply(self, event):
-        """Updates the preview grid"""
-        
-        try:
-            dialect, self.has_header = self.csvwidgets.get_dialect()
-        except TypeError:
-            event.Skip()
-            return 0
-        
-        self.grid.fill_cells(dialect, self.has_header)
-        
-        event.Skip()
             
 # end of class CsvImportDialog
 
