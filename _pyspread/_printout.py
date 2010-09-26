@@ -1,5 +1,7 @@
 import wx
 
+from _pyspread.irange import irange
+
 class MyCanvas(wx.ScrolledWindow):
     def __init__(self, parent, grid, rowslice, colslice, tab,
                  id = -1, size = wx.DefaultSize):
@@ -7,8 +9,11 @@ class MyCanvas(wx.ScrolledWindow):
                                    style=wx.SUNKEN_BORDER)
         
         self.lines = []
-        self.width  = grid.GetSize()[0]
-        self.height = grid.GetSize()[1]
+        
+        # Get dc size
+        
+        self.width, self.height = self._get_dc_size(grid, rowslice, colslice)
+        
         self.x = self.y = 0
         self.curLine = []
         
@@ -28,10 +33,20 @@ class MyCanvas(wx.ScrolledWindow):
         
         self.Show(False)
     
+    def _get_dc_size(self, grid, rowslice, colslice):
+        """Returns width and height of print dc"""
+        
+        ul_rect = grid.CellToRect(rowslice.start, colslice.start)
+        lr_rect = grid.CellToRect(rowslice.stop, colslice.stop)
+        
+        width  = lr_rect.x + lr_rect.width  - ul_rect.x
+        height = lr_rect.y + lr_rect.height - ul_rect.y
+        
+        return width, height
+    
     def draw_func(self, dc, rect, row, col):
         """Redirected Draw function from Maingrid"""
         
-        #print row, col, rect.x, rect.y
         return self.grid.text_renderer.Draw(self.grid, self.grid_attr, dc, 
                                       rect, row, col, False, printing=True)
 
@@ -40,10 +55,8 @@ class MyCanvas(wx.ScrolledWindow):
         
         dc.BeginDrawing()
         
-        #self.grid.text_renderer.redraw_imminent = True
-        
-        for row in xrange(self.rowslice.stop-1, self.rowslice.start-1, -1):
-            for col in xrange(self.colslice.stop-1, self.colslice.start-1, -1):
+        for row in irange(self.rowslice.stop-1, self.rowslice.start-1, -1):
+            for col in irange(self.colslice.stop-1, self.colslice.start-1, -1):
                 rect = self.grid.CellToRect(row, col)
                 
                 rect = wx.Rect(rect.x - \
@@ -98,13 +111,12 @@ class MyPrintout(wx.Printout):
             return False
 
     def GetPageInfo(self):
-        return (1, 2, 1, 2)
+        return (1, 1, 1, 1)
 
     def OnPrintPage(self, page):
         dc = self.GetDC()
 
-        #-------------------------------------------
-        # One possible method of setting scaling factors...
+        # Set scaling factors
 
         maxX = self.canvas.width
         maxY = self.canvas.height
@@ -118,8 +130,8 @@ class MyPrintout(wx.Printout):
         maxY = maxY + (2 * marginY)
 
         # Get the size of the DC in pixels
-        (w, h) = dc.GetSizeTuple()
-
+        w, h = dc.GetSizeTuple()
+        
         # Calculate a suitable scaling factor
         scaleX = float(w) / maxX
         scaleY = float(h) / maxY

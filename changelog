@@ -18,7 +18,7 @@
 + Undoing text font and textattribute changes works now
 + CSV import dialog apply button removed
 + Cell limit (2**26) for 32 bit systems removed
-+ Prints of off-screen areas now correctly center on page (open)
++ Prints of off-screen areas now correctly center on page
 + Help now works when not in the home directory
 + Double underscores in Tutorial corrected
 
