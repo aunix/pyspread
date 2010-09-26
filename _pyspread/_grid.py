@@ -758,7 +758,6 @@ class GridSelectionMixin(object):
                 try:
                     if (row + rowslice.start, col + colslice.start) \
                           not in selection:
-                        print repr(row, col)
                         data[row, col] = omittedfield_repr
                 except TypeError:
                     if selection is None:

@@ -879,18 +879,9 @@ class DimensionsEntryDialog(wx.Dialog):
             self.dimensions[dimension] = 1
             self.textctrls[dimension].SetValue(str(1))
         
-        # If we are on a 32 bit platform, the number of
-        # cells must be 2**26 or smaller because of the 
-        # 2 GB limit
-        
-        if struct.calcsize("P") * 8 == 32: # 32 bit system
-            if reduce(lambda x, y: x*y, self.dimensions) > 2 ** 26:
-                self.dimensions[dimension] = 1
-                self.textctrls[dimension].SetValue(str(1))
-        elif struct.calcsize("P") * 8 == 64: # 64 bit system
-            if any(dim > 80000000 for dim in self.dimensions):
-                self.dimensions[dimension] = 1
-                self.textctrls[dimension].SetValue(str(1))
+        if any(dim > 80000000 for dim in self.dimensions):
+            self.dimensions[dimension] = 1
+            self.textctrls[dimension].SetValue(str(1))
         
     def OnXDim(self, event):
         """Event handler for x dimension TextCtrl"""

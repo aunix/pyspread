@@ -83,7 +83,7 @@ def irange(start, stop=None, step=1):
         
 
 def indices(slc, length):
-    """Long integer dropin for slice method indices"""
+    """Long integer drop-in for slice method indices"""
     
     if length < 0:
         raise ValueError, "Length must be >= 0"
@@ -116,7 +116,7 @@ def indices(slc, length):
     return start, stop, step
 
 def slice_range(slc, length):
-    """Replaces renge(length)[slc]"""
+    """Replaces range(length)[slc]"""
     
     __indices = slc.indices(length)
     return irange(*__indices)

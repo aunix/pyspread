@@ -60,7 +60,7 @@ from _pyspread._dialogs import MacroDialog, CsvImportDialog, CsvExportDialog, \
             DimensionsEntryDialog, CellEntryDialog, AboutDialog
 from _pyspread._interfaces import CsvInterfaces, PysInterfaces, TxtInterfaces, \
             string_match, is_pyme_present, sign, verify
-from _pyspread.config import ICONPREFIX, icon_size, KEYFUNCTIONS
+from _pyspread.config import PROG_DIR, icon_size, KEYFUNCTIONS
             
 
 
@@ -168,7 +168,7 @@ class MainWindow(wx.Frame):
         
         self.SetTitle("pyspread")
         _icon = wx.EmptyIcon()
-        _icon.CopyFromBitmap(wx.Bitmap(ICONPREFIX+'icons/pyspread.png', \
+        _icon.CopyFromBitmap(wx.Bitmap(PROG_DIR+'icons/pyspread.png', \
                              wx.BITMAP_TYPE_ANY))
         self.SetIcon(_icon)
         
@@ -627,10 +627,11 @@ class MainWindow(wx.Frame):
         printer = wx.Printer(pdd)
         
         selection = self.MainGrid.get_selection()
-        print selection
+        #print selection
+        
         if len(selection) == 1:
             slice_x, slice_y = self.MainGrid.get_visiblecell_slice()[:2]
-            print slice_x, slice_y
+            #print slice_x, slice_y
             selection = [(x, y) for x in irange(slice_x.start, slice_x.stop)
                                 for y in irange(slice_y.start, slice_y.stop)]
         
@@ -703,7 +704,7 @@ class MainWindow(wx.Frame):
         
         dlg.Destroy()
     
-    def _launch_help(self, filename):
+    def _launch_help(self, filepath, filename):
         """Generix help launcher"""
         
         # Set up window
@@ -715,7 +716,7 @@ class MainWindow(wx.Frame):
         
         # Get help data
         current_path = os.getcwd()
-        os.chdir(self.module_path)
+        os.chdir(filepath)
         help_file = open(filename, "r")
         help_html = help_file.read()
         help_file.close()
@@ -730,17 +731,17 @@ class MainWindow(wx.Frame):
     def OnManual(self, event):
         """Launches pyspread manual"""
         
-        self._launch_help("doc/manual.html")
+        self._launch_help(PROG_DIR + "doc", "manual.html")
     
     def OnTutorial(self, event):
         """Launches pyspread tutorial"""
         
-        self._launch_help("doc/tutorial.html")
+        self._launch_help(PROG_DIR + "doc", "tutorial.html")
         
     def OnFAQ(self, event):
         """Launches pyspread FAQ"""
         
-        self._launch_help("doc/faq.html")
+        self._launch_help(PROG_DIR + "doc", "faq.html")
     
     def OnAbout(self, event):
         """Launches about dialog"""

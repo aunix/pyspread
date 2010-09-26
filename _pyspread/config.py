@@ -36,7 +36,7 @@ import os.path
 import wx
 import wx.stc  as  stc
 
-ICONPREFIX = os.path.dirname(os.path.realpath(__file__)) + '/'
+PROG_DIR = os.path.dirname(os.path.realpath(__file__)) + '/'
 
 """
 GPG key parameters
@@ -315,8 +315,8 @@ Provides the dict 'icons' with paths to the toolbar icons.
 
 icon_size = (36, 36)
 small_icon_size = (24, 24)
-_action_path = ICONPREFIX + "icons/actions/"
-_toggle_path = ICONPREFIX + "icons/toggles/"
+_action_path = PROG_DIR + "icons/actions/"
+_toggle_path = PROG_DIR + "icons/toggles/"
 
 icons = {"FileNew": _action_path + "filenew.png", 
          "FileOpen": _action_path + "fileopen.png", 

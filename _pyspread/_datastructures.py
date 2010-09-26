@@ -298,7 +298,7 @@ class PyspreadGrid(object):
             if attr_data == default_data:
                 self.sgrid[pos] = unicode(value)
                 return
-
+            
             newitem = UserString(value)
 
             olditem = self.sgrid[pos]
@@ -887,7 +887,6 @@ class DictGrid(UserDict.IterableUserDict):
             else:
                 fetchlist.append([dim_key])
         
-        #print fetchlist
         keys = [(x, y, z) for x in fetchlist[0] \
                           for y in fetchlist[1] \
                           for z in fetchlist[2]]
