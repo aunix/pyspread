@@ -82,7 +82,8 @@ class MainWindow(wx.Frame):
         self.wildcard = "Pyspread file (*.pys)|*.pys|" \
                         "All files (*.*)|*.*"
         self.wildcard_interfaces = {0: PysInterfaces, 
-                                    1: PysInterfaces}
+                                    1: PysInterfaces, 
+                                    2: PysInterfaces}
         # Get path of module
         self.module_path = os.path.dirname(__file__)
         
@@ -429,7 +430,11 @@ class MainWindow(wx.Frame):
     def OnFileSaveAs(self, event):
         """Opens the file dialog and saves the file to the chosen location"""
         
-        filepath, filterindex = self._get_filepath(safe=False, style=wx.SAVE)
+        wildcard = "Pyspread file with gpg signature (*.pys)|*.pys|" \
+                   "Pyspread file without gpg signature (*.pys)|*.pys|" \
+                   "All files (*.*)|*.*"
+        filepath, filterindex = self._get_filepath(safe=False, style=wx.SAVE,
+                                                   wildcard=wildcard)
         
         if filepath is not None:
             self.filepath = filepath
@@ -437,7 +442,7 @@ class MainWindow(wx.Frame):
             
             self.MainGrid.savefile(filepath, self.wildcard_interface)
             
-            if self.MainGrid.pysgrid.safe_mode:
+            if self.MainGrid.pysgrid.safe_mode or filterindex == 1:
                 self.main_window_statusbar.SetStatusText("Untrusted file saved")
             else:
                 self.sign_file()
