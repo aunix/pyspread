@@ -395,8 +395,10 @@ class MainWindow(wx.Frame):
             def GetString(self):
                 return "0"
         
+        self.MainGrid.Freeze()
         self.MainGrid.OnCombo(Dummyevent())
         self.MainGrid.ForceRefresh()
+        self.MainGrid.Thaw()
     
     def sign_file(self):
         """Signs file if possible"""
@@ -1073,14 +1075,14 @@ class MainWindow(wx.Frame):
         
         old_zoom = self.MainGrid.zoom
         
+        self.MainGrid.Freeze()
+        
         if self.MainGrid.zoom < 1.0 and old_zoom > self.MainGrid.zoom + 0.1:
             old_zoom, self.MainGrid.zoom = \
                 self.MainGrid.zoom, self.MainGrid.zoom + 0.1
             self.MainGrid.zoom_rows()
             self.MainGrid.zoom_cols()
             self.MainGrid.zoom_labels()
-            
-            self.MainGrid.ForceRefresh()            
             
             self.MainGrid.zoom = old_zoom
         
@@ -1089,6 +1091,8 @@ class MainWindow(wx.Frame):
         self.MainGrid.zoom_labels()
 
         self.MainGrid.ForceRefresh()
+        
+        self.MainGrid.Thaw()
         
         event.Skip()
     

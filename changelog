@@ -21,6 +21,7 @@
 + Prints of off-screen areas now correctly center on page
 + Help now works when not in the home directory
 + Double underscores in Tutorial corrected
++ Save options "pys file with/without gpg signature" added
 
 0.1.1
 -----

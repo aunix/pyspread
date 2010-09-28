@@ -50,6 +50,7 @@ import wx.grid
 import wx.combo
 import numpy
 
+from _pyspread.irange import irange
 from _pyspread.config import odftags, DEFAULT_FONT, selected_cell_brush
 from _pyspread.config import column_width_tag, row_height_tag, faces, dpi
 from _pyspread._datastructures import PyspreadGrid
@@ -169,8 +170,10 @@ class MainGridTable(wx.grid.PyGridTableBase):
         # update the scrollbars and the displayed part 
         # of the grid
         
+        grid.Freeze()
         grid.AdjustScrollbars()
         grid.ForceRefresh()
+        grid.Thaw()
 
 # end of class MainGridTable
 
@@ -744,6 +747,11 @@ class GridSelectionMixin(object):
             data = numpy.array( \
                     getter((rowslice, colslice, self.current_table)), \
                     dtype="O")
+        if len(data.shape) == 1:
+            data = data.reshape((data.shape[0], 1))
+            if len(list(irange(rowslice.start, rowslice.stop))) == 1:
+                data = numpy.transpose(data)
+            
         try:
             len(data)
         except TypeError:
@@ -765,17 +773,9 @@ class GridSelectionMixin(object):
                 
                 key = (row + rowslice.start, col + colslice.start, 
                       self.current_table)
-                      
-                ## THIS IS BAD, however print framework is redone anyways
-                try:
-                    is_none = data[row, col] is None
-                except IndexError:
-                    is_none = data[row] is None
-                except IndexError:
-                    is_none = data[col] is None
                                     
                 if hasattr(source, 'sgrid') and source.sgrid[key] == 0  or \
-                   is_none:
+                   data[row, col] is None:
                     try:
                         data[row, col] = omittedfield_repr
                     except IndexError:
@@ -952,8 +952,9 @@ class GridClipboardMixin(object):
                         self.GetGridCursorCol(), \
                         self.current_table)
             self.clipboard.grid_paste(self.pysgrid, key=pastepos)
-        
+        self.Freeze()
         self.ForceRefresh()
+        self.Thaw()
 
 # end of class GridClipboardMixin
 
@@ -1332,7 +1333,7 @@ class MainGrid(wx.grid.Grid,
         self.Bind(wx.grid.EVT_GRID_ROW_SIZE, self.OnRowSize)
         self.Bind(wx.grid.EVT_GRID_COL_SIZE, self.OnColSize)
         
-        self.Bind(wx.EVT_SCROLLWIN, self.OnScroll)
+        #self.Bind(wx.EVT_SCROLLWIN, self.OnScroll)
         self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
         
         # When selection process ends, 
@@ -1510,13 +1511,13 @@ class MainGrid(wx.grid.Grid,
         
         event.Skip()
     
-    def OnScroll(self, event):
-        """Scroll event method updates the grid"""
-        
-        ##self.scrollpos = self.GetScrollPos(wx.HORIZONTAL), \
-        ##                 self.GetScrollPos(wx.VERTICAL)
-                         
-        event.Skip()
+#    def OnScroll(self, event):
+#        """Scroll event method updates the grid"""
+#        
+#        ##self.scrollpos = self.GetScrollPos(wx.HORIZONTAL), \
+#        ##                 self.GetScrollPos(wx.VERTICAL)
+#                         
+#        event.Skip()
     
     def OnCellEditorShown(self, event):
         """CellEditor event method sets editor content to Python code"""
@@ -1534,8 +1535,9 @@ class MainGrid(wx.grid.Grid,
     
     def OnCellEditorHidden(self, event):
         """When a cell editor is hidden, the grid is refreshed"""
-        
+        self.Freeze()
         self.Refresh()
+        self.Thaw()
         event.Skip()
     
     def OnCellSelected(self, event):
@@ -1563,6 +1565,9 @@ class MainGrid(wx.grid.Grid,
         except TypeError: 
             self.entry_line.SetValue("")
         
+        self.Freeze()
+        self.parent.attributes_toolbar.Freeze()
+        
         self.entry_line.SetSelection(-1, -1)
         self.Refresh()
         
@@ -1588,6 +1593,9 @@ class MainGrid(wx.grid.Grid,
         except NameError:
             # Attributes toolbar not yet created
             pass
+        
+        self.Thaw()
+        self.parent.attributes_toolbar.Thaw()
         
         event.Skip()
 
@@ -1788,7 +1796,6 @@ class MainGrid(wx.grid.Grid,
             self.zoom_cols()
             self.zoom_labels()
             
-            #self.ForceRefresh()
         else:
             event.Skip()
 
@@ -1838,8 +1845,10 @@ class EntryLine(wx.TextCtrl):
             return
         
         if event.GetKeyCode() == 13:
+            self.parent.Freeze()
             self.grid.ForceRefresh()
             self.grid.SetFocus()
+            self.parent.Thaw()
             
         elif event.GetKeyCode() == wx.WXK_INSERT and \
              event.ControlDown():

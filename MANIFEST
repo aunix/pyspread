@@ -20,7 +20,6 @@ authors
 thanks
 faq
 news
-todo
 MANIFEST
 COPYING
 README
@@ -28,7 +27,6 @@ _pyspread/COPYING
 INSTALL
 setup.py
 _pyspread/icons/pyspread.png
-_pyspread/icons/splash_image.png
 _pyspread/icons/actions/filenew.png
 _pyspread/icons/actions/fileopen.png
 _pyspread/icons/actions/filesave.png
@@ -43,6 +41,7 @@ _pyspread/icons/actions/edit-find.png
 _pyspread/icons/actions/edit-find-replace.png
 _pyspread/icons/actions/format-justify-right.png
 _pyspread/icons/actions/format-justify-left.png
+_pyspread/icons/actions/format-justify-center.png
 _pyspread/icons/actions/format-text-alignbottom.png
 _pyspread/icons/actions/format-text-aligncenter.png
 _pyspread/icons/actions/format-text-aligntop.png
@@ -67,11 +66,12 @@ _pyspread/icons/toggles/border_right.xpm
 _pyspread/icons/toggles/border_top_n_bottom.xpm
 _pyspread/icons/toggles/border_top.xpm
 _pyspread/examples/new_wagner.pys
+_pyspread/examples/test.csv
+_pyspread/examples/testtab.tsv
+_pyspread/examples/headertest.csv
 _pyspread/examples/unicode.pys
 _pyspread/examples/__init__.py
-_pyspread/examples/large_example.pys
 _pyspread/examples/logwindow.m
-_pyspread/examples/macrotest.m
 _pyspread/examples/dcmacros.m
 _pyspread/doc/manual.html
 _pyspread/doc/tutorial.html
