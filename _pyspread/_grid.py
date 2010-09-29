@@ -749,7 +749,7 @@ class GridSelectionMixin(object):
                     dtype="O")
         if len(data.shape) == 1:
             data = data.reshape((data.shape[0], 1))
-            if len(list(irange(rowslice.start, rowslice.stop))) == 1:
+            if sum(1 for _ in irange(rowslice.start, rowslice.stop)) == 1:
                 data = numpy.transpose(data)
             
         try:
