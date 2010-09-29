@@ -22,6 +22,7 @@
 + Help now works when not in the home directory
 + Double underscores in Tutorial corrected
 + Save options "pys file with/without gpg signature" added
++ Pyspread gpg key name changed to pyspread_<user-id>
 
 0.1.1
 -----

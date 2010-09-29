@@ -82,6 +82,7 @@ except ImportError:
     pass
 
 from _pyspread.config import VERSION, SNIFF_SIZE, default_dimensions
+from _pyspread.config import GPG_KEY_UID, GPG_KEY_PARMS, GPG_KEY_PASSPHRASE
 
 DEFAULT_FONT = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
 
@@ -308,7 +309,6 @@ def is_pyme_present():
 def _passphrase_callback(hint='', desc='', prev_bad=''): 
     """Callback function needed by pyme"""
     
-    from config import GPG_KEY_PASSPHRASE
     return GPG_KEY_PASSPHRASE
 
 def _get_file_data(filename):
@@ -334,13 +334,13 @@ def genkey():
     #c.set_progress_cb(callbacks.progress_stdout, None)
     
     # Check if standard key is already present
-    keyname = 'pyspread'
+    keyname = GPG_KEY_UID
     c.op_keylist_start(keyname, 0)
     key = c.op_keylist_next()
     if key is None:
         # Key not present --> Create new one
-        from config import GPG_KEY_PARMS
-        print "Generating new GPG key 'pyspread'. This may take some time..."
+        print "Generating new GPG key", keyname, \
+              ". This may take some time..."
         c.op_genkey(GPG_KEY_PARMS, None, None)
         print c.op_genkey_result().fpr
 
@@ -348,8 +348,6 @@ def genkey():
 
 def sign(filename):
     """Returns detached signature for file"""
-    
-    from config import GPG_KEY_UID
     
     plaintext = _get_file_data(filename)
     

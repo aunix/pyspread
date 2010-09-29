@@ -31,6 +31,7 @@ Provides paths for libraries and icons
 
 """
 
+import getpass
 import os.path
 
 import wx
@@ -44,22 +45,23 @@ GPG key parameters
 
 """
 
+GPG_KEY_UID = 'pyspread_' + getpass.getuser()
+GPG_KEY_PASSPHRASE = "pyspread" # Set this individually!
+
 GPG_KEY_PARMS = \
 """<GnupgKeyParms format="internal">
     Key-Type: DSA
     Key-Length: 2048
     Subkey-Type: ELG-E
     Subkey-Length: 2048
-    Name-Real: pyspread
+    Name-Real: """ + GPG_KEY_UID + """
     Name-Comment: Pyspread savefile signature keys
     Name-Email: pyspread@127.0.0.1
-    Passphrase: pyspread
+    Passphrase: """ + GPG_KEY_PASSPHRASE + """
     Expire-Date: 0
     </GnupgKeyParms>
     """
     
-GPG_KEY_UID = 'pyspread'
-GPG_KEY_PASSPHRASE = "pyspread" # Set this individually!
 
 """
 System info
