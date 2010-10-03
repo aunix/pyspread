@@ -23,6 +23,8 @@
 + Double underscores in Tutorial corrected
 + Save options "pys file with/without gpg signature" added
 + Pyspread gpg key name changed to pyspread_<user-id>
++ Deleting all rows and columns can be undone again (open)
++ When reversing search, all values are now found (open)
 
 0.1.1
 -----
