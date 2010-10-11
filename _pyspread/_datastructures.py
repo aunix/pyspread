@@ -427,7 +427,10 @@ class PyspreadGrid(object):
         for key in sgrid:
             if key[axis] >= ins_point:
                 new_key = list(key)
-                new_key[axis] += notoinsert
+                try:
+                    new_key[axis] += notoinsert
+                except TypeError:
+                    pass
                 new_key = tuple(new_key)
                 key_update[new_key] = sgrid[key]
                 del_keys.append(key)
@@ -478,8 +481,10 @@ class PyspreadGrid(object):
             elif rmp <= key[axis]:
                 # Move cell
                 new_key = list(key)
-                print new_key
-                new_key[axis] -= notoremove
+                try:
+                    new_key[axis] -= notoremove
+                except TypeError:
+                    pass
                 new_key = tuple(new_key)
                 key_update[new_key] = sgrid[key]
                 del_keys.append(key)

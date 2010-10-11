@@ -1038,7 +1038,6 @@ class GridManipulationMixin(object):
             self.pysgrid.unredo.append(undo_operation, operation)
         
         self.create_rowcol()
-        self.table.ResetView()
     
     def insert_selected_rows(self):
         """Inserts the number of rows of the imminent selection at cursor."""
@@ -1053,7 +1052,6 @@ class GridManipulationMixin(object):
                             notoinsert=no_selected_rows)
         self.create_rowcol()
         self.pysgrid.unredo.mark()
-        self.table.ResetView()
     
     def insert_selected_cols(self):
         """Inserts the number of cols of the imminent selection at cursor."""
@@ -1068,7 +1066,6 @@ class GridManipulationMixin(object):
                             notoinsert=no_selected_cols)
         self.create_rowcol()
         self.pysgrid.unredo.mark()
-        self.table.ResetView()
     
     def insert_selected_tables(self):
         """Inserts one table after the current one."""
@@ -1096,7 +1093,6 @@ class GridManipulationMixin(object):
             self.pysgrid.remove(removalpoint=[current_row, None, None], \
                                 notoremove=no_selected_rows)
             self.create_rowcol()
-            self.table.ResetView()
         self.pysgrid.unredo.mark()
     
     def delete_selected_cols(self):
@@ -1112,7 +1108,6 @@ class GridManipulationMixin(object):
             self.pysgrid.remove(removalpoint=[None, current_col, None], \
                                               notoremove=no_selected_cols)
             self.create_rowcol()
-            self.table.ResetView()
         self.pysgrid.unredo.mark()
     
     def delete_selected_tables(self):
@@ -1355,6 +1350,8 @@ class MainGrid(wx.grid.Grid,
             self.CreateGrid(*self.pysgrid.shape[:2])
         except:
             pass
+            
+        self.table.ResetView()
 
     def get_visible_rows(self):
         """Returns a lists of the visible rows"""
@@ -1451,7 +1448,6 @@ class MainGrid(wx.grid.Grid,
         
         self.create_rowcol()
         self.pysgrid.unredo.reset()
-        self.table.ResetView()
         
         # Set up grid
         self.current_table = 0

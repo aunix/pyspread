@@ -188,7 +188,7 @@ default_cell_attributes = {
     "textfont": unicode(wx.Font(faces['size'], wx.DEFAULT, wx.NORMAL, 
                         wx.NORMAL, False, faces['helv']).GetNativeFontInfo()),
     "column-width": 150,
-    "row-height": 25,
+    "row-height": 26,
 }
 
 """
