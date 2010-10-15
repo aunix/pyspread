@@ -142,13 +142,16 @@ def sorted_keys(keys, startkey, reverse=False):
     """
 
     tuple_key = lambda t: t[::-1]
-    tuple_cmp = lambda t: t[::-1] < startkey[::-1]
-
+    if reverse:
+        tuple_cmp = lambda t: t[::-1] > startkey[::-1]
+    else:
+        tuple_cmp = lambda t: t[::-1] < startkey[::-1]
+        
     searchkeys = sorted(keys, key=tuple_key, reverse=reverse)
     searchpos = sum(1 for _ in ifilter(tuple_cmp, searchkeys))
-
+    
     searchkeys = searchkeys[searchpos:] + searchkeys[:searchpos]
-
+    
     for key in searchkeys:
         yield key
 

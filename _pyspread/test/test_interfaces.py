@@ -77,14 +77,12 @@ class Test(object):
     def test_sorted_keys(self):
         keys = [(1, 0, 0), (2, 0, 0), (0, 1, 0), (0, 99, 0), (0, 0, 0), 
                 (0, 0, 99), (1, 2, 3)]
-        assert \
-            list(_interfaces.sorted_keys(keys, (0, 1, 0))) == \
+        assert list(_interfaces.sorted_keys(keys, (0, 1, 0))) == \
              [(0, 1, 0), (0, 99, 0), (1, 2, 3), (0, 0, 99), (0, 0, 0), 
               (1, 0, 0), (2, 0, 0)]
-        assert \
-            list(_interfaces.sorted_keys(keys, (0, 3, 0), reverse=True)) == \
-             [(2, 0, 0), (1, 0, 0), (0, 0, 0), (0, 0, 99), (1, 2, 3), 
-              (0, 99, 0), (0, 1, 0)]
+        sk = list(_interfaces.sorted_keys(keys, (0, 3, 0), reverse=True))
+        assert sk == [(0, 1, 0), (2, 0, 0), (1, 0, 0), (0, 0, 0), (0, 0, 99), 
+              (1, 2, 3), (0, 99, 0)]
     
     def test_fill_numpyarray(self):
         """Fill the target with values from an array"""

@@ -957,7 +957,7 @@ class MainWindow(wx.Frame):
         
         findfunc = self.MainGrid.pysgrid.findnextmatch
         
-        # Search starts in next cell after the current one
+        # Search starts in next cell after the current onez
         gridpos = list(self.MainGrid.key)
         if "DOWN" in event_flags:
             if gridpos[0] < self.MainGrid.shape[0]:
@@ -977,8 +977,8 @@ class MainWindow(wx.Frame):
                 gridpos[2] -= 1
             else:
                 gridpos = [dim - 1 for dim in self.MainGrid.pysgrid.shape]
-        gridpos = tuple(gridpos)
-        return findfunc(gridpos, event_find_string, event_flags)
+        
+        return findfunc(tuple(gridpos), event_find_string, event_flags)
     
     def find_gui_feedback(self, event, event_find_string, findpos):
         """GUI feedback in find process
