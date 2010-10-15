@@ -26,6 +26,7 @@
 + Deleting rows and columns can be undone again
 + When reversing search, all values are now found
 + Saved pys files now have .pys suffix added automatically
++ Fixed font size reset bug when setting font attributes
 
 0.1.1
 -----

@@ -171,6 +171,7 @@ if wx.Platform == '__WXMSW__':
     DEFAULT_FONT.SetPointSize(faces['size'])
 else:
     DEFAULT_FONT = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+    DEFAULT_FONT.SetPointSize(faces['size'])
 
 FONT_SIZES = range(3, 14) + range(16, 32, 2) + range(36, 99, 4)
 

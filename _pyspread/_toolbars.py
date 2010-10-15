@@ -568,7 +568,7 @@ class AttributesToolbar(wx.ToolBar):
             self.alignment_tb.state = 1
         else:
             self.alignment_tb.state = 2
-            ##print "Vertical align tag " + vertical_align + " unknown"
+            
         self.alignment_tb.toggle(None)
         self.alignment_tb.Refresh()
     
@@ -959,7 +959,6 @@ class AttributesToolbar(wx.ToolBar):
             old_font_string = pysgrid.get_sgrid_attr(key, "textfont")
             
             textfont = textfont_from_string(old_font_string)
-            textfont.SetPointSize(faces['size'])
 
             istoggled = event.GetEventObject().GetToolState(event.GetId())
 
