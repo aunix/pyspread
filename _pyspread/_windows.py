@@ -439,7 +439,11 @@ class MainWindow(wx.Frame):
                                                    wildcard=wildcard)
         
         if filepath is not None:
+            if filterindex < 2 and filepath[-4:] != ".pys":
+                filepath += ".pys"
+            
             self.filepath = filepath
+                
             self.wildcard_interface = self.wildcard_interfaces[filterindex]()
             
             self.MainGrid.savefile(filepath, self.wildcard_interface)
