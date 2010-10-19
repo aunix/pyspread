@@ -51,7 +51,7 @@ import wx.combo
 import numpy
 
 from _pyspread.irange import irange
-from _pyspread.config import odftags, DEFAULT_FONT, selected_cell_brush
+from _pyspread.config import odftags, get_default_font, selected_cell_brush
 from _pyspread.config import column_width_tag, row_height_tag, faces, dpi
 from _pyspread._datastructures import PyspreadGrid
 from _pyspread._menubars import ContextMenu
@@ -1304,7 +1304,7 @@ class MainGrid(wx.grid.Grid,
         self.std_row_size = self.GetRowSize(0)
         self.std_col_size = self.GetColSize(0)
         
-        self.SetDefaultCellFont(DEFAULT_FONT)
+        self.SetDefaultCellFont(get_default_font())
         self.selection_present = False
         
         # Background key is (width, height, bgbrush, 
@@ -1328,7 +1328,6 @@ class MainGrid(wx.grid.Grid,
         self.Bind(wx.grid.EVT_GRID_ROW_SIZE, self.OnRowSize)
         self.Bind(wx.grid.EVT_GRID_COL_SIZE, self.OnColSize)
         
-        #self.Bind(wx.EVT_SCROLLWIN, self.OnScroll)
         self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
         
         # When selection process ends, 
@@ -1506,23 +1505,9 @@ class MainGrid(wx.grid.Grid,
                 self.entry_line.SetValue("")
         
         event.Skip()
-    
-#    def OnScroll(self, event):
-#        """Scroll event method updates the grid"""
-#        
-#        ##self.scrollpos = self.GetScrollPos(wx.HORIZONTAL), \
-#        ##                 self.GetScrollPos(wx.VERTICAL)
-#                         
-#        event.Skip()
-    
+        
     def OnCellEditorShown(self, event):
         """CellEditor event method sets editor content to Python code"""
-        
-        ##if wx.Platform == '__WXGTK__':
-        ##    pos = (self.GetScrollPos(wx.HORIZONTAL), 
-        ##           self.GetScrollPos(wx.VERTICAL))
-        ##    if  pos != (0, 0):
-        ##        self.Scroll(self.scrollpos[0] + 1, self.scrollpos[1] + 1)
         
         row, col = event.Row, event.Col
         self.key = (row, col, self.current_table)
@@ -1560,14 +1545,20 @@ class MainGrid(wx.grid.Grid,
             self.entry_line.SetValue(currstr)
         except TypeError: 
             self.entry_line.SetValue("")
+
+        self._update_attribute_toolbar()
+        
+        event.Skip()
+
+    
+    def _update_attribute_toolbar(self):
+        """Update attribute toolbar"""
         
         self.Freeze()
         self.parent.attributes_toolbar.Freeze()
         
         self.entry_line.SetSelection(-1, -1)
-        self.Refresh()
         
-        # Update Attribute toolbar
         
         pysgrid = self.pysgrid
         
@@ -1590,10 +1581,10 @@ class MainGrid(wx.grid.Grid,
             # Attributes toolbar not yet created
             pass
         
+        self.Refresh()
+        
         self.Thaw()
         self.parent.attributes_toolbar.Thaw()
-        
-        event.Skip()
 
     def OnContextMenu(self, event):
         """Context Menu event method calls context menu"""

@@ -27,15 +27,14 @@ _widgets
 
 Provides:
 ---------
-  1. IndexGrid: Grid that supports indexing and __len__
-  2. MainGrid: Main grid
-  2. CollapsiblePane: Collapsible pane with basic toggle mechanism
-  3. MacroEditPanel: Collapsible label, parameter entry area and editor
-  4. ImageComboBox: Base class for image combo boxes
-  5. PenStyleComboBox: ComboBox for border pen style selection
-  6. FontChoiceCombobox: ComboBox for font selection
-  7. BorderEditChoice: ComboBox for border selection
-  8. BitmapToggleButton: Button that toggles through a list of bitmaps
+  1. CollapsiblePane: Collapsible pane with basic toggle mechanism
+  2. PythonSTC: Syntax highlighting editor
+  3. ImageComboBox: Base class for image combo boxes
+  4. PenStyleComboBox: ComboBox for border pen style selection
+  5. PenWidthComboBox: ComboBox for border pen width selection
+  5. FontChoiceCombobox: ComboBox for font selection
+  6. BorderEditChoice: ComboBox for border selection
+  7. BitmapToggleButton: Button that toggles through a list of bitmaps
 
 """
 

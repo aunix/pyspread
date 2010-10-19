@@ -165,13 +165,8 @@ Default cell font size
 
 """
 
-if wx.Platform == '__WXMSW__':
-    DEFAULT_FONT = wx.Font(faces['size'], wx.NORMAL, wx.NORMAL, 
-                           wx.NORMAL, False, faces['helv'])
-    DEFAULT_FONT.SetPointSize(faces['size'])
-else:
-    DEFAULT_FONT = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
-    DEFAULT_FONT.SetPointSize(faces['size'])
+get_default_font = lambda : wx.Font(faces['size'], wx.NORMAL, wx.NORMAL, 
+                                   wx.NORMAL, False, faces['helv'])
 
 FONT_SIZES = range(3, 14) + range(16, 32, 2) + range(36, 99, 4)
 

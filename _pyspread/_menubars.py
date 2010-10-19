@@ -162,7 +162,7 @@ class MainMenu(_filledMenu):
                 "Export a file (Supported formats: CSV)"]], \
             ["Separator"], \
             [item, ["OnFileApprove", "&Approve file", 
-                "Approve, unfreeze and sign the curretn file"]], \
+                "Approve, unfreeze and sign the current file", wx.ID_OK]], \
             ["Separator"], \
             [item, ["OnFilePrint", "&Print...\tCtrl+p", 
                 "Print current spreadsheet", wx.ID_PRINT]], \

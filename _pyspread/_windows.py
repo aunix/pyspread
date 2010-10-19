@@ -621,7 +621,7 @@ class MainWindow(wx.Frame):
             self.MainGrid.pysgrid.sgrid.execute_macros(safe_mode=False)
             
             # Hide Menu item
-            menuitem = event.GetEventObject().FindItemById(event.Id)
+            menuitem = event.GetEventObject().FindItemById(wx.ID_OK)
             menuitem.Enable(False)
             
             # Refresh grid

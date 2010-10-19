@@ -81,10 +81,9 @@ try:
 except ImportError:
     pass
 
-from _pyspread.config import VERSION, SNIFF_SIZE, default_dimensions
+from _pyspread.config import VERSION, SNIFF_SIZE, default_dimensions, faces
 from _pyspread.config import GPG_KEY_UID, GPG_KEY_PARMS, GPG_KEY_PASSPHRASE
-
-DEFAULT_FONT = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+from _pyspread.config import get_default_font
 
 class SafeUnpickler(object):
     """Unpicklung with this class only allows PICKLE_SAVE classes"""
@@ -159,8 +158,8 @@ def sorted_keys(keys, startkey, reverse=False):
 def textfont_from_string(font_string):
     """Returns wx textfont from given font string"""
 
-    textfont = wx.Font(10, wx.NORMAL, wx.NORMAL, 
-                       wx.NORMAL, False, 'Arial')
+    textfont = wx.Font(faces['size'], wx.NORMAL, wx.NORMAL, 
+                           wx.NORMAL, False, faces['helv'])
     nativefontinfo = wx.NativeFontInfo()
     nativefontinfo.FromString(font_string)
 
@@ -466,19 +465,14 @@ def make_repr(obj):
     
     return repr(obj)
 
-def get_default_font():
-    """Returns the default system font"""
-    
-    return DEFAULT_FONT
-
 def get_font_from_data(fontdata):
     """Returns wx.Font from fontdata string"""
     
     if fontdata == "":
-        return DEFAULT_FONT
+        return get_default_font()
     
-    textfont = wx.Font(10, wx.NORMAL, wx.NORMAL, 
-                               wx.NORMAL, False, 'Arial')
+    textfont = wx.Font(faces['size'], wx.NORMAL, wx.NORMAL, 
+                           wx.NORMAL, False, faces['helv'])
     nativefontinfo = wx.NativeFontInfo()
     nativefontinfo.FromString(fontdata)
 

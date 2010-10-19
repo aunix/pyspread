@@ -38,7 +38,8 @@ import wx
 import wx.lib.colourselect as csel
 
 from _pyspread.config import odftags, border_toggles, default_cell_attributes
-from _pyspread.config import FONT_SIZES, DEFAULT_FONT, faces, icons, small_icon_size
+from _pyspread.config import FONT_SIZES, get_default_font, faces, icons
+from _pyspread.config import small_icon_size
 
 from _pyspread._interfaces import get_font_list, textfont_from_string
 import _widgets
@@ -312,7 +313,7 @@ class AttributesToolbar(wx.ToolBar):
         """Creates font size combo box"""
         
         self.std_font_sizes = FONT_SIZES
-        font_size = str(DEFAULT_FONT.GetPointSize())
+        font_size = str(get_default_font().GetPointSize())
         self.font_size_combo = wx.ComboBox(self, -1, value=font_size,
             size=(60, -1), choices=map(unicode, self.std_font_sizes),
             style=wx.CB_DROPDOWN | wx.TE_PROCESS_ENTER)
