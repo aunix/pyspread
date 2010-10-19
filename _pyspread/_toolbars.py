@@ -38,10 +38,10 @@ import wx
 import wx.lib.colourselect as csel
 
 from _pyspread.config import odftags, border_toggles, default_cell_attributes
-from _pyspread.config import FONT_SIZES, get_default_font, faces, icons
-from _pyspread.config import small_icon_size
+from _pyspread.config import FONT_SIZES, faces, icons, small_icon_size
 
 from _pyspread._interfaces import get_font_list, textfont_from_string
+from _pyspread._interfaces import get_default_font
 import _widgets
 
 class MainToolbar(wx.ToolBar):
@@ -431,7 +431,7 @@ class AttributesToolbar(wx.ToolBar):
         """Updates text font widgets"""
         
         if textfont is None:
-            textfont = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
+            textfont = get_default_font()
         
         font_face = textfont.FaceName
         font_size = textfont.PointSize
@@ -958,9 +958,11 @@ class AttributesToolbar(wx.ToolBar):
         
         for key in keys:
             old_font_string = pysgrid.get_sgrid_attr(key, "textfont")
+            if old_font_string:
+                textfont = textfont_from_string(old_font_string)
+            else:
+                textfont = get_default_font()
             
-            textfont = textfont_from_string(old_font_string)
-
             istoggled = event.GetEventObject().GetToolState(event.GetId())
 
             if event.GetId() == wx.FONTWEIGHT_BOLD and istoggled:

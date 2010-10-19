@@ -165,9 +165,6 @@ Default cell font size
 
 """
 
-get_default_font = lambda : wx.Font(faces['size'], wx.NORMAL, wx.NORMAL, 
-                                   wx.NORMAL, False, faces['helv'])
-
 FONT_SIZES = range(3, 14) + range(16, 32, 2) + range(36, 99, 4)
 
 selected_cell_brush = wx.Brush(wx.Colour(127, 127, 255), wx.SOLID)

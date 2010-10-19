@@ -51,13 +51,13 @@ import wx.combo
 import numpy
 
 from _pyspread.irange import irange
-from _pyspread.config import odftags, get_default_font, selected_cell_brush
+from _pyspread.config import odftags, selected_cell_brush
 from _pyspread.config import column_width_tag, row_height_tag, faces, dpi
 from _pyspread._datastructures import PyspreadGrid
 from _pyspread._menubars import ContextMenu
 from _pyspread._interfaces import Clipboard, Digest, PysInterfaces, \
                                  get_pen_from_data, get_brush_from_data, \
-                                 get_font_from_data
+                                 get_font_from_data, get_default_font
 
 class MainGridTable(wx.grid.PyGridTableBase):
     """Table base class that handles interaction between MainGrid and pysgrid"""
@@ -1545,7 +1545,7 @@ class MainGrid(wx.grid.Grid,
             self.entry_line.SetValue(currstr)
         except TypeError: 
             self.entry_line.SetValue("")
-
+        
         self._update_attribute_toolbar()
         
         event.Skip()
@@ -1562,11 +1562,12 @@ class MainGrid(wx.grid.Grid,
         
         pysgrid = self.pysgrid
         
-        nativefontinfo = wx.NativeFontInfo()
-        nativefontinfo.FromString(pysgrid.get_sgrid_attr(self.key, "textfont"))
+        textfont = get_default_font()
         
-        textfont = wx.Font(10, wx.NORMAL, wx.NORMAL, wx.NORMAL, False, 'Arial')
-        textfont.SetNativeFontInfo(nativefontinfo)
+        if pysgrid.get_sgrid_attr(self.key, "textfont"):
+            nativefontinfo = wx.NativeFontInfo()
+            nativefontinfo.FromString(pysgrid.get_sgrid_attr(self.key, "textfont"))
+            textfont.SetNativeFontInfo(nativefontinfo)
         
         textattributes = pysgrid.get_sgrid_attr(self.key, "textattributes")
         
