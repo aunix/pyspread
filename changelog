@@ -27,6 +27,8 @@
 + When reversing search, all values are now found
 + Saved pys files now have .pys suffix added automatically
 + Fixed font size reset bug when setting font attributes
++ Loading a file from command line now checks signature correctly
++ Fixed moving cells bug for edits in non top-left grid position in wx.GTK
 
 0.1.1
 -----

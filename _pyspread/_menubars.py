@@ -162,7 +162,7 @@ class MainMenu(_filledMenu):
                 "Export a file (Supported formats: CSV)"]], \
             ["Separator"], \
             [item, ["OnFileApprove", "&Approve file", 
-                "Approve, unfreeze and sign the current file", wx.ID_OK]], \
+                "Approve, unfreeze and sign the current file"]], \
             ["Separator"], \
             [item, ["OnFilePrint", "&Print...\tCtrl+p", 
                 "Print current spreadsheet", wx.ID_PRINT]], \
@@ -232,4 +232,10 @@ class MainMenu(_filledMenu):
         ] \
     ]
 
+    def enable_file_approve(self, enable=True):
+        """Enables or disables menu item (for entering/leaving save mode)"""
+        
+        file_approve_menuitem = self.methodname_item["OnFileApprove"]
+        file_approve_menuitem.Enable(enable)
+        
 # end of class MainMenu

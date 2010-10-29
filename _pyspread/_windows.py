@@ -129,8 +129,7 @@ class MainWindow(wx.Frame):
         self.attributes_toolbar = AttributesToolbar(self, -1)
         
         # Disable menu item for leaving save mode
-        file_approve_menuitem = self.main_menu.methodname_item["OnFileApprove"]
-        file_approve_menuitem.Enable(False)
+        self.main_menu.enable_file_approve(False)
         
         # Print data
         # wx.PrintData properties setup from 
@@ -309,10 +308,8 @@ class MainWindow(wx.Frame):
                 "File is not properly signed. Safe mode activated. " + \
                 "Select File -> Approve to leave safe mode.")
             
-            # Disable menu item for leaving save mode
-            file_approve_menuitem = \
-                self.main_menu.methodname_item["OnFileApprove"]
-            file_approve_menuitem.Enable(True)
+            # Enable menu item for entering save mode
+            self.main_menu.enable_file_approve()
     
     def _get_filepath(self, *args, **kwargs):
         """Opens a file dialog and returns filepath and Filterindex
@@ -595,7 +592,7 @@ class MainWindow(wx.Frame):
                 
             dlg.ShowModal()
             dlg.Destroy()
-
+    
     def OnFileApprove(self, event):
         """Signs the current file and leaves safe mode"""
         
@@ -620,9 +617,8 @@ class MainWindow(wx.Frame):
             # Run macros
             self.MainGrid.pysgrid.sgrid.execute_macros(safe_mode=False)
             
-            # Hide Menu item
-            menuitem = event.GetEventObject().FindItemById(wx.ID_OK)
-            menuitem.Enable(False)
+            # Disable menu item for leaving save mode
+            self.main_menu.enable_file_approve(False)
             
             # Refresh grid
             self.MainGrid.ForceRefresh()

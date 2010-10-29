@@ -226,9 +226,19 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
         except TypeError:
             pass
         self._tc.SetInsertionPointEnd()
+        
+        # wx.GTK fix that prevents the grid from moving around
+        grid.Freeze()
+        gridpos = grid.GetScrollPos(wx.HORIZONTAL), \
+                  grid.GetScrollPos(wx.VERTICAL)
         self._tc.SetFocus()
-
-        # For this example, select the text
+        new_gridpos = grid.GetScrollPos(wx.HORIZONTAL), \
+                      grid.GetScrollPos(wx.VERTICAL)
+        if gridpos != new_gridpos:
+            grid.Scroll(*gridpos)
+        grid.Thaw()
+        
+        # Select the text
         self._tc.SetSelection(-1, -1)
 
     def EndEdit(self, row, col, grid):
@@ -325,9 +335,12 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
     def draw_text_label(self, dc, res, rect, grid, pysgrid, key):
         """Draws text label of cell"""
         
-        row, col, _ = key
-        
         res_text = unicode(res)
+        
+        if not res_text:
+            return
+        
+        row, col, _ = key
         
         textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
         
@@ -354,6 +367,8 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         try:
             strikethrough_tag = odftags["strikethrough"]
             strikethrough = textattributes[strikethrough_tag]
+            if strikethrough == "transparent":
+                return
         except KeyError:
             return
             
@@ -533,7 +548,8 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             # so we return
             return
         
-        self.draw_text_label(dc, res, rect, grid, pysgrid, key)
+        elif res is not None:
+            self.draw_text_label(dc, res, rect, grid, pysgrid, key)
         
 # end of class TextRenderer
         
@@ -1068,12 +1084,12 @@ class GridManipulationMixin(object):
         self.pysgrid.unredo.mark()
     
     def insert_selected_tables(self):
-        """Inserts one table after the current one."""
+        """Inserts one table before the current one."""
         
         current_table = self.current_table
         no_selected_tables = 1
         operation = (self.cbox_z.Append, [unicode(self.pysgrid.shape[2])])
-        undo_operation = (self.cbox_z.Delete, [self.pysgrid.shape[2]-1])
+        undo_operation = (self.cbox_z.Delete, [self.pysgrid.shape[2]])
         self.pysgrid.unredo.append(undo_operation, operation)
         self.cbox_z.Append(unicode(self.pysgrid.shape[2]))
         self.pysgrid.insert(insertionpoint=[None, None, current_table], \
@@ -1118,7 +1134,7 @@ class GridManipulationMixin(object):
             no_selected_tables = 1
             operation = (self.cbox_z.Delete, [self.pysgrid.shape[2] - 1])
             undo_operation = (self.cbox_z.Append, \
-                              [unicode(self.pysgrid.shape[2])])
+                              [unicode(self.pysgrid.shape[2] - 1)])
             self.pysgrid.unredo.append(undo_operation, operation)
             self.cbox_z.Delete(self.pysgrid.shape[2] - 1)
             self.pysgrid.remove(removalpoint=[None, None, current_table], \
@@ -1516,6 +1532,7 @@ class MainGrid(wx.grid.Grid,
     
     def OnCellEditorHidden(self, event):
         """When a cell editor is hidden, the grid is refreshed"""
+        
         self.Freeze()
         self.Refresh()
         self.Thaw()

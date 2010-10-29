@@ -405,7 +405,7 @@ class PyspreadGrid(object):
         
         """
         
-        # The function does only work correctly with correct insertionpoint
+        # The function only works correctly with correct insertionpoint
         assert len(insertionpoint) == 3
         assert list(insertionpoint).count(None) == 2
         
