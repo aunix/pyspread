@@ -72,8 +72,10 @@ System info
 # the real application is instanciated.
 # These checks need a wx.App in order to work.
 
+displaysize = wx.GetDisplaySize()
+
 dpi = map(lambda (pixels, length_mm): pixels * 25.6 / length_mm, 
-          zip(wx.GetDisplaySize(), wx.GetDisplaySizeMM()))
+          zip(displaysize, wx.GetDisplaySizeMM()))
 
 """
 Grid lines

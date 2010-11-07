@@ -70,6 +70,7 @@ _pyspread/examples/test.csv
 _pyspread/examples/testtab.tsv
 _pyspread/examples/headertest.csv
 _pyspread/examples/unicode.pys
+_pyspread/examples/function_plot.pys
 _pyspread/examples/__init__.py
 _pyspread/examples/logwindow.m
 _pyspread/examples/dcmacros.m

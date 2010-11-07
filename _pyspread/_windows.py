@@ -60,7 +60,7 @@ from _pyspread._dialogs import MacroDialog, CsvImportDialog, CsvExportDialog, \
             DimensionsEntryDialog, CellEntryDialog, AboutDialog
 from _pyspread._interfaces import CsvInterfaces, PysInterfaces, TxtInterfaces, \
             string_match, is_pyme_present, sign, verify
-from _pyspread.config import PROG_DIR, icon_size, KEYFUNCTIONS
+from _pyspread.config import PROG_DIR, icon_size, KEYFUNCTIONS, displaysize
             
 
 
@@ -172,7 +172,9 @@ class MainWindow(wx.Frame):
                              wx.BITMAP_TYPE_ANY))
         self.SetIcon(_icon)
         
-        self.SetInitialSize((1024, 768))
+        self.SetInitialSize((int(displaysize[0] * 0.9), 
+                             int(displaysize[1] * 0.9)))
+        self.SetMinSize((320, 200))
         #self.Maximize()
         
         # Status bar
