@@ -38,7 +38,8 @@ import wx
 import wx.lib.colourselect as csel
 
 from _pyspread.config import odftags, border_toggles, default_cell_attributes
-from _pyspread.config import FONT_SIZES, faces, icons, small_icon_size
+from _pyspread.config import FONT_SIZES, faces
+from _pyspread.config import icons, icon_size, small_icon_size
 
 from _pyspread._interfaces import get_font_list, textfont_from_string
 from _pyspread._interfaces import get_default_font
@@ -110,6 +111,8 @@ class MainToolbar(wx.ToolBar):
 
     def __init__(self, *args, **kwargs):
         wx.ToolBar.__init__(self, *args, **kwargs)
+        self.SetToolBitmapSize(icon_size)
+        
         self.parent = args[0]
         self._add_tools()
 
@@ -148,7 +151,10 @@ class FindToolbar(wx.ToolBar):
     def __init__(self, *args, **kwargs):
         kwargs["style"] = wx.TB_FLAT | wx.TB_NODIVIDER
         wx.ToolBar.__init__(self, *args, **kwargs)
-        
+        self.SetToolBitmapSize(small_icon_size)
+        if '__WXMAC__' in wx.PlatformInfo:
+            # Extra margin because search control is too high
+            self.SetMargins((0, 7)) 
         self.parent = args[0]
         
         # Search entry control
@@ -159,7 +165,6 @@ class FindToolbar(wx.ToolBar):
                                 "searching in the grid cell source code"))
         self.menu = self.make_menu()
         self.search.SetMenu(self.menu)
-        self.SetToolBitmapSize(small_icon_size)
         self.AddControl(self.search)
         
         # Search direction toggle button
@@ -175,7 +180,6 @@ class FindToolbar(wx.ToolBar):
             longhelp = sfbs[name]["longhelp"]
             
             bmp = wx.Bitmap(icons[iconname], wx.BITMAP_TYPE_PNG)
-            self.SetToolBitmapSize(small_icon_size)
             self.AddCheckLabelTool(__id, name, bmp, 
                 shortHelp=shorthelp, longHelp=longhelp)
             
@@ -198,7 +202,6 @@ class FindToolbar(wx.ToolBar):
         self.search_direction_tb.SetInitialSize()
         self.search_direction_tb.SetToolTip( \
             wx.ToolTip("Search direction"))
-        self.SetToolBitmapSize(small_icon_size)
         self.AddControl(self.search_direction_tb)
         
     
@@ -282,6 +285,7 @@ class AttributesToolbar(wx.ToolBar):
         self.pysgrid = self.grid.pysgrid
         
         wx.ToolBar.__init__(self, *args, **kwargs)
+        self.SetToolBitmapSize(small_icon_size)
         
         self._create_font_choice_combo()
         self._create_font_size_combo()
@@ -305,7 +309,6 @@ class AttributesToolbar(wx.ToolBar):
         self.font_choice_combo = _widgets.FontChoiceCombobox(self, \
                                     choices=self.fonts, style=wx.CB_READONLY,
                                     size=(125, -1))
-        self.SetToolBitmapSize(self.font_choice_combo.GetSize())
         self.AddControl(self.font_choice_combo)
         self.Bind(wx.EVT_COMBOBOX, self.OnTextFont, self.font_choice_combo)
     
@@ -317,7 +320,6 @@ class AttributesToolbar(wx.ToolBar):
         self.font_size_combo = wx.ComboBox(self, -1, value=font_size,
             size=(60, -1), choices=map(unicode, self.std_font_sizes),
             style=wx.CB_DROPDOWN | wx.TE_PROCESS_ENTER)
-        self.SetToolBitmapSize(small_icon_size)
         self.AddControl(self.font_size_combo)
         self.Bind(wx.EVT_COMBOBOX, self.OnTextSize, self.font_size_combo)
         self.Bind(wx.EVT_TEXT_ENTER, self.OnTextSize, self.font_size_combo)
@@ -338,7 +340,6 @@ class AttributesToolbar(wx.ToolBar):
             
         for name, __id, iconname, buttonname in font_face_buttons:
             bmp = wx.Bitmap(icons[iconname])
-            self.SetToolBitmapSize(small_icon_size)
             self.AddCheckLabelTool(__id, name, bmp, shortHelp=buttonname)
             self.Bind(wx.EVT_TOOL, self.OnToolClick, id=__id)
     
