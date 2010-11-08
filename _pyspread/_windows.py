@@ -186,8 +186,8 @@ class MainWindow(wx.Frame):
         for i in range(len(main_window_statusbar_fields)):
             self.main_window_statusbar.SetStatusText( \
                             main_window_statusbar_fields[i], i)
-        self.main_window_toolbar.SetToolBitmapSize(icon_size)
-        self.main_window_toolbar.SetMargins((1, 1))
+        #self.main_window_toolbar.SetToolBitmapSize(icon_size)
+        #self.main_window_toolbar.SetMargins((1, 1))
         self.main_window_toolbar.Realize()
     
     def _do_layout(self):

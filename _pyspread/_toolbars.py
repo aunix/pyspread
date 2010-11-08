@@ -87,6 +87,13 @@ class MainToolbar(wx.ToolBar):
         "Print current spreadsheet"], \
     ]
 
+    def __init__(self, *args, **kwargs):
+        wx.ToolBar.__init__(self, *args, **kwargs)
+        self.SetToolBitmapSize(icon_size)
+        
+        self.parent = args[0]
+        self._add_tools()
+
     def _add_tools(self):
         """Adds tools from self.toolbardata to self"""
         
@@ -108,13 +115,6 @@ class MainToolbar(wx.ToolBar):
                 self.parent.Bind(wx.EVT_TOOL, method, id=toolid)
             else:
                 raise TypeError, "Toolbar item unknown"
-
-    def __init__(self, *args, **kwargs):
-        wx.ToolBar.__init__(self, *args, **kwargs)
-        self.SetToolBitmapSize(icon_size)
-        
-        self.parent = args[0]
-        self._add_tools()
 
 
 # end of class MainToolbar
