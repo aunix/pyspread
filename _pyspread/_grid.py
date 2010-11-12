@@ -542,7 +542,10 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         if type(res) is types.FunctionType:
             # Add func_dict attribute 
             # so that we are sure that it uses a dc
-            res(grid, attr, dc, rect)
+            try:
+                res(grid, attr, dc, rect)
+            except TypeError:
+                pass
             
             # We do not want the string representation rendered 
             # so we return

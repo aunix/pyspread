@@ -103,7 +103,9 @@ class PyspreadGrid(object):
         
         # Set up environment for evaluation
         env = globals().copy()
-        env.update( {'X':key[0], 'Y':key[1], 'Z':key[2], 'S':self } )
+        env.update( {'X':key[0], 'Y':key[1], 'Z':key[2],
+                     'R':key[0], 'C':key[1], 'T':key[2],
+                     'S':self } )
         
         # Check if there is a global assignment
         split_exp = self.sgrid[key].split("=")
