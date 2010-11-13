@@ -64,6 +64,7 @@ Provides
 import bz2
 import cPickle as pickle
 import csv
+import datetime
 from itertools import ifilter
 import optparse
 import re
@@ -452,6 +453,25 @@ def make_float(obj):
     """Makes a float from comparable types"""
 
     return float(obj)
+
+def make_date(obj):
+    """Makes a date from comparable types"""
+    
+    from dateutil.parser import parse
+    return parse(obj).date()
+
+def make_datetime(obj):
+    """Makes a datetime from comparable types"""
+    
+    from dateutil.parser import parse
+    return parse(obj)
+
+def make_time(obj):
+    """Makes a time from comparable types"""
+    
+    from dateutil.parser import parse
+    return parse(obj).time()
+
 
 def make_object(obj):
     """Returns the object"""
@@ -935,6 +955,9 @@ class Digest(object):
             types.IntType: make_int, \
             types.FloatType: make_float, \
             types.CodeType: make_object, \
+            datetime.date: make_date, \
+            datetime.datetime: make_datetime, \
+            datetime.time: make_time, \
             }
 
         if self.fallback_type is not None and \

@@ -31,6 +31,7 @@ Provides
 """
 
 import cStringIO
+import datetime
 import sys
 import types
 import UserDict

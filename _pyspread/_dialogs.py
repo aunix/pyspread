@@ -359,6 +359,16 @@ class CSVPreviewGrid(wx.grid.Grid, GridIndexMixin):
         'Object': types.ObjectType, \
     }
     
+    # Only add date and time if dateutil is installed
+    try:
+        from dateutil.parser import *
+        import datetime
+        digest_types['Date'] = datetime.date
+        digest_types['DateTime'] = datetime.datetime
+        digest_types['Time'] = datetime.time
+    except ImportError:
+        pass
+    
     def __init__(self, *args, **kwargs):
         self.has_header = kwargs.pop('has_header')
         self.csvfilepath = kwargs.pop('csvfilepath')
