@@ -31,7 +31,7 @@ class obj_lil_matrix(pysparseMatrix.PysparseMatrix):
         if dtype != "O":
             # Normal lil_matrix
             self.has_objectmatrix = False
-            super(obj_lil_matrix, self).__init__(A, shape, dtype)
+            pysparseMatrix.PysparseMatrix.__init__(A, shape, dtype)
             
         else:
             self.objectpool_limit = 2 ** 32
