@@ -361,7 +361,7 @@ class CSVPreviewGrid(wx.grid.Grid, GridIndexMixin):
     
     # Only add date and time if dateutil is installed
     try:
-        from dateutil.parser import *
+        from dateutil.parser import parse
         import datetime
         digest_types['Date'] = datetime.date
         digest_types['DateTime'] = datetime.datetime

@@ -152,9 +152,9 @@ class FindToolbar(wx.ToolBar):
         kwargs["style"] = wx.TB_FLAT | wx.TB_NODIVIDER
         wx.ToolBar.__init__(self, *args, **kwargs)
         self.SetToolBitmapSize(small_icon_size)
-        if '__WXMAC__' in wx.PlatformInfo:
-            # Extra margin because search control is too high
-            self.SetMargins((0, 7)) 
+        #if '__WXMAC__' in wx.PlatformInfo:
+        #    # Extra margin because search control is too high
+        #    self.SetMargins((0, 7)) 
         self.parent = args[0]
         
         # Search entry control
