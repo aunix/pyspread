@@ -310,7 +310,7 @@ Provides the dict 'icons' with paths to the toolbar icons.
 
 """
 
-icon_size = (48, 48)
+icon_size = (24, 24)
 small_icon_size = (24, 24)
 _action_path = PROG_DIR + "icons/actions/"
 _toggle_path = PROG_DIR + "icons/toggles/"
