@@ -310,8 +310,14 @@ Provides the dict 'icons' with paths to the toolbar icons.
 
 """
 
-icon_size = (24, 24)
+if wx.Platform == '__WXMAC__':
+    # Mac does not support "uncommon" icon sizes
+    icon_size = (24, 24)
+else:
+    icon_size = (36, 36)
+    
 small_icon_size = (24, 24)
+
 theme = "Tango"
 
 _action_path = PROG_DIR + "icons/" + theme + "/" + \
@@ -326,7 +332,6 @@ _toggle_path = PROG_DIR + "icons/" + theme + "/" + \
                str(small_icon_size[0]) + "x" + str(small_icon_size[1]) + \
                "/toggles/"
                
-print _action_path_small, _toggle_path
 icons = {"FileNew": _action_path + "filenew.png", 
          "FileOpen": _action_path + "fileopen.png", 
          "FileSave": _action_path + "filesave.png", 
@@ -339,18 +344,19 @@ icons = {"FileNew": _action_path + "filenew.png",
          "Redo": _action_path + "edit-redo.png",
          "Find": _action_path + "edit-find.png",
          "FindReplace": _action_path + "edit-find-replace.png",
-         "FormatTextBold": _action_path + "format-text-bold.png",
-         "FormatTextItalic": _action_path + "format-text-italic.png",
-         "FormatTextUnderline": _action_path + "format-text-underline.png",
-         "FormatTextStrikethrough": _action_path + \
+         "FormatTextBold": _action_path_small + "format-text-bold.png",
+         "FormatTextItalic": _action_path_small + "format-text-italic.png",
+         "FormatTextUnderline": _action_path_small + \
+                                            "format-text-underline.png",
+         "FormatTextStrikethrough": _action_path_small + \
                                             "format-text-strikethrough.png",
-         "JustifyRight": _action_path + "format-justify-right.png",
-         "JustifyCenter": _action_path + "format-justify-center.png",
-         "JustifyLeft": _action_path + "format-justify-left.png",
-         "AlignTop": _action_path + "format-text-aligntop.png",
-         "AlignCenter": _action_path + "format-text-aligncenter.png", 
-         "AlignBottom": _action_path + "format-text-alignbottom.png", 
-         "Freeze": _action_path + "frozen_small.png",
+         "JustifyRight": _action_path_small + "format-justify-right.png",
+         "JustifyCenter": _action_path_small + "format-justify-center.png",
+         "JustifyLeft": _action_path_small + "format-justify-left.png",
+         "AlignTop": _action_path_small + "format-text-aligntop.png",
+         "AlignCenter": _action_path_small + "format-text-aligncenter.png", 
+         "AlignBottom": _action_path_small + "format-text-alignbottom.png", 
+         "Freeze": _action_path_small + "frozen_small.png",
          "AllBorders": _toggle_path + "border_all.xpm",
          "LeftBorders": _toggle_path + "border_left.xpm",
          "RightBorders": _toggle_path + "border_right.xpm",
