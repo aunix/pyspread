@@ -312,9 +312,21 @@ Provides the dict 'icons' with paths to the toolbar icons.
 
 icon_size = (24, 24)
 small_icon_size = (24, 24)
-_action_path = PROG_DIR + "icons/actions/"
-_toggle_path = PROG_DIR + "icons/toggles/"
+theme = "Tango"
 
+_action_path = PROG_DIR + "icons/" + theme + "/" + \
+               str(icon_size[0]) + "x" + str(icon_size[1]) + \
+               "/actions/"
+               
+_action_path_small = PROG_DIR + "icons/" + theme + "/" + \
+                     str(small_icon_size[0]) + "x" + str(small_icon_size[1]) + \
+                     "/actions/"
+               
+_toggle_path = PROG_DIR + "icons/" + theme + "/" + \
+               str(small_icon_size[0]) + "x" + str(small_icon_size[1]) + \
+               "/toggles/"
+               
+print _action_path_small, _toggle_path
 icons = {"FileNew": _action_path + "filenew.png", 
          "FileOpen": _action_path + "fileopen.png", 
          "FileSave": _action_path + "filesave.png", 
