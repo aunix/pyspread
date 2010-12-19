@@ -28,7 +28,7 @@ class Rect(object):
         self.height = height
     
     def get_bbox(self):
-        """Returns bounding box (xmin, ymin, xmax, ymax)"""
+        """Returns bounding box (xmin, xmax, ymin, ymax)"""
         
         x_min = self.x
         x_max = x_min + self.width
@@ -69,20 +69,17 @@ class RotoOriginRect(Rect):
     """
     
     def __init__(self, width, height, angle):
-        
-        self.width = width
-        self.height = height
+        Rect.__init__(self, -width /  2.0, -height / 2.0, width, height)
         self.angle = angle / 180.0 * pi
     
     def get_bbox(self):
-        """Returns bounding box (xmin, ymin, xmax, ymax)"""
+        """Returns bounding box (xmin, xmax, ymin, ymax)"""
         
-        angle = self.angle
         width = self.width
         height = self.height
         
-        cos_angle = cos(angle)
-        sin_angle = sin(angle)
+        cos_angle = cos(self.angle)
+        sin_angle = sin(self.angle)
         
         x_diff = 0.5 * width
         y_diff = 0.5 * height
@@ -119,7 +116,50 @@ class RotoOriginRect(Rect):
                 y_max = -y_min
         
         return x_min, x_max, y_min, y_max
+    
+    def is_edge_not_excluding_vertices(self, other):
+        """Returns False iif any edge excludes all vertices of other."""
         
+        c_a = cos(self.angle)
+        s_a = sin(self.angle)
+        
+        # Get min and max of other.
+        
+        other_x_min, other_x_max, other_y_min, other_y_max = other.get_bbox()
+        
+        self_x_diff = 0.5 * self.width
+        self_y_diff = 0.5 * self.height
+        
+        if c_a > 0:
+            if s_a > 0:
+                return \
+                c_a * other_x_max + s_a * other_y_max < -self_x_diff or \
+                c_a * other_x_min + s_a * other_y_min >  self_x_diff or \
+                c_a * other_y_max - s_a * other_x_min < -self_y_diff or \
+                c_a * other_y_min - s_a * other_x_max >  self_y_diff
+
+            else: # s_a <= 0.0
+                return \
+                c_a * other_x_max + s_a * other_y_min < -self_x_diff or \
+                c_a * other_x_min + s_a * other_y_max >  self_x_diff or \
+                c_a * other_y_max - s_a * other_x_max < -self_y_diff or \
+                c_a * other_y_min - s_a * other_x_min >  self_y_diff
+
+        else: # c_a <= 0.0
+            if s_a > 0:
+                return \
+                c_a * other_x_min + s_a * other_y_max < -self_x_diff or \
+                c_a * other_x_max + s_a * other_y_min >  self_x_diff or \
+                c_a * other_y_min - s_a * other_x_min < -self_y_diff or \
+                c_a * other_y_max - s_a * other_x_max >  self_y_diff
+
+            else: # s_a <= 0.0
+                return \
+                c_a * other_x_min + s_a * other_y_min < -self_x_diff or \
+                c_a * other_x_max + s_a * other_y_max >  self_x_diff or \
+                c_a * other_y_min - s_a * other_x_max < -self_y_diff or \
+                c_a * other_y_max - s_a * other_x_min >  self_y_diff
+    
     def collides(self, other):
         """Returns collision with axis aligned rect"""
         
@@ -130,76 +170,27 @@ class RotoOriginRect(Rect):
         if angle == 0:
             return other.collides(Rect(-0.5*width, -0.5*height, width, height))
         
-        other_x = other.x
-        other_y = other.y
-        other_width = other.width
-        other_height = other.height
-        
-        """
-        Phase 1
-
-         * Form bounding box on tilted rectangle P.
-         * Check whether bounding box and other intersect.
-         * If not, then self and other do not intersect.
-         * Otherwise proceed to Phase 2.
-
-        """
+        # Phase 1
+        #
+        #  * Form bounding box on tilted rectangle P.
+        #  * Check whether bounding box and other intersect.
+        #  * If not, then self and other do not intersect.
+        #  * Otherwise proceed to Phase 2.
 
         # Now perform the standard rectangle intersection test.
 
         if self.is_bbox_not_intersecting(other):
             return False
 
-        """
-        Phase 2
 
-        If we get here, check the edges of self to see
-         * if one of them excludes all vertices of other.
-         * If so, then self and other do not intersect.
-         * (If not, then self and other do intersect.)
+        # Phase 2
+        #
+        # If we get here, check the edges of self to see
+        #  * if one of them excludes all vertices of other.
+        #  * If so, then self and other do not intersect.
+        #  * (If not, then self and other do intersect.)
 
-        """
-        c = cos(angle)
-        s = sin(angle)
-        
-        # Get min and max of other.
-        other_x_min = other_x
-        other_x_max = other_x_min + other_width
-        other_y_min = other_y
-        other_y_max = other_y_min + other_height
-        
-        self_x_diff = 0.5 * width
-        self_y_diff = 0.5 * height
-        
-        if c > 0:
-            if s > 0:
-                return not ( \
-                c * other_x_max + s * other_y_max < -self_x_diff or \
-                c * other_x_min + s * other_y_min >  self_x_diff or \
-                c * other_y_max - s * other_x_min < -self_y_diff or \
-                c * other_y_min - s * other_x_max >  self_y_diff )
-
-            else: # s <= 0.0
-                return not ( \
-                c * other_x_max + s * other_y_min < -self_x_diff or \
-                c * other_x_min + s * other_y_max >  self_x_diff or \
-                c * other_y_max - s * other_x_max < -self_y_diff or \
-                c * other_y_min - s * other_x_min >  self_y_diff )
-
-        else: # c <= 0.0
-            if s > 0:
-                return not ( \
-                c * other_x_min + s * other_y_max < -self_x_diff or \
-                c * other_x_max + s * other_y_min >  self_x_diff or \
-                c * other_y_min - s * other_x_min < -self_y_diff or \
-                c * other_y_max - s * other_x_max >  self_y_diff )
-
-            else: # s <= 0.0
-                return not ( \
-                c * other_x_min + s * other_y_min < -self_x_diff or \
-                c * other_x_max + s * other_y_max >  self_x_diff or \
-                c * other_y_min - s * other_x_max < -self_y_diff or \
-                c * other_y_max - s * other_x_min >  self_y_diff )
+        return not self.is_edge_not_excluding_vertices(other)
 
 class RotoRect(object):
     """Rectangle class for generic rotated rectangles
@@ -220,8 +211,45 @@ class RotoRect(object):
     """
     
     def __init__(self, x, y, width, height, angle):
-        pass
-        
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.angle = angle / 180.0 * pi
 
-if __name__ == "__main__":
-    pass
+    def collides_axisaligned_rect(self, other):
+        """Returns collision with axis aligned other rect"""
+        
+        # Shift both rects so that self is centered at origin
+
+        self_shifted = RotoOriginRect(self.width, self.height, self.angle)
+
+        self_shifted_bbox = self_shifted.get_bbox()
+        
+        c_a = cos(self.angle)
+        s_a = sin(self.angle)
+        
+        center_x = self.x + self.width / 2.0 * c_a \
+                          + self.height / 2.0 * s_a
+        center_y = self.y - self.height / 2.0 * c_a \
+                          - self.width / 2.0 * s_a
+
+        other_shifted = Rect(other.x - center_x, other.y - center_y, 
+                             other.width, other.height)
+
+        # Calculate collision
+        
+        return self_shifted.collides(other_shifted)
+
+    def collides(self, other):
+        """Returns collision with other rect"""
+        
+        # Is other rect not axis aligned?
+        if hasattr(other, "angle"):
+            raise NotImplementedError, "Non-axis aligned rects not implemented"
+            
+        else: # Other rect is axis aligned
+            return self.collides_axisaligned_rect(other)
+
+#if __name__ == "__main__":
+#    pass
