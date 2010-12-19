@@ -313,8 +313,10 @@ Provides the dict 'icons' with paths to the toolbar icons.
 if wx.Platform == '__WXMAC__':
     # Mac does not support "uncommon" icon sizes
     icon_size = (24, 24)
+    wide_icon = ""
 else:
     icon_size = (36, 36)
+    wide_icon = "_w"
     
 small_icon_size = (24, 24)
 
@@ -367,9 +369,9 @@ icons = {"FileNew": _action_path + "filenew.png",
          "TopBottomBorders": _toggle_path + "border_top_n_bottom.xpm",
          "SearchDirectionUp": _toggle_path + "go-down.png",
          "SearchDirectionDown": _toggle_path + "go-up.png",
-         "SearchCaseSensitive": _toggle_path + "aA.png",
-         "SearchRegexp": _toggle_path + "regex.png",
-         "SearchWholeword": _toggle_path + "wholeword.png",
+         "SearchCaseSensitive": _toggle_path + "aA" + wide_icon + ".png",
+         "SearchRegexp": _toggle_path + "regex" + wide_icon + ".png",
+         "SearchWholeword": _toggle_path + "wholeword" + wide_icon + ".png",
          }
          
 """
