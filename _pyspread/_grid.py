@@ -355,13 +355,100 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         if res is not None and res_text:
             dc.DrawRotatedText(res_text, *text_pos)
         
-        self.text_extent = dc.GetTextExtent(res_text)
+        text_extent = dc.GetTextExtent(res_text)
         
-        self._draw_strikethrough_line(grid, dc, rect, text_pos, 
+        self._draw_strikethrough_line(grid, dc, rect, text_pos, text_extent,
                 textattributes)
         
+        # Print text box ##TODO
+        
+        import _pyspread.xrect as xrect
+        string_x, string_y, angle = text_pos
+        textbox = xrect.RotoRect(string_x, string_y, 
+                                 text_extent[0], text_extent[1], deg=angle)
+        print string_x, string_y, text_extent[0], text_extent[1], angle
+        for r in xrange(row-1, row+2):
+            for c in xrange(col-1, col+2):
+                print r, c
+                cell_rect = grid.CellToRect(r, c)
+                if True or cell_rect != (-1, -1, -1, -1) and (r != row or c != col):
+                    cell_rotorect = xrect.RotoRect(cell_rect.x, cell_rect.y,
+                                     cell_rect.width, cell_rect.height, deg=0.001)
+                    if textbox.rotocollide(cell_rotorect):
+                        print "col: ", r, c, cell_rect.x, cell_rect.y
+        
+        
+#        string_x, string_y, angle = text_pos
+#        pt_ll =  string_x, string_y + text_extent[1]
+#        pt_ul =  string_x, string_y 
+#        pt_lr =  string_x + text_extent[0], string_y + text_extent[1]
+#        pt_ur =  string_x + text_extent[0], string_y
+#        
+#        if not -0.0001 < angle < 0.0001:
+#            rot_angle = angle / 180.0 * pi
+#            def rotation(x, y, angle, base_x=0.0, base_y=0.0):
+#                x -= base_x
+#                y -= base_y
+#
+#                __x =  cos(rot_angle) * x + sin(rot_angle) * y
+#                __y = -sin(rot_angle) * x + cos(rot_angle) * y
+#
+#                __x += base_x
+#                __y += base_y
+#
+#                return __x, __y
+#            
+#            pt_ul = rotation(pt_ul[0], pt_ul[1], rot_angle, 
+#                              base_x=string_x, base_y=string_y)
+#            pt_ll = rotation(pt_ll[0], pt_ll[1], rot_angle, 
+#                              base_x=string_x, base_y=string_y)
+#            pt_ur = rotation(pt_ur[0], pt_ur[1], rot_angle, 
+#                              base_x=string_x, base_y=string_y)
+#            pt_lr = rotation(pt_lr[0], pt_lr[1], rot_angle, 
+#                              base_x=string_x, base_y=string_y)
+#        
+#        dc.DrawLine(pt_ul[0], pt_ul[1], pt_ll[0], pt_ll[1])
+#        dc.DrawLine(pt_ll[0], pt_ll[1], pt_lr[0], pt_lr[1])
+#        dc.DrawLine(pt_lr[0], pt_lr[1], pt_ur[0], pt_ur[1])
+#        dc.DrawLine(pt_ur[0], pt_ur[1], pt_ul[0], pt_ul[1])
+#        
+#        
+#        # Print affected cells
+#        
+#        def is_intersecting(rect1, rect2):
+#            """Returns True if both rects are intersecting
+#            
+#            P1----P2
+#            |      |
+#            P3----P4
+#            
+#            rect1/2: 4-tuple of 2-tuples
+#            \tRectangles
+#            
+#            """
+#            
+#            return rect1[0][0] < rect2[0][0] < rect1[1][0] and \
+#                   rect1[0][1] > rect2[0][1] > rect1[2][2]
+#            
+#        vis_cell_slice = self.table.get_visiblecell_slice()[:2]
+#        
+#        for row in irange(vis_cell_slice[0].start, vis_cell_slice[0].stop):
+#            for col in irange(vis_cell_slice[1].start, vis_cell_slice[1].stop):
+#                cell_rect = self.table.CellToRect(row, col)
+#                
+#                cl_ul = cell_rect[:2]
+#                cl_ll = cell_rect[0], cell_rect[1] + cell_rect[3]
+#                cl_ur = cell_rect[0] + cell_rect[2], cell_rect[1]
+#                cl_lr = cell_rect[0] + cell_rect[2], cell_rect[1] + cell_rect[3]
+#                
+#                if is_intersecting((pt_ul, pt_ur, pt_ll, pt_lr), 
+#                                   (cl_ul, cl_ll, cl_ur, cl_lr)):
+#                    
+#                    print row, col
+        
+        
     def _draw_strikethrough_line(self, grid, dc, rect, 
-                                 textpos, textattributes):
+                                 text_pos, text_extent, textattributes):
         """Draws a strikethrough line if needed"""
         
         try:
@@ -372,15 +459,14 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         except KeyError:
             return
             
-        string_x, string_y, angle = textpos
-        text_extent = self.text_extent
+        string_x, string_y, angle = text_pos
         
         strikethroughwidth = max(1, int(round(1.5 * grid.zoom)))
         dc.SetPen(wx.Pen(wx.BLACK, strikethroughwidth, wx.SOLID))
 
         x1 = string_x
         y1 = string_y + text_extent[1] / 2
-        x2 = string_x + text_extent[0] + 2
+        x2 = string_x + text_extent[0]
         y2 = string_y + text_extent[1] / 2
 
         if not -0.0001 < angle < 0.0001:
@@ -432,6 +518,15 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             textfont.GetStyle(), textfont.GetWeight(), 
             underline_mode == "continuous", textfont.GetFaceName())
         dc.SetFont(zoomed_font)
+    
+    def is_cell_overlaid(self, rect, cell):
+        """Returns True iif the cell is overlaid by the rect"""
+        ##TODO
+        pass
+        # 1. Get bounding box of Rect:
+        #    minx_ub, maxx_lb - miny_ub, maxy_lb
+        # 2. Return all grid edges inside bounding box that are inside rect
+               
     
     def get_text_position(self, dc, rect, res_text, textattributes):
         """Returns text x, y, angle position in cell"""
@@ -546,10 +641,6 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
                 res(grid, attr, dc, rect)
             except TypeError:
                 pass
-            
-            # We do not want the string representation rendered 
-            # so we return
-            return
         
         elif res is not None:
             self.draw_text_label(dc, res, rect, grid, pysgrid, key)
@@ -715,7 +806,7 @@ class GridSelectionMixin(object):
         return row, col
     
     def get_visiblecell_slice(self):
-        """Returns a tuple of 3 slices that contanins the visible cells"""
+        """Returns a tuple of 3 slices that contains the visible cells"""
         
         topleft_x = self.YToRow(self.GetViewStart()[1] * self.ScrollLineX)
         topleft_y = self.XToCol(self.GetViewStart()[0] * self.ScrollLineY)
