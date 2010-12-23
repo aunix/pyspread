@@ -331,7 +331,55 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         wx.grid.PyGridCellRenderer.__init__(self)
         
         self.table = table
+    
+    def get_textbox_edges(self, text_pos, text_extent):
+        """Returns upper left, lower left, lower right, upper right of text"""
         
+        string_x, string_y, angle = text_pos
+        
+        pt_ul =  string_x, string_y 
+        pt_ll =  string_x, string_y + text_extent[1]
+        pt_lr =  string_x + text_extent[0], string_y + text_extent[1]
+        pt_ur =  string_x + text_extent[0], string_y
+        
+        if not -0.0001 < angle < 0.0001:
+            rot_angle = angle / 180.0 * pi
+            def rotation(x, y, angle, base_x=0.0, base_y=0.0):
+                x -= base_x
+                y -= base_y
+
+                __x =  cos(rot_angle) * x + sin(rot_angle) * y
+                __y = -sin(rot_angle) * x + cos(rot_angle) * y
+
+                __x += base_x
+                __y += base_y
+
+                return __x, __y
+            
+            pt_ul = rotation(pt_ul[0], pt_ul[1], rot_angle, 
+                              base_x=string_x, base_y=string_y)
+            pt_ll = rotation(pt_ll[0], pt_ll[1], rot_angle, 
+                              base_x=string_x, base_y=string_y)
+            pt_ur = rotation(pt_ur[0], pt_ur[1], rot_angle, 
+                              base_x=string_x, base_y=string_y)
+            pt_lr = rotation(pt_lr[0], pt_lr[1], rot_angle, 
+                              base_x=string_x, base_y=string_y)
+        
+        return pt_ul, pt_ll, pt_lr, pt_ur
+    
+    def get_text_rotorect(self, text_pos, text_extent):
+        """Returns a RotoRect for given cell text"""
+        
+        import _pyspread.xrect as xrect
+        
+        pt_ll = self.get_textbox_edges(text_pos, text_extent)[1]
+        
+        rr_x, rr_y = pt_ll
+        
+        angle = float(text_pos[2]) 
+        
+        return xrect.RotoRect(rr_x, rr_y, text_extent[0], text_extent[1], angle)
+    
     def draw_text_label(self, dc, res, rect, grid, pysgrid, key):
         """Draws text label of cell"""
         
@@ -363,54 +411,34 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         # Print text box ##TODO
         
         import _pyspread.xrect as xrect
-        string_x, string_y, angle = text_pos
-        textbox = xrect.RotoRect(string_x, string_y, 
-                                 text_extent[0], text_extent[1], deg=angle)
-        print string_x, string_y, text_extent[0], text_extent[1], angle
-        for r in xrange(row-1, row+2):
-            for c in xrange(col-1, col+2):
-                print r, c
+        
+        textbox = self.get_text_rotorect(text_pos, text_extent)
+        #print "---", textbox
+        
+        colliding_rect_list = []
+        
+        vis_cell_slice = grid.get_visiblecell_slice()
+        
+        for r in irange(vis_cell_slice[0].start, vis_cell_slice[0].stop):
+            for c in irange(vis_cell_slice[1].start, vis_cell_slice[1].stop):
                 cell_rect = grid.CellToRect(r, c)
-                if True or cell_rect != (-1, -1, -1, -1) and (r != row or c != col):
-                    cell_rotorect = xrect.RotoRect(cell_rect.x, cell_rect.y,
-                                     cell_rect.width, cell_rect.height, deg=0.001)
-                    if textbox.rotocollide(cell_rotorect):
-                        print "col: ", r, c, cell_rect.x, cell_rect.y
+                if cell_rect != (-1, -1, -1, -1) and (r != row or c != col):
+                    cell_rect = xrect.Rect(cell_rect.x, cell_rect.y, cell_rect.width, cell_rect.height)
+                    if textbox.collides_axisaligned_rect(cell_rect):
+                        colliding_rect_list.append((cell_rect.x, cell_rect.y, cell_rect.width, cell_rect.height))
         
         
-#        string_x, string_y, angle = text_pos
-#        pt_ll =  string_x, string_y + text_extent[1]
-#        pt_ul =  string_x, string_y 
-#        pt_lr =  string_x + text_extent[0], string_y + text_extent[1]
-#        pt_ur =  string_x + text_extent[0], string_y
-#        
-#        if not -0.0001 < angle < 0.0001:
-#            rot_angle = angle / 180.0 * pi
-#            def rotation(x, y, angle, base_x=0.0, base_y=0.0):
-#                x -= base_x
-#                y -= base_y
-#
-#                __x =  cos(rot_angle) * x + sin(rot_angle) * y
-#                __y = -sin(rot_angle) * x + cos(rot_angle) * y
-#
-#                __x += base_x
-#                __y += base_y
-#
-#                return __x, __y
-#            
-#            pt_ul = rotation(pt_ul[0], pt_ul[1], rot_angle, 
-#                              base_x=string_x, base_y=string_y)
-#            pt_ll = rotation(pt_ll[0], pt_ll[1], rot_angle, 
-#                              base_x=string_x, base_y=string_y)
-#            pt_ur = rotation(pt_ur[0], pt_ur[1], rot_angle, 
-#                              base_x=string_x, base_y=string_y)
-#            pt_lr = rotation(pt_lr[0], pt_lr[1], rot_angle, 
-#                              base_x=string_x, base_y=string_y)
-#        
-#        dc.DrawLine(pt_ul[0], pt_ul[1], pt_ll[0], pt_ll[1])
-#        dc.DrawLine(pt_ll[0], pt_ll[1], pt_lr[0], pt_lr[1])
-#        dc.DrawLine(pt_lr[0], pt_lr[1], pt_ur[0], pt_ur[1])
-#        dc.DrawLine(pt_ur[0], pt_ur[1], pt_ul[0], pt_ul[1])
+        pt_ul, pt_ll, pt_lr, pt_ur = self.get_textbox_edges(text_pos, 
+                                                            text_extent)
+        
+        dc.DrawLine(pt_ul[0], pt_ul[1], pt_ll[0], pt_ll[1])
+        dc.DrawLine(pt_ll[0], pt_ll[1], pt_lr[0], pt_lr[1])
+        dc.DrawLine(pt_lr[0], pt_lr[1], pt_ur[0], pt_ur[1])
+        dc.DrawLine(pt_ur[0], pt_ur[1], pt_ul[0], pt_ul[1])
+        
+        dc.SetBrush(wx.TRANSPARENT_BRUSH)
+        dc.DrawRectangleList(colliding_rect_list)
+        
 #        
 #        
 #        # Print affected cells

@@ -27,6 +27,12 @@ class Rect(object):
         self.width = width
         self.height = height
     
+    def __str__(self):
+        return "Rect(" + \
+               ", ".join(map(str, (self.x, self.y, 
+                                   self.width, self.height))) + \
+               ")"
+    
     def get_bbox(self):
         """Returns bounding box (xmin, xmax, ymin, ymax)"""
         
@@ -71,6 +77,12 @@ class RotoOriginRect(Rect):
     def __init__(self, width, height, angle):
         Rect.__init__(self, -width /  2.0, -height / 2.0, width, height)
         self.angle = angle / 180.0 * pi
+    
+    def __str__(self):
+        return "RotoOriginRect(" + \
+          ", ".join(map(str, (self.x, self.y, 
+                              self.width, self.height, self.angle))) + \
+          ")"
     
     def get_bbox(self):
         """Returns bounding box (xmin, xmax, ymin, ymax)"""
@@ -206,7 +218,7 @@ class RotoRect(object):
     height: Number
     \tRectangle height
     angle: Number:
-    \tRectangle rotation angle clock-wise around origin
+    \tRectangle rotation angle counter clock-wise around origin
     
     """
     
@@ -215,24 +227,38 @@ class RotoRect(object):
         self.y = y
         self.width = width
         self.height = height
-        self.angle = angle / 180.0 * pi
+        self.angle_rad = angle / 180.0 * pi
+        self.angle_deg = angle 
 
+    def __str__(self):
+        return "RotoRect(" + \
+          ", ".join(map(str, (self.x, self.y, 
+                              self.width, self.height, self.angle))) + \
+          ")"
+    
+    def get_center(self):
+        """Returns rectangle center"""
+        
+        c_a = cos(self.angle_rad)
+        s_a = sin(self.angle_rad)
+        
+        center_x = self.x + self.width / 2.0 * c_a \
+                          - self.height / 2.0 * s_a
+        center_y = self.y - self.height / 2.0 * c_a \
+                          - self.width / 2.0 * s_a
+                          
+        return center_x, center_y
+    
     def collides_axisaligned_rect(self, other):
         """Returns collision with axis aligned other rect"""
         
         # Shift both rects so that self is centered at origin
 
-        self_shifted = RotoOriginRect(self.width, self.height, self.angle)
+        self_shifted = RotoOriginRect(self.width, self.height, -self.angle_deg)
 
         self_shifted_bbox = self_shifted.get_bbox()
         
-        c_a = cos(self.angle)
-        s_a = sin(self.angle)
-        
-        center_x = self.x + self.width / 2.0 * c_a \
-                          + self.height / 2.0 * s_a
-        center_y = self.y - self.height / 2.0 * c_a \
-                          - self.width / 2.0 * s_a
+        center_x, center_y = self.get_center()
 
         other_shifted = Rect(other.x - center_x, other.y - center_y, 
                              other.width, other.height)
