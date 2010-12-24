@@ -42,6 +42,7 @@ Provides:
 
 from math import sin, cos, pi
 from itertools import izip
+from operator import itemgetter
 import string
 import types
 
@@ -50,6 +51,7 @@ import wx.grid
 import wx.combo
 import numpy
 
+import _pyspread.xrect as xrect
 from _pyspread.irange import irange
 from _pyspread.config import odftags, selected_cell_brush
 from _pyspread.config import column_width_tag, row_height_tag, faces, dpi
@@ -410,22 +412,83 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         # Print text box ##TODO
         
-        import _pyspread.xrect as xrect
+        def l1_radius_cells(dist):
+            """Generator of cell index tuples with distance dist to o"""
+            
+            if not dist:
+                yield 0, 0
+                
+            else:
+                for pos in xrange(-dist, dist):
+                    yield pos, dist
+                    yield pos, -dist
+                    yield dist, pos
+                    yield -dist, pos
         
         textbox = self.get_text_rotorect(text_pos, text_extent)
-        #print "---", textbox
         
         colliding_rect_list = []
         
         vis_cell_slice = grid.get_visiblecell_slice()
+        vis_row_min = vis_cell_slice[0].start
+        vis_row_max = vis_cell_slice[0].stop
+        vis_col_min = vis_cell_slice[1].start
+        vis_col_max = vis_cell_slice[1].start
         
-        for r in irange(vis_cell_slice[0].start, vis_cell_slice[0].stop):
-            for c in irange(vis_cell_slice[1].start, vis_cell_slice[1].stop):
-                cell_rect = grid.CellToRect(r, c)
-                if cell_rect != (-1, -1, -1, -1) and (r != row or c != col):
-                    cell_rect = xrect.Rect(cell_rect.x, cell_rect.y, cell_rect.width, cell_rect.height)
+        max_vis = max(vis_row_max - row, vis_col_max - col,
+                      row - vis_row_min, col - vis_col_min)
+                        
+        for dist in irange(1, max_vis+1):
+            all_empty = True
+            
+            for radius_cell in l1_radius_cells(dist):
+                __row = radius_cell[0] + row
+                __col = radius_cell[1] + col
+                
+                if vis_row_min <= __row <= vis_row_max and \
+                   vis_col_min <= __col <= vis_col_max:
+            
+                    cell_rect = grid.CellToRect(__row, __col)
+                    cell_rect = xrect.Rect(cell_rect.x, cell_rect.y, 
+                                           cell_rect.width, cell_rect.height)
                     if textbox.collides_axisaligned_rect(cell_rect):
-                        colliding_rect_list.append((cell_rect.x, cell_rect.y, cell_rect.width, cell_rect.height))
+                        all_empty = False
+                        colliding_rect_list.append((cell_rect.x, cell_rect.y, 
+                            cell_rect.width, cell_rect.height))
+            
+            # If there are no collisions, we break
+            
+            if all_empty:
+                break
+                        
+#        visible_cells = [(__row, __col, abs(row - __row) + abs(col - __col)) \
+#          for __row in irange(vis_cell_slice[0].start, vis_cell_slice[0].stop) \
+#          for __col in irange(vis_cell_slice[1].start, vis_cell_slice[1].stop)]
+#        
+#        sort_key = lambda key: abs(row - key[0]) + abs(col - key[1])
+#        visible_cells.sort(key=itemgetter(2))
+#        
+#        last_dist = 0
+#        all_empty = False
+#        
+#        for __row, __col, _ in visible_cells:
+#            # Distance of tested cell to row, col cell
+#            curr_dist = sort_key((__row, __col))
+#            
+#            # Have we reached a new distance level?
+#            if curr_dist > last_dist:
+#                if all_empty:
+#                    break
+#                all_empty = True
+#                last_dist = curr_dist
+#            
+#            cell_rect = grid.CellToRect(__row, __col)
+#            cell_rect = xrect.Rect(cell_rect.x, cell_rect.y, 
+#                                   cell_rect.width, cell_rect.height)
+#            if textbox.collides_axisaligned_rect(cell_rect):
+#                all_empty = False
+#                colliding_rect_list.append((cell_rect.x, cell_rect.y, 
+#                                            cell_rect.width, cell_rect.height))
         
         
         pt_ul, pt_ll, pt_lr, pt_ur = self.get_textbox_edges(text_pos, 
