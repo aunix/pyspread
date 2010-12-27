@@ -419,12 +419,19 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
                 yield 0, 0
                 
             else:
-                for pos in xrange(-dist, dist):
+                for pos in xrange(-dist, dist+1):
                     yield pos, dist
                     yield pos, -dist
                     yield dist, pos
                     yield -dist, pos
         
+        __rect = xrect.Rect(rect.x, rect.y, rect.width, rect.height)
+        
+        # If cell rect stays inside cell, we do nothing
+        if all(__rect.is_point_in_rect(*textedge) \
+          for textedge in self.get_textbox_edges(text_pos, text_extent)):
+            return
+            
         textbox = self.get_text_rotorect(text_pos, text_extent)
         
         colliding_rect_list = []
@@ -433,11 +440,11 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         vis_row_min = vis_cell_slice[0].start
         vis_row_max = vis_cell_slice[0].stop
         vis_col_min = vis_cell_slice[1].start
-        vis_col_max = vis_cell_slice[1].start
+        vis_col_max = vis_cell_slice[1].stop
         
         max_vis = max(vis_row_max - row, vis_col_max - col,
                       row - vis_row_min, col - vis_col_min)
-                        
+        
         for dist in irange(1, max_vis+1):
             all_empty = True
             
@@ -447,7 +454,6 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
                 
                 if vis_row_min <= __row <= vis_row_max and \
                    vis_col_min <= __col <= vis_col_max:
-            
                     cell_rect = grid.CellToRect(__row, __col)
                     cell_rect = xrect.Rect(cell_rect.x, cell_rect.y, 
                                            cell_rect.width, cell_rect.height)
@@ -490,7 +496,6 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
 #                colliding_rect_list.append((cell_rect.x, cell_rect.y, 
 #                                            cell_rect.width, cell_rect.height))
         
-        
         pt_ul, pt_ll, pt_lr, pt_ur = self.get_textbox_edges(text_pos, 
                                                             text_extent)
         
@@ -499,6 +504,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         dc.DrawLine(pt_lr[0], pt_lr[1], pt_ur[0], pt_ur[1])
         dc.DrawLine(pt_ur[0], pt_ur[1], pt_ul[0], pt_ul[1])
         
+        dc.SetPen(wx.BLACK_PEN)
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
         dc.DrawRectangleList(colliding_rect_list)
         

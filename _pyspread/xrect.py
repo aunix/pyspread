@@ -54,6 +54,23 @@ class Rect(object):
                self_y_min > other_y_max or \
                other_y_min > self_y_max
     
+    def is_point_in_rect(self, pt_x, pt_y):
+        """Returns True iif point is inside the rectangle (border included)
+        
+        Parameters
+        ----------
+        
+         * pt_x: Number
+        \tx-value of point
+         * pt_y: Number
+        \ty-value of point
+        
+        """
+        
+        x_min, x_max, y_min, y_max = self.get_bbox()
+        
+        return x_min <= pt_x <= x_max and y_min <= pt_y <= y_max
+    
     def collides(self, other):
         """Returns collision with axis aligned rect"""
         
