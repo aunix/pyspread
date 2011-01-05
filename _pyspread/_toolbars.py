@@ -393,9 +393,16 @@ class AttributesToolbar(wx.ToolBar):
         button_size = (30, 30)
         button_style = wx.NO_BORDER
         
-        self.linecolor_choice = \
-            csel.ColourSelect(self, -1, unichr(0x2500), (0, 0, 0), 
-                              size=button_size, style=button_style)
+        try:
+            self.linecolor_choice = \
+                csel.ColourSelect(self, -1, unichr(0x2500), (0, 0, 0), 
+                                  size=button_size, style=button_style)
+        except UnicodeEncodeError:
+            # ANSI wxPython installed
+            self.linecolor_choice = \
+                csel.ColourSelect(self, -1, "-", (0, 0, 0), 
+                                  size=button_size, style=button_style)
+            
         self.bgcolor_choice = \
             csel.ColourSelect(self, -1, "", (255, 255, 255), 
                               size=button_size, style=button_style)

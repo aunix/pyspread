@@ -466,36 +466,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             
             if all_empty:
                 break
-                        
-#        visible_cells = [(__row, __col, abs(row - __row) + abs(col - __col)) \
-#          for __row in irange(vis_cell_slice[0].start, vis_cell_slice[0].stop) \
-#          for __col in irange(vis_cell_slice[1].start, vis_cell_slice[1].stop)]
-#        
-#        sort_key = lambda key: abs(row - key[0]) + abs(col - key[1])
-#        visible_cells.sort(key=itemgetter(2))
-#        
-#        last_dist = 0
-#        all_empty = False
-#        
-#        for __row, __col, _ in visible_cells:
-#            # Distance of tested cell to row, col cell
-#            curr_dist = sort_key((__row, __col))
-#            
-#            # Have we reached a new distance level?
-#            if curr_dist > last_dist:
-#                if all_empty:
-#                    break
-#                all_empty = True
-#                last_dist = curr_dist
-#            
-#            cell_rect = grid.CellToRect(__row, __col)
-#            cell_rect = xrect.Rect(cell_rect.x, cell_rect.y, 
-#                                   cell_rect.width, cell_rect.height)
-#            if textbox.collides_axisaligned_rect(cell_rect):
-#                all_empty = False
-#                colliding_rect_list.append((cell_rect.x, cell_rect.y, 
-#                                            cell_rect.width, cell_rect.height))
-        
+                                
         pt_ul, pt_ll, pt_lr, pt_ur = self.get_textbox_edges(text_pos, 
                                                             text_extent)
         
@@ -507,41 +478,6 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         dc.SetPen(wx.BLACK_PEN)
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
         dc.DrawRectangleList(colliding_rect_list)
-        
-#        
-#        
-#        # Print affected cells
-#        
-#        def is_intersecting(rect1, rect2):
-#            """Returns True if both rects are intersecting
-#            
-#            P1----P2
-#            |      |
-#            P3----P4
-#            
-#            rect1/2: 4-tuple of 2-tuples
-#            \tRectangles
-#            
-#            """
-#            
-#            return rect1[0][0] < rect2[0][0] < rect1[1][0] and \
-#                   rect1[0][1] > rect2[0][1] > rect1[2][2]
-#            
-#        vis_cell_slice = self.table.get_visiblecell_slice()[:2]
-#        
-#        for row in irange(vis_cell_slice[0].start, vis_cell_slice[0].stop):
-#            for col in irange(vis_cell_slice[1].start, vis_cell_slice[1].stop):
-#                cell_rect = self.table.CellToRect(row, col)
-#                
-#                cl_ul = cell_rect[:2]
-#                cl_ll = cell_rect[0], cell_rect[1] + cell_rect[3]
-#                cl_ur = cell_rect[0] + cell_rect[2], cell_rect[1]
-#                cl_lr = cell_rect[0] + cell_rect[2], cell_rect[1] + cell_rect[3]
-#                
-#                if is_intersecting((pt_ul, pt_ur, pt_ll, pt_lr), 
-#                                   (cl_ul, cl_ll, cl_ur, cl_lr)):
-#                    
-#                    print row, col
         
         
     def _draw_strikethrough_line(self, grid, dc, rect, 
