@@ -32,11 +32,12 @@ Provides:
   3. TextRenderer: Standard renderer for text output
   4. GridIndexMixin: Grid mixin for indexing and __len__
   5. GridSelectionMixin: Grid mixin for handling selections
-  6. GridClipboardMixin: Grid mixin for handling selections
+  6. GridClipboardMixin: Grid mixin for handling clipboard
   7. GridManipulationMixin: Grid mixin for manipulating rows, columns and tables
-  8. Background: Memory DC with background content for given cell
-  9. MainGrid: Main grid
-  10. EntryLine: The line for entering cell code
+  8. GridCollisionMixin: Grid mixin for collision detection
+  9. Background: Memory DC with background content for given cell
+  10. MainGrid: Main grid
+  11. EntryLine: The line for entering cell code
 
 """
 
@@ -53,7 +54,7 @@ import numpy
 
 import _pyspread.xrect as xrect
 from _pyspread.irange import irange
-from _pyspread.config import odftags, selected_cell_brush
+from _pyspread.config import odftags, selected_cell_brush, overflow_rects
 from _pyspread.config import column_width_tag, row_height_tag, faces, dpi
 from _pyspread._datastructures import PyspreadGrid
 from _pyspread._menubars import ContextMenu
@@ -382,6 +383,37 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         return xrect.RotoRect(rr_x, rr_y, text_extent[0], text_extent[1], angle)
     
+    def draw_blocking_rect(self, dc, cell_rect, block_direction):
+        """Draws block rectangles for given direction and blocking cell
+        
+        Properties
+        ----------
+        dc: wx.DC
+        \t Target draw context
+        block_direction: String in overflow_rects.keys()
+        \tIdentifier for direction, in which blocking rect shall point
+        cell_rect: wx.Rect
+        \tRect of blocking cell
+        
+        """
+
+        arrow, trafo = overflow_rects[block_direction]
+
+        arrow_x, arrow_y = trafo(cell_rect.x, cell_rect.y,
+                          cell_rect.width, cell_rect.height)
+
+        dc.DrawBitmap(arrow, arrow_x, arrow_y, True)
+    
+    def draw_textbox(self, dc, text_pos, text_extent):
+    
+        pt_ul, pt_ll, pt_lr, pt_ur = self.get_textbox_edges(text_pos, 
+                                                            text_extent)
+        
+        dc.DrawLine(pt_ul[0], pt_ul[1], pt_ll[0], pt_ll[1])
+        dc.DrawLine(pt_ll[0], pt_ll[1], pt_lr[0], pt_lr[1])
+        dc.DrawLine(pt_lr[0], pt_lr[1], pt_ur[0], pt_ur[1])
+        dc.DrawLine(pt_ur[0], pt_ur[1], pt_ul[0], pt_ul[1])
+
     def draw_text_label(self, dc, res, rect, grid, pysgrid, key):
         """Draws text label of cell"""
         
@@ -410,43 +442,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         self._draw_strikethrough_line(grid, dc, rect, text_pos, text_extent,
                 textattributes)
         
-        # Print text box ##TODO
-        
-        def l1_radius_cells(dist):
-            """Generator of cell index tuples with distance dist to o"""
-            
-            if not dist:
-                yield 0, 0
-                
-            else:
-                for pos in xrange(-dist, dist+1):
-                    yield pos, dist
-                    yield pos, -dist
-                    yield dist, pos
-                    yield -dist, pos
-        
-        def get_block_direction(rect_row, rect_col, block_row, block_col):
-            """Returns a blocking direction string from UP DOWN RIGHT LEFT"""
-            
-            diff_row = rect_row - block_row
-            diff_col = rect_col - block_col
-            
-            assert not diff_row == diff_col == 0
-            
-            if abs(diff_row) < abs(diff_col):
-                # Columns are dominant
-                if rect_col < block_col:
-                    return "RIGHT"
-                else:
-                    return "LEFT"
-            else:
-                # Rows are dominant
-                if rect_row < block_row:
-                    return "DOWN"
-                else:
-                    return "UP"
-                    
-        from config import overflow_rects
+        # Collision detection ##TODO
         
         __rect = xrect.Rect(rect.x, rect.y, rect.width, rect.height)
         
@@ -456,67 +452,30 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             return
             
         textbox = self.get_text_rotorect(text_pos, text_extent)
-        
-        colliding_rect_list = []
-        
-        vis_cell_slice = grid.get_visiblecell_slice()
-        vis_row_min = vis_cell_slice[0].start
-        vis_row_max = vis_cell_slice[0].stop
-        vis_col_min = vis_cell_slice[1].start
-        vis_col_max = vis_cell_slice[1].stop
-        
-        max_vis = max(vis_row_max - row, vis_col_max - col,
-                      row - vis_row_min, col - vis_col_min)
-        
-        for dist in irange(1, max_vis+1):
-            all_empty = True
-            
-            for radius_cell in l1_radius_cells(dist):
-                __row = radius_cell[0] + row
-                __col = radius_cell[1] + col
-                
-                if vis_row_min <= __row <= vis_row_max and \
-                   vis_col_min <= __col <= vis_col_max:
-                    cell_rect = grid.CellToRect(__row, __col)
-                    cell_rect = xrect.Rect(cell_rect.x, cell_rect.y, 
-                                           cell_rect.width, cell_rect.height)
-                    if textbox.collides_axisaligned_rect(cell_rect):
-                        all_empty = False
-                        colliding_rect_list.append((cell_rect.x, cell_rect.y, 
-                            cell_rect.width, cell_rect.height))
-                        
-                        if grid.pysgrid[__row, __col, tab] is not None:
-                            # Blocking cell
-                            block_direction = \
-                                get_block_direction(row, col, __row, __col)
-                                
-                            arrow, trafo = overflow_rects[block_direction]
-                            
-                            arrow_x, arrow_y = trafo(cell_rect.x, cell_rect.y,
-                                              cell_rect.width, cell_rect.height)
-                            
-                            dc.DrawBitmap(arrow, arrow_x, arrow_y, True)
-                            
-                            
-
-            
-            # If there are no collisions, we break
-            
-            if all_empty:
-                break
-                                
-        pt_ul, pt_ll, pt_lr, pt_ur = self.get_textbox_edges(text_pos, 
-                                                            text_extent)
-        
-        dc.DrawLine(pt_ul[0], pt_ul[1], pt_ll[0], pt_ll[1])
-        dc.DrawLine(pt_ll[0], pt_ll[1], pt_lr[0], pt_lr[1])
-        dc.DrawLine(pt_lr[0], pt_lr[1], pt_ur[0], pt_ur[1])
-        dc.DrawLine(pt_ur[0], pt_ur[1], pt_ul[0], pt_ul[1])
+        self.draw_textbox(dc, text_pos, text_extent)
         
         dc.SetPen(wx.BLACK_PEN)
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
-        dc.DrawRectangleList(colliding_rect_list)
         
+        blocking_distance = None
+        
+        for distance, __row, __col in grid.colliding_cells(row, col, textbox):
+            
+            # Rectangles around colliding rects
+            
+            cell_rect = grid.CellToRect(__row, __col)
+            dc.DrawRectangleRect(cell_rect)
+            
+            # Draw blocking arrows if locking cell is not empty
+            
+            if (blocking_distance is None or distance == blocking_distance) \
+               and grid.pysgrid[__row, __col, tab] is not None:
+                blocking_distance = distance
+                
+                block_direction = grid.get_block_direction(row, col, 
+                                                           __row, __col)
+                self.draw_blocking_rect(dc, cell_rect, block_direction)
+
         
     def _draw_strikethrough_line(self, grid, dc, rect, 
                                  text_pos, text_extent, textattributes):
@@ -589,15 +548,6 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             textfont.GetStyle(), textfont.GetWeight(), 
             underline_mode == "continuous", textfont.GetFaceName())
         dc.SetFont(zoomed_font)
-    
-    def is_cell_overlaid(self, rect, cell):
-        """Returns True iif the cell is overlaid by the rect"""
-        ##TODO
-        pass
-        # 1. Get bounding box of Rect:
-        #    minx_ub, maxx_lb - miny_ub, maxy_lb
-        # 2. Return all grid edges inside bounding box that are inside rect
-               
     
     def get_text_position(self, dc, rect, res_text, textattributes):
         """Returns text x, y, angle position in cell"""
@@ -1308,6 +1258,87 @@ class GridManipulationMixin(object):
     
 # end of class GridManipulationMixin
 
+class GridCollisionMixin(object):
+    """Collison helper functions for grid drawing"""
+
+    def colliding_cells(self, row, col, textbox):
+        """Generates distance, row, col tuples of colliding cells
+        
+        Parameters
+        ----------
+        row: Integer
+        \tRow of cell that is tested for collision
+        col: Integer
+        \tColumn of cell that is tested for collision
+        
+        """
+        
+        def l1_radius_cells(dist):
+            """Generator of cell index tuples with distance dist to o"""
+            
+            if not dist:
+                yield 0, 0
+                
+            else:
+                for pos in xrange(-dist, dist+1):
+                    yield pos, dist
+                    yield pos, -dist
+                    yield dist, pos
+                    yield -dist, pos
+        
+        def get_max_visible_distance(row, col):
+            """Returns maximum distance between current and any visible cell"""
+
+            vis_cell_slice = self.get_visiblecell_slice()
+            vis_row_min = vis_cell_slice[0].start
+            vis_row_max = vis_cell_slice[0].stop
+            vis_col_min = vis_cell_slice[1].start
+            vis_col_max = vis_cell_slice[1].stop
+
+            return max(vis_row_max - row, vis_col_max - col,
+                       row - vis_row_min, col - vis_col_min)
+        
+        for dist in irange(get_max_visible_distance(row, col)):
+            all_empty = True
+            
+            for radius_cell in l1_radius_cells(dist + 1):
+                __row = radius_cell[0] + row
+                __col = radius_cell[1] + col
+                
+                if self.IsVisible(__row, __col, wholeCellVisible=False):
+                    cell_rect = self.CellToRect(__row, __col)
+                    cell_rect = xrect.Rect(cell_rect.x, cell_rect.y, 
+                                           cell_rect.width, cell_rect.height)
+                    if textbox.collides_axisaligned_rect(cell_rect):
+                        all_empty = False
+                        yield dist + 1, __row, __col
+
+            # If there are no collisions in a circle, we break
+            
+            if all_empty:
+                break
+
+    def get_block_direction(self, rect_row, rect_col, block_row, block_col):
+        """Returns a blocking direction string from UP DOWN RIGHT LEFT"""
+
+        diff_row = rect_row - block_row
+        diff_col = rect_col - block_col
+
+        assert not diff_row == diff_col == 0
+
+        if abs(diff_row) < abs(diff_col):
+            # Columns are dominant
+            if rect_col < block_col:
+                return "RIGHT"
+            else:
+                return "LEFT"
+        else:
+            # Rows are dominant
+            if rect_row <= block_row:
+                return "DOWN"
+            else:
+                return "UP"
+
 class Background(object):
     """Memory DC with background content for given cell"""
     
@@ -1399,7 +1430,7 @@ class Background(object):
 # end of class Background
 
 class MainGrid(wx.grid.Grid, 
-               GridIndexMixin, GridSelectionMixin,
+               GridIndexMixin, GridSelectionMixin, GridCollisionMixin,
                GridClipboardMixin, GridManipulationMixin):
     """Main grid for spreadsheet application
     
