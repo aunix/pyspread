@@ -373,7 +373,19 @@ icons = {"FileNew": _action_path + "filenew.png",
          "SearchRegexp": _toggle_path + "regex" + wide_icon + ".png",
          "SearchWholeword": _toggle_path + "wholeword" + wide_icon + ".png",
          }
-         
+
+# Bitmap and position of cell overflow rects
+overflow_rects = { \
+    "RIGHT": [wx.Bitmap(_toggle_path + "arrow_right.xpm", wx.BITMAP_TYPE_XPM), 
+              lambda x, y, w, h: (x - 6, y + h / 2 - 5)], 
+    "LEFT": [wx.Bitmap(_toggle_path + "arrow_left.xpm", wx.BITMAP_TYPE_XPM), 
+              lambda x, y, w, h: (x + w + 1, y + h / 2 - 5)], 
+    "UP": [wx.Bitmap(_toggle_path + "arrow_up.xpm", wx.BITMAP_TYPE_XPM), 
+              lambda x, y, w, h: (x + w / 2 - 5, y + h + 1)], 
+    "DOWN": [wx.Bitmap(_toggle_path + "arrow_down.xpm", wx.BITMAP_TYPE_XPM), 
+              lambda x, y, w, h: (x + w / 2 - 5, y - 6)], 
+}
+
 """
 Border toggles
 ==============

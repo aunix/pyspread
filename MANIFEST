@@ -79,6 +79,10 @@ _pyspread/icons/Tango/24x24/toggles/border_outside.xpm
 _pyspread/icons/Tango/24x24/toggles/border_right.xpm
 _pyspread/icons/Tango/24x24/toggles/border_top_n_bottom.xpm
 _pyspread/icons/Tango/24x24/toggles/border_top.xpm
+_pyspread/icons/Tango/24x24/toggles/arrow_right.xpm
+_pyspread/icons/Tango/24x24/toggles/arrow_left.xpm
+_pyspread/icons/Tango/24x24/toggles/arrow_up.xpm
+_pyspread/icons/Tango/24x24/toggles/arrow_down.xpm
 _pyspread/examples/new_wagner.pys
 _pyspread/examples/test.csv
 _pyspread/examples/testtab.tsv

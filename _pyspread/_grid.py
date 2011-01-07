@@ -390,7 +390,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         if not res_text:
             return
         
-        row, col, _ = key
+        row, col, tab = key
         
         textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
         
@@ -424,6 +424,29 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
                     yield pos, -dist
                     yield dist, pos
                     yield -dist, pos
+        
+        def get_block_direction(rect_row, rect_col, block_row, block_col):
+            """Returns a blocking direction string from UP DOWN RIGHT LEFT"""
+            
+            diff_row = rect_row - block_row
+            diff_col = rect_col - block_col
+            
+            assert not diff_row == diff_col == 0
+            
+            if abs(diff_row) < abs(diff_col):
+                # Columns are dominant
+                if rect_col < block_col:
+                    return "RIGHT"
+                else:
+                    return "LEFT"
+            else:
+                # Rows are dominant
+                if rect_row < block_row:
+                    return "DOWN"
+                else:
+                    return "UP"
+                    
+        from config import overflow_rects
         
         __rect = xrect.Rect(rect.x, rect.y, rect.width, rect.height)
         
@@ -461,6 +484,21 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
                         all_empty = False
                         colliding_rect_list.append((cell_rect.x, cell_rect.y, 
                             cell_rect.width, cell_rect.height))
+                        
+                        if grid.pysgrid[__row, __col, tab] is not None:
+                            # Blocking cell
+                            block_direction = \
+                                get_block_direction(row, col, __row, __col)
+                                
+                            arrow, trafo = overflow_rects[block_direction]
+                            
+                            arrow_x, arrow_y = trafo(cell_rect.x, cell_rect.y,
+                                              cell_rect.width, cell_rect.height)
+                            
+                            dc.DrawBitmap(arrow, arrow_x, arrow_y, True)
+                            
+                            
+
             
             # If there are no collisions, we break
             
