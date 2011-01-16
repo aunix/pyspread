@@ -51,7 +51,6 @@ import wx.grid
 from wx.lib.wordwrap import wordwrap
 import wx.stc as stc
 
-from _pyspread._grid import GridIndexMixin
 from _pyspread._widgets import PythonSTC
 from _pyspread._interfaces import Digest, sniff, fill_wxgrid
 from _pyspread._interfaces import ALPHA_ONLY, DIGIT_ONLY, Validator
@@ -345,7 +344,7 @@ class CsvParameterWidgets(object):
         
         return csv.get_dialect('user'), has_header
 
-class CSVPreviewGrid(wx.grid.Grid, GridIndexMixin):
+class CSVPreviewGrid(wx.grid.Grid):
     """The grid of the csv import parameter entry panel"""
     
     shape = [10, 10]

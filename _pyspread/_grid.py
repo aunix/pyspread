@@ -21,1417 +21,228 @@
 # along with pyspread.  If not, see <http://www.gnu.org/licenses/>.
 # --------------------------------------------------------------------
 
+
 """
 _grid
-========
+=====
 
-Provides:
----------
-  1. MainGridTable: Interaction class for communicating with pysgrid
-  2. TextCellEditor: Custom cell editor
-  3. TextRenderer: Standard renderer for text output
-  4. GridIndexMixin: Grid mixin for indexing and __len__
-  5. GridSelectionMixin: Grid mixin for handling selections
-  6. GridClipboardMixin: Grid mixin for handling clipboard
-  7. GridManipulationMixin: Grid mixin for manipulating rows, columns and tables
-  8. GridCollisionMixin: Grid mixin for collision detection
-  9. Background: Memory DC with background content for given cell
-  10. MainGrid: Main grid
-  11. EntryLine: The line for entering cell code
+Provides
+--------
+ 1. MainGrid The main grid that includes the entry line and a context menu
 
 """
 
-from math import sin, cos, pi
-from itertools import izip
-from operator import itemgetter
-import string
 import types
 
 import wx
-import wx.grid
-import wx.combo
-import numpy
 
-import _pyspread.xrect as xrect
-from _pyspread.irange import irange
-from _pyspread.config import odftags, selected_cell_brush, overflow_rects
-from _pyspread.config import column_width_tag, row_height_tag, faces, dpi
 from _pyspread._datastructures import PyspreadGrid
-from _pyspread._menubars import ContextMenu
-from _pyspread._interfaces import Clipboard, Digest, PysInterfaces, \
-                                 get_pen_from_data, get_brush_from_data, \
-                                 get_font_from_data, get_default_font
 
-class MainGridTable(wx.grid.PyGridTableBase):
-    """Table base class that handles interaction between MainGrid and pysgrid"""
+from _pyspread.grid_controller import GridSelectionMixin, \
+    GridClipboard, GridManipulationMixin, GridSelectionMask, TextCellEditor
+
+from _pyspread.grid_model import MainGridTable
+
+from _pyspread.grid_view import GridCollisionMixin, TextRenderer
+
+from _pyspread._events import post_status_text, post_entryline_text
+from _pyspread._events import post_entryline_selection
+from _pyspread._events import EVT_GRID_MSG
+
+from _pyspread._interfaces import Digest, get_default_font, PysInterfaces
+
+from _pyspread._menubars import ContextMenu
+
+from _pyspread.config import odftags, faces
+
+
+class MainGrid(object):
+    """Main grid for spreadsheet application
+    
+    This is a mask for the wxPython GUI object.
+    
+    Parameters:
+    -----------
+     * parent: wx.Window
+    \tParent window that has a ToolBar called main_window_toolbar
+     * rows: Integer
+    \tNumber of grid rows
+     * cols: Integer
+    \tNumber of grid columns
+     * tabs: Integer
+    \tNumber of grid tables
+    
+    """
+    
+    def __init__(self, parent, rows, cols, tabs):
+        ##Remove entry_line
+        ##Remove c_box_z
+        
+        self.parent = parent
+        
+        self._main_grid = MGrid(parent, -1, size=(1, 1), 
+            dim=(rows, cols, tabs), 
+            cbox_z = parent.cbox_z)
+        
+        
+        self.model = MainGridModel(self._main_grid)
+        
+        self.controller = MainGridController(self._main_grid, self.model)
+        
+        self.view = MainGridView(self._main_grid, self.model)
+
+
+# end of class MainGrid
+
+class MainGridModel(object):
+    """Model for MainGrid"""
     
     def __init__(self, grid):
         self.grid = grid
         self.pysgrid = grid.pysgrid
+        self.macros = grid.pysgrid.sgrid.macros
+        self.shape = grid.pysgrid.shape
         
-        wx.grid.PyGridTableBase.__init__(self)
+        self.frozen_cells = self.pysgrid.sgrid.frozen_cells
         
-        # we need to store the row length and column length to
-        # see if the table has changed size
-        self._rows = self.GetNumberRows()
-        self._cols = self.GetNumberCols()
+        self.load = grid.loadfile
+
+
+class MainGridController(object):
+    """Controller for MainGrid"""
     
-    def GetNumberRows(self):
-        """Return the number of rows in the grid"""
-        
-        return self.pysgrid.shape[0]
-    
-    def GetNumberCols(self):
-        """Return the number of columns in the grid"""
-        
-        return self.pysgrid.shape[1]
-    
-    def GetRowLabelValue(self, row):
-        """Returns row number"""
-        
-        return str(row)
-    
-    def GetColLabelValue(self, col):
-        """Returns column number"""
-        
-        return str(col)
-    
-    def GetSource(self, row, col, table=None):
-        """Return the source string of a cell"""
-        
-        if table is None:
-            table = self.grid.current_table
-            
-        value = self.pysgrid.sgrid[row, col, table]
-        
-        if value is None:
-            return u""
-        else:
-            return value
-
-    def GetValue(self, row, col, table=None):
-        """Return the result value of a cell"""
-        
-        if table is None:
-            table = self.grid.current_table
-        
-        value = self.pysgrid[row, col, table]
-        
-        if value is None:
-            return u""
-        else:
-            return value
-    
-    def SetValue(self, row, col, value, refresh=True):
-        """Set the value of a cell"""
-        
-        self.pysgrid[row, col, self.grid.current_table] = value
-        
-    def UpdateValues(self):
-        """Update all displayed values"""
-        
-        # This sends an event to the grid table 
-        # to update all of the values
-        
-        msg = wx.grid.GridTableMessage(self, 
-                wx.grid.GRIDTABLE_REQUEST_VIEW_GET_VALUES)
-        self.grid.ProcessTableMessage(msg)
-
-    def ResetView(self):
-        """
-        (Grid) -> Reset the grid view.   Call this to
-        update the grid if rows and columns have been added or deleted
-        
-        """
-        
-        grid = self.grid
-        
-        grid.BeginBatch()
-
-        for current, new, delmsg, addmsg in [
-            (self._rows, self.GetNumberRows(), 
-             wx.grid.GRIDTABLE_NOTIFY_ROWS_DELETED, 
-             wx.grid.GRIDTABLE_NOTIFY_ROWS_APPENDED),
-            (self._cols, self.GetNumberCols(), 
-             wx.grid.GRIDTABLE_NOTIFY_COLS_DELETED, 
-             wx.grid.GRIDTABLE_NOTIFY_COLS_APPENDED),
-        ]:
-
-            if new < current:
-                msg = wx.grid.GridTableMessage(self, delmsg, new, current-new)
-                grid.ProcessTableMessage(msg)
-            elif new > current:
-                msg = wx.grid.GridTableMessage(self, addmsg, new-current)
-                grid.ProcessTableMessage(msg)
-                self.UpdateValues()
-
-        grid.EndBatch()
-
-        self._rows = self.GetNumberRows()
-        self._cols = self.GetNumberCols()
-
-        # update the scrollbars and the displayed part 
-        # of the grid
-        
-        grid.Freeze()
-        grid.AdjustScrollbars()
-        grid.ForceRefresh()
-        grid.Thaw()
-
-# end of class MainGridTable
-
-class TextCellEditor(wx.grid.PyGridCellEditor):
-    """Custom cell editor
-    
-    All the methods that can be overridden are present. The ones that 
-    must be overridden are marked with "*Must Override*" in the docstring.
-    
-    """
-    
-    def __init__(self, parent):
-        self.parent = parent
-        wx.grid.PyGridCellEditor.__init__(self)
-
-    def Create(self, parent, id, evtHandler):
-        """Called to create the control, which must derive from wx.Control.
-        
-        *Must Override*
-        
-        """
-        
-        self._tc = EntryLine(parent, id, "", grid=self.parent)
-        self._tc.SetInsertionPoint(0)
-        self.SetControl(self._tc)
-        
-        if evtHandler:
-            self._tc.PushEventHandler(evtHandler)
-
-    def Show(self, show, attr):
-        """
-        Show or hide the edit control.  You can use the attr (if not None)
-        to set colours or fonts for the control.
-        
-        """
-        
-        super(TextCellEditor, self).Show(show, attr)
-
-    def BeginEdit(self, row, col, grid):
-        """Fetch value from the table and prepare the edit control for editing.
-        
-        Set the focus to the edit control.
-        *Must Override*
-        
-        """
-        
-        self.start_value = grid.GetTable().GetSource(row, col)
-        try:
-            self._tc.SetValue(self.start_value)
-        except TypeError:
-            pass
-        self._tc.SetInsertionPointEnd()
-        
-        # wx.GTK fix that prevents the grid from moving around
-        grid.Freeze()
-        gridpos = grid.GetScrollPos(wx.HORIZONTAL), \
-                  grid.GetScrollPos(wx.VERTICAL)
-        self._tc.SetFocus()
-        new_gridpos = grid.GetScrollPos(wx.HORIZONTAL), \
-                      grid.GetScrollPos(wx.VERTICAL)
-        if gridpos != new_gridpos:
-            grid.Scroll(*gridpos)
-        grid.Thaw()
-        
-        # Select the text
-        self._tc.SetSelection(-1, -1)
-
-    def EndEdit(self, row, col, grid):
-        """Complete the editing of the current cell.
-        
-        Returns True if the value has changed.  
-        If necessary, the control may be destroyed.
-        *Must Override*
-        
-        """
-        changed = False
-        
-        val = self._tc.GetValue()
-        
-        if val != self.start_value:
-            changed = True
-            
-            # Update the table
-            
-            grid.GetTable().SetValue(row, col, val) 
-            
-        self.start_value = ''
-        
-        self.parent.pysgrid.unredo.mark()
-        
-        return changed
-
-    def Reset(self):
-        """
-        Reset the value in the control back to its starting value.
-        
-        *Must Override*
-        
-        """
-        
-        self._tc.SetValue(self.start_value)
-        self._tc.SetInsertionPointEnd()
-
-    def StartingKey(self, evt):
-        """If the editor is enabled by pressing keys on the grid, this will be
-        
-        called to let the editor do something about that first key if desired.
-        
-        """
-        
-        key = evt.GetKeyCode()
-        char = None
-        if key in [ wx.WXK_NUMPAD0, wx.WXK_NUMPAD1, wx.WXK_NUMPAD2, 
-                    wx.WXK_NUMPAD3, wx.WXK_NUMPAD4, wx.WXK_NUMPAD5, 
-                    wx.WXK_NUMPAD6, wx.WXK_NUMPAD7, wx.WXK_NUMPAD8, 
-                    wx.WXK_NUMPAD9 ]:
-            char = chr(ord('0') + key - wx.WXK_NUMPAD0)
-
-        elif key < 256 and key >= 0 and chr(key) in string.printable:
-            char = chr(key)
-
-        if char is not None:
-            #self._tc.AppendText(char)
-            self._tc.ChangeValue(char) # Replace
-            self._tc.SetInsertionPointEnd()
-        else:
-            self._tc.SetSelection(-1, -1)
-            evt.Skip()
-
-    def StartingClick(self):
-        """If the editor is enabled by clicking on the cell,
-        this method will be called to allow the editor to 
-        simulate the click on the control if needed.
-        
-        """
-        
-        pass
-
-    def Clone(self):
-        """Create a new object which is the copy of this one
-        
-        *Must Override*
-        
-        """
-        
-        return TextCellEditor(parent=self)
-
-# end of class TextCellEditor
-
-class TextRenderer(wx.grid.PyGridCellRenderer):
-    """This renderer draws borders and text at specified font, size, color"""
-
-    def __init__(self, table):
-        
-        wx.grid.PyGridCellRenderer.__init__(self)
-        
-        self.table = table
-    
-    def get_textbox_edges(self, text_pos, text_extent):
-        """Returns upper left, lower left, lower right, upper right of text"""
-        
-        string_x, string_y, angle = text_pos
-        
-        pt_ul =  string_x, string_y 
-        pt_ll =  string_x, string_y + text_extent[1]
-        pt_lr =  string_x + text_extent[0], string_y + text_extent[1]
-        pt_ur =  string_x + text_extent[0], string_y
-        
-        if not -0.0001 < angle < 0.0001:
-            rot_angle = angle / 180.0 * pi
-            def rotation(x, y, angle, base_x=0.0, base_y=0.0):
-                x -= base_x
-                y -= base_y
-
-                __x =  cos(rot_angle) * x + sin(rot_angle) * y
-                __y = -sin(rot_angle) * x + cos(rot_angle) * y
-
-                __x += base_x
-                __y += base_y
-
-                return __x, __y
-            
-            pt_ul = rotation(pt_ul[0], pt_ul[1], rot_angle, 
-                              base_x=string_x, base_y=string_y)
-            pt_ll = rotation(pt_ll[0], pt_ll[1], rot_angle, 
-                              base_x=string_x, base_y=string_y)
-            pt_ur = rotation(pt_ur[0], pt_ur[1], rot_angle, 
-                              base_x=string_x, base_y=string_y)
-            pt_lr = rotation(pt_lr[0], pt_lr[1], rot_angle, 
-                              base_x=string_x, base_y=string_y)
-        
-        return pt_ul, pt_ll, pt_lr, pt_ur
-    
-    def get_text_rotorect(self, text_pos, text_extent):
-        """Returns a RotoRect for given cell text"""
-        
-        import _pyspread.xrect as xrect
-        
-        pt_ll = self.get_textbox_edges(text_pos, text_extent)[1]
-        
-        rr_x, rr_y = pt_ll
-        
-        angle = float(text_pos[2]) 
-        
-        return xrect.RotoRect(rr_x, rr_y, text_extent[0], text_extent[1], angle)
-    
-    def draw_blocking_rect(self, dc, cell_rect, block_direction):
-        """Draws block rectangles for given direction and blocking cell
-        
-        Properties
-        ----------
-        dc: wx.DC
-        \t Target draw context
-        block_direction: String in overflow_rects.keys()
-        \tIdentifier for direction, in which blocking rect shall point
-        cell_rect: wx.Rect
-        \tRect of blocking cell
-        
-        """
-
-        arrow, trafo = overflow_rects[block_direction]
-
-        arrow_x, arrow_y = trafo(cell_rect.x, cell_rect.y,
-                          cell_rect.width, cell_rect.height)
-
-        dc.DrawBitmap(arrow, arrow_x, arrow_y, True)
-    
-    def draw_textbox(self, dc, text_pos, text_extent):
-    
-        pt_ul, pt_ll, pt_lr, pt_ur = self.get_textbox_edges(text_pos, 
-                                                            text_extent)
-        
-        dc.DrawLine(pt_ul[0], pt_ul[1], pt_ll[0], pt_ll[1])
-        dc.DrawLine(pt_ll[0], pt_ll[1], pt_lr[0], pt_lr[1])
-        dc.DrawLine(pt_lr[0], pt_lr[1], pt_ur[0], pt_ur[1])
-        dc.DrawLine(pt_ur[0], pt_ur[1], pt_ul[0], pt_ul[1])
-
-    def draw_text_label(self, dc, res, rect, grid, pysgrid, key):
-        """Draws text label of cell"""
-        
-        res_text = unicode(res)
-        
-        if not res_text:
-            return
-        
-        row, col, tab = key
-        
-        textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
-        
-        textfont = get_font_from_data( \
-            pysgrid.get_sgrid_attr(key, "textfont"))
-        
-        self.set_font(dc, textfont, textattributes, grid.zoom)
-        
-        text_pos = self.get_text_position(dc, rect, res_text, 
-                                          textattributes)
-        
-        if res is not None and res_text:
-            dc.DrawRotatedText(res_text, *text_pos)
-        
-        text_extent = dc.GetTextExtent(res_text)
-        
-        self._draw_strikethrough_line(grid, dc, rect, text_pos, text_extent,
-                textattributes)
-        
-        # Collision detection ##TODO
-        
-        __rect = xrect.Rect(rect.x, rect.y, rect.width, rect.height)
-        
-        # If cell rect stays inside cell, we do nothing
-        if all(__rect.is_point_in_rect(*textedge) \
-          for textedge in self.get_textbox_edges(text_pos, text_extent)):
-            return
-            
-        textbox = self.get_text_rotorect(text_pos, text_extent)
-        self.draw_textbox(dc, text_pos, text_extent)
-        
-        dc.SetPen(wx.BLACK_PEN)
-        dc.SetBrush(wx.TRANSPARENT_BRUSH)
-        
-        blocking_distance = None
-        
-        for distance, __row, __col in grid.colliding_cells(row, col, textbox):
-            
-            # Rectangles around colliding rects
-            
-            cell_rect = grid.CellToRect(__row, __col)
-            dc.DrawRectangleRect(cell_rect)
-            
-            # Draw blocking arrows if locking cell is not empty
-            
-            if (blocking_distance is None or distance == blocking_distance) \
-               and grid.pysgrid[__row, __col, tab] is not None:
-                blocking_distance = distance
-                
-                block_direction = grid.get_block_direction(row, col, 
-                                                           __row, __col)
-                self.draw_blocking_rect(dc, cell_rect, block_direction)
-
-        
-    def _draw_strikethrough_line(self, grid, dc, rect, 
-                                 text_pos, text_extent, textattributes):
-        """Draws a strikethrough line if needed"""
-        
-        try:
-            strikethrough_tag = odftags["strikethrough"]
-            strikethrough = textattributes[strikethrough_tag]
-            if strikethrough == "transparent":
-                return
-        except KeyError:
-            return
-            
-        string_x, string_y, angle = text_pos
-        
-        strikethroughwidth = max(1, int(round(1.5 * grid.zoom)))
-        dc.SetPen(wx.Pen(wx.BLACK, strikethroughwidth, wx.SOLID))
-
-        x1 = string_x
-        y1 = string_y + text_extent[1] / 2
-        x2 = string_x + text_extent[0]
-        y2 = string_y + text_extent[1] / 2
-
-        if not -0.0001 < angle < 0.0001:
-
-            rot_angle = angle / 180.0 * pi
-
-            def rotation(x, y, angle, base_x=0.0, base_y=0.0):
-                x -= base_x
-                y -= base_y
-
-                __x =  cos(rot_angle) * x + sin(rot_angle) * y
-                __y = -sin(rot_angle) * x + cos(rot_angle) * y
-
-                __x += base_x
-                __y += base_y
-
-                return __x, __y
-
-            x1, y1 = rotation(x1, y1, rot_angle, 
-                              base_x=string_x, base_y=string_y)
-            x2, y2 = rotation(x2, y2, rot_angle,
-                              base_x=string_x, base_y=string_y)
-
-        dc.DrawLine(x1, y1, x2, y2)
-
-    def set_font(self, dc, textfont, textattributes, zoom):
-        """Sets font, text color and style"""
-        try:
-            fontcolortag = odftags["fontcolor"]
-            textcolor = textattributes[fontcolortag]
-        except KeyError:
-            textcolor = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT)
-        
-        try:
-            underline_mode = textattributes[odftags["underline"]]
-        except KeyError:
-            underline_mode = None
-        
-        dc.SetBackgroundMode(wx.TRANSPARENT)
-        dc.SetTextForeground(textcolor)
-        
-        # Adjust font size to zoom
-        
-        font_size = textfont.GetPointSize()
-        
-        zoomed_fontsize = max(1, int(round(font_size * zoom)))
-        
-        zoomed_font = wx.Font(zoomed_fontsize, textfont.GetFamily(),
-            textfont.GetStyle(), textfont.GetWeight(), 
-            underline_mode == "continuous", textfont.GetFaceName())
-        dc.SetFont(zoomed_font)
-    
-    def get_text_position(self, dc, rect, res_text, textattributes):
-        """Returns text x, y, angle position in cell"""
-        
-        text_extent = dc.GetTextExtent(res_text)
-        
-        try: 
-            text_align_tag = odftags["textalign"]
-            horizontal_align = textattributes[text_align_tag]
-        except KeyError: 
-            pass
-        
-        try:
-            vert_align_tag = odftags["verticalalign"]
-            vertical_align = textattributes[vert_align_tag]
-        except KeyError:
-            vertical_align = "top"
-        
-        if vertical_align == "middle":
-            string_y = rect.y + rect.height / 2 - text_extent[1] / 2 + 1
-            
-        elif vertical_align == "bottom":
-            string_y = rect.y + rect.height - text_extent[1]
-        
-        else:
-            string_y = rect.y + 2
-        
-        try:
-            rot_angle_tag = odftags["rotationangle"]
-            angle = float(textattributes[rot_angle_tag])
-        except KeyError:
-            angle = 0.0
-        
-        try:
-            justification_tag = odftags["justification"]
-            justification = textattributes[justification_tag]
-        except KeyError:
-            justification = "left"
-        
-        if justification == "left":
-            string_x = rect.x + 2
-            
-        elif justification == "center":
-            # First calculate x value for unrotated text
-            string_x = rect.x + rect.width / 2 - 1
-            
-            # Now map onto rotated xy position
-            rot_angle = angle / 180.0 * pi
-            string_x = string_x - text_extent[0] / 2 * cos(rot_angle)
-            string_y = string_y + text_extent[0] / 2 * sin(rot_angle)
-
-        elif justification == "right":
-            # First calculate x value for unrotated text
-            string_x = rect.x + rect.width - 2
-            
-            # Now map onto rotated xy position
-            rot_angle = angle / 180.0 * pi
-            string_x = string_x - text_extent[0] * cos(rot_angle)
-            string_y = string_y + text_extent[0] * sin(rot_angle)
-        else:
-            raise ValueError, "Cell justification must be left, center or right"
-    
-        return string_x, string_y, angle
-        
-    def Draw(self, grid, attr, dc, rect, row, col, isSelected, printing=False):
-        """Draws the cell border and content"""
-        
-        pysgrid = self.table.pysgrid
-        key = (row, col, self.table.current_table)
-        
-        if isSelected:
-            grid.selection_present = True
-            
-            bg = Background(grid, row, col, self.table.current_table,
-                            isSelected)
-        else:
-            _, _, width, height = grid.CellToRect(row, col)
-            
-            bg_components = ["bgbrush", "borderpen_bottom", "borderpen_right"]
-            
-            bg_key = tuple([width, height] + \
-                           [tuple(grid.pysgrid.get_sgrid_attr(key, bgc)) \
-                                for bgc in bg_components])
-            
-            try:
-                bg = self.table.backgrounds[bg_key]
-                
-            except KeyError:
-                if len(self.table.backgrounds) > 10000:
-                    # self.table.backgrounds may grow quickly
-                    self.table.backgrounds = {}
-                
-                bg = self.table.backgrounds[bg_key] = Background(grid, *key)
-            
-        if wx.Platform == "__WXGTK__" and not printing:
-            mask_type = wx.AND
-        else:
-            mask_type = wx.COPY
-            
-        dc.Blit(rect.x, rect.y, rect.width, rect.height,
-                bg.dc, 0, 0, mask_type)
-        
-        
-        # Check if the dc is drawn manually be a return func
-        
-        res = grid.pysgrid[row, col, grid.current_table]
-        
-        if type(res) is types.FunctionType:
-            # Add func_dict attribute 
-            # so that we are sure that it uses a dc
-            try:
-                res(grid, attr, dc, rect)
-            except TypeError:
-                pass
-        
-        elif res is not None:
-            self.draw_text_label(dc, res, rect, grid, pysgrid, key)
-        
-# end of class TextRenderer
-        
-
-class GridIndexMixin(object):
-    """Indexing, slicing and len extension class for wx.grid.Grid
-    
-    The class extends a wx.grid with indexing, slicing and len support.
-    Cell content can be read and written by indexing.
-    
-    
-    New methods
-    -----------
-    
-    __getitem__
-    \tProvides cell access via indexing and slicing
-    __setitem__
-    \tAllows setting the cell conent via indexing
-    __len__
-    \tReturns the number of grid rows
-    
-    """
-
-    def __getitem__(self, key):
-        row, col = key[:2]
-        if row < 0:
-            row += self.GetNumberRows()
-        if row >= 0:
-            return self.GetCellValue(row, col)
-
-
-    def __setitem__(self, key, value):
-        if len(key) == 2:
-            key = list(key) + [self.current_table]
-        elif len(key) != 3:
-            raise KeyError("key must be of length 2 or 3")
-        
-        row, col, tab = key
-        if row < 0:
-            row += self.GetNumberRows()
-        if row >= 0:
-            return self.SetCellValue(row, col, value)
-
-    def __getshape(self):
-        return (self.GetNumberRows(), self.GetNumberCols())
-    shape = property(__getshape)
-
-    def __len__(self):
-        return self.GetNumberRows()
-
-# end of class GridIndexMixin
-
-class GridSelectionMixin(object):
-    """Easy selection support extension class for wx.grid.Grid
-    
-    Public methods:
-    ---------------
-    get_selected_rows_cols
-    get_selection
-    get_selection_code
-    get_currentcell
-    get_visiblecell_slice
-    getselectiondata
-    selection_replace
-    selectnewcell
-    delete
-    
-    """
-    
-    def get_selected_rows_cols(self, selection = None):
-        """ Get the slices of selected rows and cols, None if no selection """
-        if selection is None:
-            selection = self.get_selection()
-        try:
-            rowslice = slice(min(c[0] for c in selection), \
-                             max(c[0] for c in selection) + 1)
-        except IndexError:
-            rowslice = None
-        try: 
-            colslice = slice(min(c[1] for c in selection), \
-                             max(c[1] for c in selection) + 1)
-        except IndexError: 
-            colslice = None
-        return rowslice, colslice
-    
-    def get_selection(self):
-        """ Returns an index list of all cells that are selected in the grid.
-        All selection types are considered equal. If no cells are selected,
-        the current cell is returned."""
-                
-        # GetSelectedCells: individual cells selected by ctrl-clicking
-        # GetSelectedRows: rows selected by clicking on the labels
-        # GetSelectedCols: cols selected by clicking on the labels
-        # GetSelectionBlockTopLeft
-        # GetSelectionBlockBottomRight: For blocks of cells selected by dragging
-        # across the grid cells.
-              
-        dimx, dimy = self.pysgrid.sgrid.shape[:2]
-        
-        selected_rows = self.GetSelectedRows()
-        selected_cols = self.GetSelectedCols()
-        
-        selection = []
-        selection += self.GetSelectedCells()
-        selection += list((row, y) \
-                          for row in selected_rows for y in xrange(dimy))
-        selection += list((x, col) \
-                          for col in selected_cols for x in xrange(dimx))
-        
-        selectionblock = izip(self.GetSelectionBlockTopLeft(), \
-                              self.GetSelectionBlockBottomRight())
-        for topleft, bottomright in selectionblock:
-            selection += [(x, y) for x in xrange(topleft[0], bottomright[0]+1) \
-                                 for y in xrange(topleft[1], bottomright[1]+1)]
-        
-        if selection == []:
-            selection = [(self.get_currentcell())]
-        selection = sorted(list(set(selection)))
-        
-        return selection
-    
-    def get_selection_code(self):
-        """Returns code for accessing the current selection from a cell"""
-
-        selection = self.get_selection()
-        
-        # If only one cell is selected return the representation
-        
-        if len(selection) == 1:
-            return "S[%d, %d, %d]" % \
-                (selection[0][0], selection[0][1], self.current_table)
-
-        # Check if selection is rectangular
-        min_x = min(x for x, y in selection)
-        max_x = max(x for x, y in selection) + 1
-        min_y = min(y for x, y in selection)
-        max_y = max(y for x, y in selection) + 1
-
-        rect = [(x, y) for x in xrange(min_x, max_x) \
-                       for y in xrange(min_y, max_y)]
-
-        if set(selection) == set(rect):
-            # If a rectangular set is selected return slice
-            
-            code = "S[%d:%d, %d:%d, %d]" % (min_x, max_x, 
-                    min_y, max_y, self.current_table)
-        else:
-            # If a non-rectangular set is selected return list comprehension
-            code = "[S[x, y, " + repr(self.current_table) + \
-                   "] for x, y in " + repr(selection) + "]"
-        
-        return code
-
-    
-    def get_currentcell(self):
-        """Get cursor position"""
-        
-        row = self.GetGridCursorRow()
-        col = self.GetGridCursorCol()
-        return row, col
-    
-    def get_visiblecell_slice(self):
-        """Returns a tuple of 3 slices that contains the visible cells"""
-        
-        topleft_x = self.YToRow(self.GetViewStart()[1] * self.ScrollLineX)
-        topleft_y = self.XToCol(self.GetViewStart()[0] * self.ScrollLineY)
-        topleft = (topleft_x, topleft_y)
-        row, col = topleft_x + 1, topleft_y + 1 # Ensures visibility
-        
-        while self.IsVisible(row, topleft[1], wholeCellVisible=False):
-            row += 1
-        while self.IsVisible(topleft[0], col, wholeCellVisible=False):
-            col += 1
-        lowerright = (row, col) # This cell is *not* visible
-        return (slice(topleft[0], lowerright[0]), \
-                slice(topleft[1], lowerright[1]), 
-                slice(self.current_table, self.current_table+1))
-    
-    def getselectiondata(self, source, rowslice, colslice, \
-                         selection=None, omittedfield_repr = '\b'):
-        """
-        Returns 2D source data array that matches the current selection
-        
-        Parameters:
-        -----------
-        source: Object
-        \t Source of the data, sliceable in >= 2 dimensions
-        
-        rowslice: Slice
-        \tRows to be retrieved
-        
-        colslice: Slice
-        \tColumns to be retrieved
-        
-        selection: List
-        \tRepresents selected cells in data
-        
-        omittedfield_repr: String
-        \tRepresents empty cells and those cells that are printed but not
-        \tselected if selection not None
-        
-        """
-        
-        getter = source.__getitem__
-        
-        try:
-            data = numpy.array( \
-                    getter((rowslice, colslice, self.current_table)).copy(), \
-                    dtype="O")
-        except AttributeError:
-            data = numpy.array( \
-                    getter((rowslice, colslice, self.current_table)), \
-                    dtype="O")
-        if len(data.shape) == 1:
-            data = data.reshape((data.shape[0], 1))
-            if sum(1 for _ in irange(rowslice.start, rowslice.stop)) == 1:
-                data = numpy.transpose(data)
-            
-        try:
-            len(data)
-        except TypeError:
-            return self.digest(source[rowslice, colslice, self.current_table])
-        
-        for row in xrange(len(data)):
-            try:
-                datarange = xrange(len(data[row]))
-            except TypeError:
-                return data
-            for col in datarange:
-                try:
-                    if (row + rowslice.start, col + colslice.start) \
-                          not in selection:
-                        data[row, col] = omittedfield_repr
-                except TypeError:
-                    if selection is None:
-                        pass
-                
-                key = (row + rowslice.start, col + colslice.start, 
-                      self.current_table)
-                                    
-                if hasattr(source, 'sgrid') and source.sgrid[key] == 0  or \
-                   data[row, col] is None:
-                    try:
-                        data[row, col] = omittedfield_repr
-                    except IndexError:
-                        data[row] = omittedfield_repr
-                    except IndexError:
-                        data[col] = omittedfield_repr
-        return data
-    
-    def selection_replace(self, editor, data):
-        """ Replaces a selection in a TextCtrl with inserted data"""
-        
-        ##*** This should be moved into a custom TextCtrl class ***
-        inspoint = int(editor.InsertionPoint)
-        sel_begin, sel_end = editor.GetSelection()
-        if sel_begin != sel_end and inspoint > sel_begin:
-            inspoint = inspoint - \
-                       min(abs(sel_end - sel_begin), abs(inspoint - sel_begin))
-        oldval = editor.GetValue()[:sel_begin] + editor.GetValue()[sel_end:]
-        newval = oldval[:inspoint] + data + oldval[inspoint:]
-        editor.SetValue(newval)
-        editor.SetInsertionPoint(inspoint + len(data))
-        editor.SetSelection(inspoint, inspoint + len(data))
-
-    def selectnewcell(self, key, event):
-        """ Selects the cell with position key.
-        
-        Parameters:
-        -----------
-        key: 3-tuple
-        \tPosition in grid(x,y,z)
-        """
-        
-        if key[2] != self.current_table:
-            self.cbox_z.SetSelection(key[2])
-            event.GetString = lambda x = 0: self.digest(key[2])
-            self.OnCombo(event)
-            self.SetFocus()
-        self.MakeCellVisible(*key[:2])
-        self.SetGridCursor(*key[:2])
-    
-    def delete(self, selection=None):
-        """Deletes selection"""
-        
-        if selection is None:
-            selection = self.get_selection()
-        for cell in selection:
-            try:
-                self.pysgrid[cell[0], cell[1], self.current_table] = u""
-            except KeyError:
-                #Cell is not there
-                pass
-        self.pysgrid.unredo.mark()
-    
-    def purge(self, selection=None):
-        """Deletes selection including cell attributes"""
-        
-        if selection is None:
-            selection = self.get_selection()
-        for cell in selection:
-            try:
-                self.pysgrid.sgrid.pop((cell[0], cell[1], self.current_table))
-            except KeyError:
-                #Cell is not there
-                pass
-        self.pysgrid.unredo.mark()
-        
-# end of class GridSelectionMixin
-
-class GridClipboardMixin(object):
-    """Easy clipboard support extension class for wx.grid.Grid
-    
-    Public methods:
-    ---------------
-    cut
-    copy
-    paste
-    undo
-    redo
-    
-    """
-    
-    def cut(self):
-        """ Cuts TextCtrlSelection if present 
-            else cuts Grid cells
-            Source can be sgrid or the displayed wxGrid """
-        self.copy(source=self.pysgrid.sgrid)
-        focus = self.parent.FindFocus()
-        if isinstance(focus, wx.TextCtrl):
-            self.selection_replace(focus, "")
-        else:
-            self.delete()
-    
-    def _copy_textctrl(self, control):
-        """Copies TextCtrlSelection"""
-        
-        selection = control.GetStringSelection()
-        if selection != u"":
-            self.copy_selection = []
-            return selection
-        else:
-            return None
-    
-    def _copy_grid(self, source):
-        """Copies Grid cells"""
-        
-        selection = self.get_selection()
-        
-        rowslice, colslice = self.get_selected_rows_cols(selection)
-        data = self.getselectiondata(source, rowslice, colslice, selection)
-        
-        self.copy_selection = [ \
-            (cell[0]-rowslice.start, cell[1]-colslice.start) \
-            for cell in selection]
-        
-        try:
-            iter(data)
-            assert not isinstance(data, unicode) and \
-                   not isinstance(data, basestring)
-                   
-        except (TypeError, AssertionError):
-            return self.digest(data)
-        
-        try:
-            data[0][0]
-        except (IndexError, TypeError): # Only one row
-            data = [data]
-        
-        clipboard_data = [[]]
-        for datarow in data:
-            if isinstance(datarow, unicode) or isinstance(datarow, basestring):
-                clipboard_data[-1].append(self.digest(datarow))
-            else:
-                try:
-                    for ele in datarow:
-                        clipboard_data[-1].append(self.digest(ele))
-                except TypeError:
-                    clipboard_data[-1].append(u"")
-            clipboard_data.append([])
-        
-        return "\n".join("\t".join(line) for line in clipboard_data)
-
-    
-    def copy(self, source=None):
-        """Copies TextCtrlSelection if present else copies Grid cells
-        
-        Parameters
-        ----------
-        source: sgrid
-        
-        """
-        
-        if source is None:
-            source = self.pysgrid.sgrid
-            
-        focus = self.parent.FindFocus()
-        
-        if isinstance(focus, wx.TextCtrl):
-            clipboard_data = self._copy_textctrl(focus)
-        else:
-            clipboard_data = self._copy_grid(source)
-            
-        if clipboard_data is not None:
-            self.clipboard.set_clipboard(clipboard_data)
-    
-    def paste(self):
-        """Pastes into TextCtrl if active else pastes to grid"""
-        
-        focus = self.parent.FindFocus()
-        if isinstance(focus, wx.TextCtrl):
-            data = self.clipboard.get_clipboard()
-            self.selection_replace(focus, data)
-        else: # We got a grid selection
-            pastepos = (self.GetGridCursorRow(), \
-                        self.GetGridCursorCol(), \
-                        self.current_table)
-            self.clipboard.grid_paste(self.pysgrid, key=pastepos)
-        self.Freeze()
-        self.ForceRefresh()
-        self.Thaw()
-
-# end of class GridClipboardMixin
-
-
-class GridManipulationMixin(object):
-    """Manipulates rows, columns and tables. Mixin for wx.grid.Grid
-    
-    change_dim
-    insert_selected_rows
-    insert_selected_cols
-    insert_selected_tables
-    delete_selected_rows
-    delete_selected_cols
-    delete_selected_tables
-    
-    """
-    
-    def change_dim(self, dimension, number):
-        """
-        Appends/deletes a number of rows/cols/tables to a dimension of the grid
-        
-        Parameters
-        ----------
-        
-        dimension: int
-        \tThe dimension at which rows/cols/tables are appended
-        number: int
-        \tThe number of rows that shall be appended (if > 0) or deleted (if < 0)
-        
-        """
-        
-        assert dimension in xrange(3)
-        
-        if number == 0:
-            # Nothing to do
-            return None
-        
-        elif number < 0:
-            number = abs(number)
-            delete = True
-            
-            # Size of target grid dimension
-            size = self.pysgrid.sgrid.shape[dimension] - number
-            
-        else:
-            delete = False
-            
-            # Size of source grid dimension
-            size = self.pysgrid.sgrid.shape[dimension]
-        
-        # Append
-        if dimension == 0:
-            operations = \
-              [(self.pysgrid.insert, [[size, None, None], number])]
-            undo_operations = \
-              [(self.pysgrid.remove, [[size, None, None], number])]
-            
-        elif dimension == 1:
-            operations = \
-              [(self.pysgrid.insert, [[None, size, None], number])]
-            undo_operations = \
-              [(self.pysgrid.remove, [[None, size, None], number])]
-            
-        elif dimension == 2:
-            minsize = min(size, size + number)
-            maxsize = max(size, size + number)
-            operations = \
-              [(self.pysgrid.insert, [[None, None, size], number])] + \
-              [(self.cbox_z.Append, [unicode(i)]) \
-                    for i in xrange(minsize, maxsize)]
-            undo_operations = \
-              [(self.pysgrid.remove, [[None, None, size], number])] + \
-              [(self.cbox_z.Delete, [i-1]) \
-                    for i in range(minsize, maxsize + 1)[::-1]]
-        
-        if delete:
-            operations, undo_operations = undo_operations, operations
-        
-        for undo_operation, operation in zip(undo_operations, operations):
-            operation[0](*operation[1]) # Do the operation
-            self.pysgrid.unredo.append(undo_operation, operation)
-        
-        self.create_rowcol()
-    
-    def insert_selected_rows(self):
-        """Inserts the number of rows of the imminent selection at cursor."""
-        
-        # Current insertion position and selected rows
-        selectedrows = set(c[0] for c in self.get_selection())
-        current_row = min(selectedrows)
-        no_selected_rows = max(1, len(selectedrows))
-        
-        # Insert rows
-        self.pysgrid.insert(insertionpoint=[current_row, None, None], \
-                            notoinsert=no_selected_rows)
-        self.create_rowcol()
-        self.pysgrid.unredo.mark()
-    
-    def insert_selected_cols(self):
-        """Inserts the number of cols of the imminent selection at cursor."""
-        
-        # Current insertion position and selected columns
-        selectedcols = set(c[1] for c in self.get_selection())
-        current_col = min(selectedcols)
-        no_selected_cols = max(1, len(selectedcols))
-        
-        # Insert columns
-        self.pysgrid.insert(insertionpoint=[None, current_col, None], \
-                            notoinsert=no_selected_cols)
-        self.create_rowcol()
-        self.pysgrid.unredo.mark()
-    
-    def insert_selected_tables(self):
-        """Inserts one table before the current one."""
-        
-        current_table = self.current_table
-        no_selected_tables = 1
-        operation = (self.cbox_z.Append, [unicode(self.pysgrid.shape[2])])
-        undo_operation = (self.cbox_z.Delete, [self.pysgrid.shape[2]])
-        self.pysgrid.unredo.append(undo_operation, operation)
-        self.cbox_z.Append(unicode(self.pysgrid.shape[2]))
-        self.pysgrid.insert(insertionpoint=[None, None, current_table], \
-                            notoinsert=no_selected_tables)
-        self.pysgrid.unredo.mark()
-
-    def delete_selected_rows(self):
-        """Deletes the number of rows of the imminent selection at cursor."""
-        
-        if self.pysgrid.shape[0] > 0:
-            # Current deletion position and selected rows
-            selectedrows = set(c[0] for c in self.get_selection())
-            current_row = min(selectedrows)
-            no_selected_rows = min(max(1, len(selectedrows)), \
-                               self.pysgrid.shape[0] - 1)
-            # Delete rows
-            self.pysgrid.remove(removalpoint=[current_row, None, None], \
-                                notoremove=no_selected_rows)
-            self.create_rowcol()
-        self.pysgrid.unredo.mark()
-    
-    def delete_selected_cols(self):
-        """Deletes the number of cols of the imminent selection at cursor."""
-        
-        if self.pysgrid.shape[1] > 0:
-            # Current insertion position and selected columns
-            selectedcols = set(c[1] for c in self.get_selection())
-            current_col = min(selectedcols)
-            no_selected_cols = min(max(1, len(selectedcols)), \
-                               self.pysgrid.shape[1] - 1)
-            # Delete columns
-            self.pysgrid.remove(removalpoint=[None, current_col, None], \
-                                              notoremove=no_selected_cols)
-            self.create_rowcol()
-        self.pysgrid.unredo.mark()
-    
-    def delete_selected_tables(self):
-        """Deletes the current table."""
-        
-        if self.pysgrid.shape[2] > 1:
-            current_table = self.current_table
-            no_selected_tables = 1
-            operation = (self.cbox_z.Delete, [self.pysgrid.shape[2] - 1])
-            undo_operation = (self.cbox_z.Append, \
-                              [unicode(self.pysgrid.shape[2] - 1)])
-            self.pysgrid.unredo.append(undo_operation, operation)
-            self.cbox_z.Delete(self.pysgrid.shape[2] - 1)
-            self.pysgrid.remove(removalpoint=[None, None, current_table], \
-                                notoremove=no_selected_tables)
-        self.pysgrid.unredo.mark()
-    
-# end of class GridManipulationMixin
-
-class GridCollisionMixin(object):
-    """Collison helper functions for grid drawing"""
-
-    def colliding_cells(self, row, col, textbox):
-        """Generates distance, row, col tuples of colliding cells
-        
-        Parameters
-        ----------
-        row: Integer
-        \tRow of cell that is tested for collision
-        col: Integer
-        \tColumn of cell that is tested for collision
-        
-        """
-        
-        def l1_radius_cells(dist):
-            """Generator of cell index tuples with distance dist to o"""
-            
-            if not dist:
-                yield 0, 0
-                
-            else:
-                for pos in xrange(-dist, dist+1):
-                    yield pos, dist
-                    yield pos, -dist
-                    yield dist, pos
-                    yield -dist, pos
-        
-        def get_max_visible_distance(row, col):
-            """Returns maximum distance between current and any visible cell"""
-
-            vis_cell_slice = self.get_visiblecell_slice()
-            vis_row_min = vis_cell_slice[0].start
-            vis_row_max = vis_cell_slice[0].stop
-            vis_col_min = vis_cell_slice[1].start
-            vis_col_max = vis_cell_slice[1].stop
-
-            return max(vis_row_max - row, vis_col_max - col,
-                       row - vis_row_min, col - vis_col_min)
-        
-        for dist in irange(get_max_visible_distance(row, col)):
-            all_empty = True
-            
-            for radius_cell in l1_radius_cells(dist + 1):
-                __row = radius_cell[0] + row
-                __col = radius_cell[1] + col
-                
-                if self.IsVisible(__row, __col, wholeCellVisible=False):
-                    cell_rect = self.CellToRect(__row, __col)
-                    cell_rect = xrect.Rect(cell_rect.x, cell_rect.y, 
-                                           cell_rect.width, cell_rect.height)
-                    if textbox.collides_axisaligned_rect(cell_rect):
-                        all_empty = False
-                        yield dist + 1, __row, __col
-
-            # If there are no collisions in a circle, we break
-            
-            if all_empty:
-                break
-
-    def get_block_direction(self, rect_row, rect_col, block_row, block_col):
-        """Returns a blocking direction string from UP DOWN RIGHT LEFT"""
-
-        diff_row = rect_row - block_row
-        diff_col = rect_col - block_col
-
-        assert not diff_row == diff_col == 0
-
-        if abs(diff_row) < abs(diff_col):
-            # Columns are dominant
-            if rect_col < block_col:
-                return "RIGHT"
-            else:
-                return "LEFT"
-        else:
-            # Rows are dominant
-            if rect_row <= block_row:
-                return "DOWN"
-            else:
-                return "UP"
-
-class Background(object):
-    """Memory DC with background content for given cell"""
-    
-    def __init__(self, grid, row, col, tab, selection=False):
+    def __init__(self, grid, model):
         self.grid = grid
-        self.key = row, col, tab
+        self.model = model
         
-        self.dc = wx.MemoryDC() 
-        self.rect = grid.CellToRect(row, col)
-        self.bmp = wx.EmptyBitmap(self.rect.width,self.rect.height)
+        self.unredo_mark = grid.pysgrid.unredo.mark
+        self.undo = grid.undo
+        self.redo = grid.redo
         
-        self.selection = selection
+        self.grid_selection = GridSelectionMask(grid)
         
-        self.dc.SelectObject(self.bmp)
-        self.dc.SetBackgroundMode(wx.TRANSPARENT)
+        self.clipboard = GridClipboard(grid, model)
+        
+        self.make_cell_visible = grid.MakeCellVisible
+    
+    def get_cursor(self):
+        """Returns current grid cursor cell"""
+        
+        return self.grid.key
 
-        self.dc.SetDeviceOrigin(0,0)
+    def _switch_to_table(self, newtable):
+        """Switches grid to table"""
         
-        self.draw()
-        
-    def draw(self):
-        """Does the actual background drawing"""
-        
-        self.draw_background(self.dc)
-        self.draw_border_lines(self.dc)
+        if newtable in xrange(self.model.shape[2]):
+            # Update the whole grid including the empty cells
+            
+            self.grid.current_table = newtable
+            
+            self.grid.ClearGrid()
+            self.grid.Update()
+            
+            self.grid.zoom_rows()
+            self.grid.zoom_cols()
+            self.grid.zoom_labels()
+            
+            post_entryline_text(self.grid, "")
 
-    def draw_background(self, dc):
-        """Draws the background of the background"""
+    def set_cursor(self, value):
+        """Changes the grid cursor cell."""
         
-        if self.selection:
-            bgbrush = selected_cell_brush
+        if len(value) == 3:
+            self._switch_to_table(value[2])
+            
+        self.grid.MakeCellVisible(*value[:2])
+        self.grid.SetGridCursor(*value[:2])
+        
+        
+    cursor = property(get_cursor, set_cursor)
+
+    def select_cell(self, row, col, add_to_selected=False):
+        self.grid.SelectBlock(row, col, row, col, addToSelected=add_to_selected)
+    
+    def select_slice(self, row_slc, col_slc, add_to_selected=False):
+        """Selects a slice of cells
+        
+        Parameters
+        ----------
+         * row_slc: Integer or Slice
+        \tRows to be selected
+         * col_slc: Integer or Slice
+        \tColumns to be selected
+         * add_to_selected: Bool, defaults to False
+        \tOld selections are cleared if False
+        
+        """
+        
+        if not add_to_selected:
+            self.grid.ClearSelection()
+        
+        if row_slc == row_slc == slice(None, None, None):
+            # The whole grid is selected
+            self.grid.SelectAll()
+            
+        elif row_slc.stop is None and col_slc.stop is None:
+            # A block is selcted:
+            self.grid.SelectBlock(row_slc.start, col_slc.start, 
+                                  row_slc.stop-1, col_slc.stop-1)
         else:
-            bgbrush = get_brush_from_data( \
-                self.grid.pysgrid.get_sgrid_attr(self.key, "bgbrush"))
-        
-        dc.SetBrush(bgbrush)
-        dc.SetPen(wx.TRANSPARENT_PEN)
-        dc.DrawRectangle(0, 0, self.rect.width, self.rect.height)
+            for row in irange(row_slc.start, row_slc.stop, row_slc.step):
+                for col in irange(col_slc.start, col_slc.stop, col_slc.step):
+                    self.select_cell(row, col, add_to_selected=True)
 
-    def draw_border_lines(self, dc):
-        """Draws lines"""
+class MainGridView(object):
+    """View for MainGrid"""
+
+    def __init__(self, grid, model):
+        self.grid = grid
+        self.model = model
         
-        x, y, w, h  = 0, 0, self.rect.width - 1, self.rect.height - 1
-        grid = self.grid
-        row, col, tab = key = self.key
+        self.update = grid.Update
+        self.force_refresh = grid.ForceRefresh
         
-        # Get borderpens and bgbrushes for rects        
-        # Each cell draws its bottom and its right line only
-        bottomline = x, y + h, x + w, y + h
-        rightline = x + w, y, x + w, y + h
-        lines = [bottomline, rightline]
+        self.freeze = grid.Freeze
+        self.thaw = grid.Thaw
         
-        pen_names = ["borderpen_bottom", "borderpen_right"]
+        self.get_visiblecell_slice = grid.get_visiblecell_slice
+    
+    def refocus(self):
+        """Refreshes the grid and focuses it"""
         
-        borderpens = [get_pen_from_data(grid.pysgrid.get_sgrid_attr(key, pen)) \
-                        for pen in pen_names]
+        self.force_refresh()
+        self.grid.SetFocus
+    
+    def get_zoom(self):
+        return self.grid.zoom
+    
+    def set_zoom(self, zoom):
+        old_zoom = self.MainGrid.zoom
         
-        # Topmost line if in top cell
+        self.grid.Freeze()
         
-        if row == 0:
-            lines.append((x, y, x + w, y))
-            topkey = "top", col, tab
-            toppen_data  = grid.pysgrid.get_sgrid_attr(topkey, pen_names[0])
-            borderpens.append(get_pen_from_data(toppen_data))
-        
-        # Leftmost line if in left cell
-        
-        if col == 0:
-            lines.append((x, y, x, y + h))
-            leftkey = row, "left", tab
-            toppen_data  = grid.pysgrid.get_sgrid_attr(leftkey, pen_names[1])
-            borderpens.append(get_pen_from_data(toppen_data))
-        
-        zoomed_pens = []
-        
-        for pen in borderpens:
-            bordercolor = pen.GetColour()
-            borderwidth = pen.GetWidth()
-            borderstyle = pen.GetStyle()
+        if self.grid.zoom < 1.0 and old_zoom > self.grid.zoom + 0.1:
+            old_zoom, self.grid.zoom = self.grid.zoom, self.grid.zoom + 0.1
+            self.grid.zoom_rows()
+            self.grid.zoom_cols()
+            self.grid.zoom_labels()
             
-            zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
-            zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, borderstyle)
-            zoomed_pen.SetJoin(wx.JOIN_MITER)
-            
-            zoomed_pens.append(zoomed_pen)
+            self.grid.zoom = old_zoom
         
-        dc.DrawLineList(lines, zoomed_pens)
+        self.grid.zoom_rows()
+        self.grid.zoom_cols()
+        self.grid.zoom_labels()
 
-# end of class Background
+        self.force_refresh()
+        
+        self.grid.Thaw()
+    
+    zoom = property(get_zoom, set_zoom)
 
-class MainGrid(wx.grid.Grid, 
-               GridIndexMixin, GridSelectionMixin, GridCollisionMixin,
-               GridClipboardMixin, GridManipulationMixin):
+
+class MGrid(wx.grid.Grid, 
+               GridSelectionMixin, GridCollisionMixin,
+               GridManipulationMixin):
     """Main grid for spreadsheet application
     
     This is the wxPython GUI object. The class provides the front-end event
@@ -1467,10 +278,6 @@ class MainGrid(wx.grid.Grid,
     """
     
     def __init__(self, *args, **kwds):
-        try:
-            self.set_statustext = kwds.pop('set_statustext')
-        except KeyError:
-            self.set_statustext = lambda x: None
         
         self.parent = args[0]
         self.current_table = 0
@@ -1481,10 +288,9 @@ class MainGrid(wx.grid.Grid,
         if self.cbox_z is None:
             raise ValueError, "A Combobox for selecting tables is required"
         
-        self.entry_line = EntryLine(self.parent, -1, "", grid=self)
+        
         self.pysgrid = PyspreadGrid(dim)
         self.contextmenu = ContextMenu(parent=self.parent)
-        self.clipboard = Clipboard()
         
         self.cbox_z.AppendItems([unicode(dim) \
                 for dim in xrange(self.pysgrid.shape[2])])
@@ -1500,7 +306,7 @@ class MainGrid(wx.grid.Grid,
         
         self.zoom = 1.0
         
-        super(MainGrid, self).__init__(*args, **kwds)
+        wx.grid.Grid.__init__(self, *args, **kwds)
         
         self.text_renderer = TextRenderer(self)
         self.SetDefaultRenderer(self.text_renderer)
@@ -1541,6 +347,8 @@ class MainGrid(wx.grid.Grid,
         self.Bind(wx.grid.EVT_GRID_COL_SIZE, self.OnColSize)
         
         self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
+        
+        self.parent.Bind(EVT_GRID_MSG, self.OnMessage)
         
         # When selection process ends, 
         # the shiftkey or the left mouse button are released
@@ -1648,9 +456,9 @@ class MainGrid(wx.grid.Grid,
         pos = tuple(list(self.get_currentcell())+[self.current_table])
         currstr = self.table.GetSource(*pos)
         try:
-            self.entry_line.SetValue(currstr)
+            post_entryline_text(self, currstr)
         except TypeError:
-            self.entry_line.SetValue("")
+            post_entryline_text(self, "")
         
         # Set up Combo box for table choice
         
@@ -1712,9 +520,9 @@ class MainGrid(wx.grid.Grid,
         
         if code != "":
             try:
-                self.entry_line.SetValue(code)
+                post_entryline_text(self, code)
             except TypeError: 
-                self.entry_line.SetValue("")
+                post_entryline_text(self, "")
         
         event.Skip()
         
@@ -1746,7 +554,7 @@ class MainGrid(wx.grid.Grid,
         # Set cell editor
         
         self.SetCellEditor(row, col, TextCellEditor(parent=self)) 
-        
+         
         # Put code into entry line
         
         try: 
@@ -1755,9 +563,9 @@ class MainGrid(wx.grid.Grid,
             currstr = ""
         
         try: 
-            self.entry_line.SetValue(currstr)
+            post_entryline_text(self.parent, currstr)
         except TypeError: 
-            self.entry_line.SetValue("")
+            post_entryline_text(self.parent, "")
         
         self._update_attribute_toolbar()
         
@@ -1770,7 +578,7 @@ class MainGrid(wx.grid.Grid,
         self.Freeze()
         self.parent.attributes_toolbar.Freeze()
         
-        self.entry_line.SetSelection(-1, -1)
+        post_entryline_selection(self, -1, -1)
         
         
         pysgrid = self.pysgrid
@@ -1822,31 +630,10 @@ class MainGrid(wx.grid.Grid,
             if hinttext is None:
                 hinttext = ''
             try:
-                self.set_statustext(hinttext)
+                post_status_text(self.parent, hinttext)
             except TypeError:
                 pass
         event.Skip()
-    
-    def switch_to_table(self, newtable):
-        """Switches grid to table"""
-        
-        if newtable in xrange(self.pysgrid.shape[2]):
-            # Update the whole grid including the empty cells
-            
-            self.current_table = None
-            
-            self.current_table = newtable
-            
-            self.ClearGrid()
-            self.Update()
-            
-            self.zoom_rows()
-            self.zoom_cols()
-            self.zoom_labels()
-            
-            self.entry_line.ignore_changes = True
-            self.entry_line.Clear()
-            self.entry_line.ignore_changes = False
     
     def OnCombo(self, event):
         """Combo box event method that updates the current table"""
@@ -2000,59 +787,9 @@ class MainGrid(wx.grid.Grid,
         else:
             event.Skip()
 
+    def OnMessage(self, event):
+        """Updates the pysgrid from event"""
+        
+        self.pysgrid[self.key] = event.text
+
 # end of class MainGrid
-
-
-class EntryLine(wx.TextCtrl):
-    """"The line for entering cell code"""
-    
-    def __init__(self, *args, **kwargs):
-        
-        self.parent = args[0]
-        
-        try:
-            self.grid = kwargs.pop("grid")
-        except KeyError:
-            self.grid = self.parent.MainGrid
-        
-        super(EntryLine, self).__init__(*args, **kwargs)
-        
-        self.ignore_changes = False
-        
-        self.Bind(wx.EVT_TEXT, self.OnText)
-        self.Bind(wx.EVT_CHAR, self.EvtChar)
-
-    def OnText(self, event):
-        """Text event method evals the cell and updates the grid"""
-        
-        if self.ignore_changes:
-            return
-        
-        key = self.grid.key
-        
-        self.grid.pysgrid[key] = event.GetString()
-        
-        event.Skip()
-        
-    def EvtChar(self, event):
-        """Key event method
-        
-         * Forces grid update on <Enter> key
-         * Handles insertion of cell access code
-        
-        """
-        
-        if self.ignore_changes:
-            return
-        
-        if event.GetKeyCode() == 13:
-            self.parent.Freeze()
-            self.grid.ForceRefresh()
-            self.grid.SetFocus()
-            self.parent.Thaw()
-            
-        elif event.GetKeyCode() == wx.WXK_INSERT and \
-             event.ControlDown():
-            self.WriteText(self.grid.get_selection_code())
-        
-        event.Skip()

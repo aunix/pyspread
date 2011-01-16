@@ -27,6 +27,9 @@ _interfaces
 
 Provides
 --------
+
+ * EVT_STATUSBAR_TEXT: Event for updating the main statusbar
+ 
  * SafeUnpickler: Basic security for loading pys files
  
  * sorted_keys:  Generator for sorting keys
@@ -75,6 +78,8 @@ import cStringIO as StringIO
 
 import numpy
 import wx
+import wx.lib.newevent
+
 
 try:
     from pyme import core, pygpgme
@@ -84,6 +89,7 @@ except ImportError:
 
 from _pyspread.config import VERSION, SNIFF_SIZE, default_dimensions, faces
 from _pyspread.config import GPG_KEY_UID, GPG_KEY_PARMS, GPG_KEY_PASSPHRASE
+
 
 class SafeUnpickler(object):
     """Unpicklung with this class only allows PICKLE_SAVE classes"""

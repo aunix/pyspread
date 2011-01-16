@@ -35,6 +35,8 @@ Provides:
   5. FontChoiceCombobox: ComboBox for font selection
   6. BorderEditChoice: ComboBox for border selection
   7. BitmapToggleButton: Button that toggles through a list of bitmaps
+  8. EntryLine
+  9. StatusBar
 
 """
 
@@ -44,6 +46,10 @@ import wx
 import wx.grid
 import wx.combo
 import wx.stc  as  stc
+
+from _pyspread._events import EVT_STATUSBAR_MSG, EVT_ENTRYLINE_MSG
+from _pyspread._events import EVT_ENTRYLINE_SELECTION_MSG
+from _pyspread._events import post_grid_text
 
 from _pyspread.config import faces, text_styles, fold_symbol_style
 from _pyspread.config import icons, pen_styles
@@ -490,3 +496,78 @@ class BitmapToggleButton(wx.BitmapButton):
         setattr(self, "GetToolState", lambda x: self.state)
         
 # end of class BitmapToggleButton
+
+
+class EntryLine(wx.TextCtrl):
+    """"The line for entering cell code"""
+    
+    def __init__(self, parent, id=-1, *args, **kwargs):
+        wx.TextCtrl.__init__(self, parent, id)
+        
+        self.parent = parent
+        self.ignore_changes = False
+        
+        parent.Bind(EVT_ENTRYLINE_MSG, self.OnMessage)
+        parent.Bind(EVT_ENTRYLINE_SELECTION_MSG, self.OnSelectionMsg)
+        
+        self.Bind(wx.EVT_TEXT, self.OnText)
+        self.Bind(wx.EVT_CHAR, self.EvtChar)
+    
+    def OnMessage(self, event):
+        """Event handler for updating the content"""
+        
+        self.SetValue(event.text)
+    
+    def OnSelectionMsg(self, event):
+        """Event handler for setting selection"""
+        
+        self.SetSelection(event.start, event.stop)
+    
+    def OnText(self, event):
+        """Text event method evals the cell and updates the grid"""
+        
+        if self.ignore_changes:
+            return
+        
+        post_grid_text(self.parent, event.GetString())
+        
+        event.Skip()
+        
+    def EvtChar(self, event):
+        """Key event method
+        
+         * Forces grid update on <Enter> key
+         * Handles insertion of cell access code
+        
+        """
+        
+        if self.ignore_changes:
+            return
+        
+        if event.GetKeyCode() == 13:
+            self.parent.Freeze()
+            self.parent.MainGrid.view.refocus()
+            self.parent.Thaw()
+            
+        elif event.GetKeyCode() == wx.WXK_INSERT and \
+             event.ControlDown():
+            self.WriteText(self.parent.MainGrid.get_selection_code())
+        
+        event.Skip()
+        
+# end of class EntryLine
+
+class StatusBar(wx.StatusBar):
+    """Statusbar in main window"""
+    
+    def __init__(self, parent):
+        wx.StatusBar.__init__(self, parent, -1)
+        
+        parent.Bind(EVT_STATUSBAR_MSG, self.OnMessage)
+    
+    def OnMessage(self, event):
+        """Statusbar message event handler"""
+        
+        self.SetStatusText(event.text)
+    
+# end of class StatusBar

@@ -281,8 +281,9 @@ class AttributesToolbar(wx.ToolBar):
     def __init__(self, *args, **kwargs):
         kwargs["style"] = wx.TB_FLAT | wx.TB_NODIVIDER
         self.parent = args[0]
+        ## Cahne to Events
         self.grid = self.parent.MainGrid
-        self.pysgrid = self.grid.pysgrid
+        self.pysgrid = self.grid.model.pysgrid
         
         wx.ToolBar.__init__(self, *args, **kwargs)
         self.SetToolBitmapSize(small_icon_size)
@@ -507,7 +508,7 @@ class AttributesToolbar(wx.ToolBar):
         
         # Get selected cell's key
         
-        key = self.grid.key
+        key = self.grid.cursor
         
         # Compatibility: Create frozen_cells if missing
         
@@ -670,9 +671,9 @@ class AttributesToolbar(wx.ToolBar):
         
         """
         
-        selected_cells = self.grid.get_selection()
+        selected_cells = self.grid.controller.grid_selection()
         if selected_cells:
-            tab = self.grid.current_table
+            tab = self.grid.controller.cursor[2]
             return [(row, col, tab) for row, col in selected_cells]
         else:
             return [self._getkey()]
@@ -778,7 +779,7 @@ class AttributesToolbar(wx.ToolBar):
                                    
         pysgrid.unredo.mark()
         
-        self.grid.ForceRefresh()
+        self.grid.view.force_refresh()
         
     
     def OnLineWidth(self, event):
@@ -831,7 +832,7 @@ class AttributesToolbar(wx.ToolBar):
         
         pysgrid.unredo.mark()
         
-        self.grid.ForceRefresh()
+        self.grid.view.force_refresh()
         
     def OnBGColor(self, event):
         """Background color choice event handler"""
@@ -858,7 +859,7 @@ class AttributesToolbar(wx.ToolBar):
         
         pysgrid.unredo.mark()
         
-        self.grid.ForceRefresh()
+        self.grid.view.force_refresh()
         
     def OnTextColor(self, event):
         """Text color choice event handler"""
@@ -881,7 +882,7 @@ class AttributesToolbar(wx.ToolBar):
         
         pysgrid.unredo.mark()
         
-        self.grid.ForceRefresh()
+        self.grid.view.force_refresh()
     
     def OnTextFont(self, event):
         """Text font choice event handler"""
@@ -915,7 +916,7 @@ class AttributesToolbar(wx.ToolBar):
         
         pysgrid.unredo.mark()
         
-        self.grid.ForceRefresh()
+        self.grid.view.force_refresh()
     
     def OnTextSize(self, event):
         """Text size combo text event handler"""
@@ -947,7 +948,7 @@ class AttributesToolbar(wx.ToolBar):
         
         pysgrid.unredo.mark()
         
-        self.grid.ForceRefresh()
+        self.grid.view.force_refresh()
     
     def OnToolClick(self, event):
         """Toggle the tool attribute of the current cell/selection text
@@ -1034,7 +1035,7 @@ class AttributesToolbar(wx.ToolBar):
         
         pysgrid.unredo.mark()
         
-        self.grid.ForceRefresh()
+        self.grid.view.force_refresh()
         
         event.Skip()
 
