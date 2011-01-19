@@ -38,23 +38,22 @@ import wx
 
 from _pyspread._datastructures import PyspreadGrid
 
-from _pyspread.grid_controller import GridSelectionMixin, \
+from _pyspread._grid_controller import GridSelectionMixin, \
     GridClipboard, GridManipulationMixin, GridSelectionMask, TextCellEditor
 
-from _pyspread.grid_model import MainGridTable
+from _pyspread._grid_model import MainGridTable
 
-from _pyspread.grid_view import GridCollisionMixin, TextRenderer
+from _pyspread._grid_view import GridCollisionMixin, TextRenderer
 
 from _pyspread._events import post_status_text, post_entryline_text
 from _pyspread._events import post_entryline_selection
-from _pyspread._events import EVT_GRID_MSG
+from _pyspread._events import EVT_GRID_MSG, EVT_TABLE_CHANGE, EVT_GRID_SHAPE
 
 from _pyspread._interfaces import Digest, get_default_font, PysInterfaces
 
 from _pyspread._menubars import ContextMenu
 
 from _pyspread.config import odftags, faces
-
 
 class MainGrid(object):
     """Main grid for spreadsheet application
@@ -75,21 +74,16 @@ class MainGrid(object):
     """
     
     def __init__(self, parent, rows, cols, tabs):
-        ##Remove entry_line
-        ##Remove c_box_z
         
         self.parent = parent
         
-        self._main_grid = MGrid(parent, -1, size=(1, 1), 
-            dim=(rows, cols, tabs), 
-            cbox_z = parent.cbox_z)
+        self._main_grid = MGrid(parent, -1, size=(1, 1), dim=(rows, cols, tabs))
         
+        self.model = MainGridModel(parent, self._main_grid)
         
-        self.model = MainGridModel(self._main_grid)
+        self.controller = MainGridController(parent, self._main_grid, self.model)
         
-        self.controller = MainGridController(self._main_grid, self.model)
-        
-        self.view = MainGridView(self._main_grid, self.model)
+        self.view = MainGridView(parent, self._main_grid, self.model)
 
 
 # end of class MainGrid
@@ -97,7 +91,8 @@ class MainGrid(object):
 class MainGridModel(object):
     """Model for MainGrid"""
     
-    def __init__(self, grid):
+    def __init__(self, parent, grid):
+        self.parent = parent
         self.grid = grid
         self.pysgrid = grid.pysgrid
         self.macros = grid.pysgrid.sgrid.macros
@@ -106,12 +101,22 @@ class MainGridModel(object):
         self.frozen_cells = self.pysgrid.sgrid.frozen_cells
         
         self.load = grid.loadfile
-
+        
+        self.parent.Bind(EVT_GRID_SHAPE, self.OnShapeChange)
+    
+    def OnShapeChange(self, event):
+        """Grid shape change event handler"""
+        
+        self.pysgrid.shape = event.shape
+        self.grid.create_rowcol()
+        
+        event.Skip()
 
 class MainGridController(object):
     """Controller for MainGrid"""
     
-    def __init__(self, grid, model):
+    def __init__(self, parent, grid, model):
+        self.parent = parent
         self.grid = grid
         self.model = model
         
@@ -124,6 +129,8 @@ class MainGridController(object):
         self.clipboard = GridClipboard(grid, model)
         
         self.make_cell_visible = grid.MakeCellVisible
+        
+        self.parent.Bind(EVT_TABLE_CHANGE, self.OnTableChange)
     
     def get_cursor(self):
         """Returns current grid cursor cell"""
@@ -151,11 +158,14 @@ class MainGridController(object):
         """Changes the grid cursor cell."""
         
         if len(value) == 3:
-            self._switch_to_table(value[2])
-            
-        self.grid.MakeCellVisible(*value[:2])
-        self.grid.SetGridCursor(*value[:2])
+            row, col, tab = value
+            self._switch_to_table(tab)
+        else:
+            row, col = value
         
+        if not (row is None and col is None):
+            self.grid.MakeCellVisible(row, col)
+            self.grid.SetGridCursor(row, col)
         
     cursor = property(get_cursor, set_cursor)
 
@@ -192,10 +202,17 @@ class MainGridController(object):
                 for col in irange(col_slc.start, col_slc.stop, col_slc.step):
                     self.select_cell(row, col, add_to_selected=True)
 
+    def OnTableChange(self, event):
+        """Event handler for TableChangeMsg event"""
+        
+        if event.new_table != self.cursor[2]:
+            self.cursor = self.cursor[0], self.cursor[1], event.new_table
+
 class MainGridView(object):
     """View for MainGrid"""
 
-    def __init__(self, grid, model):
+    def __init__(self, parent, grid, model):
+        self.parent = parent
         self.grid = grid
         self.model = model
         
@@ -256,9 +273,6 @@ class MGrid(wx.grid.Grid,
     dim: 3-tuple, defaults to (1000, 100, 3)
     \tX, Y, Z Dimension of the grid
     
-    cbox_z: wxComboBox, defaults to None, mandatory
-    \tCombobox for selecting tables
-    
     Methods:
     --------
     create_rowcol
@@ -273,7 +287,6 @@ class MGrid(wx.grid.Grid,
     OnCellSelected
     OnContextMenu
     OnMouseMotion
-    OnCombo
     
     """
     
@@ -284,16 +297,8 @@ class MGrid(wx.grid.Grid,
         
         dim = kwds.pop("dim")
         
-        self.cbox_z = kwds.pop("cbox_z")
-        if self.cbox_z is None:
-            raise ValueError, "A Combobox for selecting tables is required"
-        
-        
         self.pysgrid = PyspreadGrid(dim)
         self.contextmenu = ContextMenu(parent=self.parent)
-        
-        self.cbox_z.AppendItems([unicode(dim) \
-                for dim in xrange(self.pysgrid.shape[2])])
         
         self.copy_selection = [] # Cells from last copy operation 
         self.current_table = 0
@@ -459,11 +464,6 @@ class MGrid(wx.grid.Grid,
             post_entryline_text(self, currstr)
         except TypeError:
             post_entryline_text(self, "")
-        
-        # Set up Combo box for table choice
-        
-        self.cbox_z.Clear()
-        self.cbox_z.AppendItems([str(i) for i in xrange(dim[2])])
         
         self.create_rowcol()
         self.pysgrid.unredo.reset()
@@ -634,16 +634,6 @@ class MGrid(wx.grid.Grid,
             except TypeError:
                 pass
         event.Skip()
-    
-    def OnCombo(self, event):
-        """Combo box event method that updates the current table"""
-        
-        try:
-            newtable = int(event.GetString())
-        except ValueError:
-            newtable = 0
-            
-        self.switch_to_table(newtable)
             
     
     def OnRowSize(self, event):

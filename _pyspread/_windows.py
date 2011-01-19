@@ -55,14 +55,15 @@ import _pyspread._grid as _grid
 
 from _pyspread.irange import irange
 from _pyspread._menubars import MainMenu
-from _pyspread._events import post_status_text, post_entryline_text
+from _pyspread._events import post_status_text, post_entryline_text, \
+            post_shape_change
 from _pyspread._toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _pyspread._dialogs import MacroDialog, CsvImportDialog, CsvExportDialog, \
             DimensionsEntryDialog, CellEntryDialog, AboutDialog
 from _pyspread._interfaces import CsvInterfaces, PysInterfaces, TxtInterfaces, \
             string_match, is_pyme_present, sign, verify
-from _pyspread.config import PROG_DIR, icon_size, KEYFUNCTIONS, displaysize
-from _pyspread._widgets import EntryLine, StatusBar
+from _pyspread.config import PROG_DIR, KEYFUNCTIONS, displaysize
+from _pyspread._widgets import EntryLine, StatusBar, TableChoiceIntCtrl
 
 
 class MainWindow(wx.Frame):
@@ -113,15 +114,12 @@ class MainWindow(wx.Frame):
         # Main tool bar
         self.main_window_toolbar = MainToolbar(self, -1)
         
-        # Combo box for table choice
-        self.cb_id = wx.NewId()
-        self.cbox_z = wx.ComboBox(self.main_window_toolbar, self.cb_id, "0", \
-                      size=(icon_size[0]*2, icon_size[1]-4), \
-                      style=wx.CB_DROPDOWN)
-        self.main_window_toolbar.AddControl(self.cbox_z)
         self.main_window_toolbar.Realize()
         
         self.entry_line = EntryLine(self)
+        
+        # IntCtrl for table choice
+        self.table_choice = TableChoiceIntCtrl(self, dim[2])
         
         # Main grid
         self.MainGrid = _grid.MainGrid(self, *dim)
@@ -153,8 +151,6 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_FIND_REPLACE, self.OnFind)
         self.Bind(wx.EVT_FIND_REPLACE_ALL, self.OnFind)
         self.Bind(wx.EVT_FIND_CLOSE, self.OnFindClose)
-        ##self.Bind(wx.EVT_TEXT, self.MainGrid.OnCombo, id=self.cb_id)
-        ##self.Bind(wx.EVT_COMBOBOX, self.MainGrid.OnCombo, id=self.cb_id)
         ##wx.EVT_KEY_DOWN(self.MainGrid._mgrid, self.OnKey)
         
         # Misc
@@ -199,11 +195,18 @@ class MainWindow(wx.Frame):
                           ToolbarPane().Top().Row(1).MaximizeButton(False).
                           LeftDockable(False).RightDockable(False))
                           
+                          
+        self._mgr.AddPane(self.table_choice, wx.aui.AuiPaneInfo().
+                          Name("table_choice").Caption("Table choice").
+                          ToolbarPane().MaxSize((50, 50)).Row(2).
+                          Top().CloseButton(False).MaximizeButton(False).
+                          LeftDockable(True).RightDockable(True))
+        
         self._mgr.AddPane(self.entry_line, wx.aui.AuiPaneInfo().
                           Name("entry_line").Caption("Entry line").
                           ToolbarPane().MinSize((800, 10)).Row(2).
                           Top().CloseButton(False).MaximizeButton(False).
-                          LeftDockable(False).RightDockable(False))
+                          LeftDockable(True).RightDockable(True))
         
         # Add the main grid
         self._mgr.AddPane(self.MainGrid._main_grid, wx.CENTER)
@@ -383,7 +386,8 @@ class MainWindow(wx.Frame):
                 return "0"
         
         self.MainGrid.view.freeze()
-        self.MainGrid.OnCombo(Dummyevent())
+        self.MainGrid.controller.cursor = 0, 0, 0
+        
         self.MainGrid.view.force_refresh()
         self.MainGrid.view.thaw()
     
@@ -689,11 +693,7 @@ class MainWindow(wx.Frame):
             col = int(dlg.col_textctrl.GetValue())
             tab = int(dlg.tab_textctrl.GetValue())
             
-            if tab != self.MainGrid.current_table:
-                # Switch to target table
-                self.MainGrid.cbox_z.SetValue(str(tab))
-                self.MainGrid.switch_to_table(tab)
-            
+            self.MainGrid.controller.cursor = row, col, tab
             self.MainGrid.MakeCellVisible(row, col)
         
         dlg.Destroy()
@@ -742,47 +742,51 @@ class MainWindow(wx.Frame):
         
         about_dialog = AboutDialog(self)
     
-    def OnInsertRows(self, event): # wxGlade: MainWindow.<event_handler>
+    def OnInsertRows(self, event):
         """Insert the maximum of 1 and the number of selected rows"""
+        
         self.MainGrid.controller.grid_selection.insert(axis=0)
         event.Skip()
     
-    def OnInsertColumns(self, event): # wxGlade: MainWindow.<event_handler>
-        """Inserts the maximum of 1 and the number of selected columns """
+    def OnInsertColumns(self, event):
+        """Inserts the maximum of 1 and the number of selected columns"""
+        
         self.MainGrid.controller.grid_selection.insert(axis=1)
         event.Skip()
     
-    def OnInsertTable(self, event): # wxGlade: MainWindow.<event_handler>
-        """Insert one table into MainGrid and pysgrid """
+    def OnInsertTable(self, event):
+        """Insert one table into MainGrid and pysgrid"""
+        
+        row, col, tab = self.MainGrid.controller.cursor
+        
         self.MainGrid.controller.grid_selection.insert(axis=2)
-        event.GetString = lambda x=0: unicode(self.MainGrid.current_table)
-        self.MainGrid.OnCombo(event)
+        self.MainGrid.controller.cursor = row, col, tab + 1
+        
         event.Skip()
     
-    def OnDeleteRows(self, event): # wxGlade: MainWindow.<event_handler>
+    def OnDeleteRows(self, event):
         """Deletes rows from all tables of the grid"""
         
-        self.MainGrid.delete_selected_rows()
+        self.MainGrid.controller.grid_selection.delete(axis=0)
         event.Skip()
     
-    def OnDeleteColumns(self, event): # wxGlade: MainWindow.<event_handler>
+    def OnDeleteColumns(self, event):
         """Deletes columnss from all tables of the grid"""
         
-        self.MainGrid.delete_selected_cols()
+        self.MainGrid.controller.grid_selection.delete(axis=1)
         event.Skip()
     
-    def OnDeleteTable(self, event): # wxGlade: MainWindow.<event_handler>
+    def OnDeleteTable(self, event):
         """Deletes tables"""
         
-        self.MainGrid.delete_selected_tables()
+        row, col, tab = self.MainGrid.controller.cursor
         
-        newtable = max(0, min(self.MainGrid.current_table, \
-                           self.MainGrid.model.pysgrid.sgrid.shape[2] - 1))
+        self.MainGrid.controller.grid_selection.delete(axis=2)
         
-        event.GetString = lambda x=0: unicode(newtable)
-        self.MainGrid.OnCombo(event)
+        if self.MainGrid.model.shape[2] < tab:
+            tab = self.MainGrid.model.shape[2]
         
-        self.cbox_z.SetSelection(newtable)
+        self.MainGrid.controller.cursor = row, col, tab
         
         event.Skip()
     
@@ -798,14 +802,9 @@ class MainWindow(wx.Frame):
         
         dimensions = tuple(dim_dialog.dimensions)
         
-        # Check for each dimension, how many items are inserted or deleted
-        dim_diff = [dimensions[i] - self.MainGrid.model.pysgrid.shape[i] \
-                        for i in xrange(3)]
+        post_shape_change(self, dimensions)
         
-        for dim, diff in enumerate(dim_diff):
-            self.MainGrid.change_dim(dim, diff)
-        
-        self.MainGrid.model.pysgrid.unredo.reset()
+        event.Skip()
     
     def OnMacroList(self, event):
         """Invokes the MacroDialog and updates the macros in the app"""
@@ -849,7 +848,7 @@ class MainWindow(wx.Frame):
         
         event.Skip()
     
-    def OnFind(self, event): # wxGlade: MainWindow.<event_handler>
+    def OnFind(self, event):
         """Find functionality should be in interfaces"""
         
         newstring = ""

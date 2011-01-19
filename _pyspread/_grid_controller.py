@@ -8,6 +8,7 @@ import wx.grid
 
 from _pyspread._widgets import EntryLine
 from _pyspread._interfaces import Clipboard
+from _pyspread._events import post_shape_change
 
 
 # Grid level input
@@ -96,7 +97,6 @@ class GridSelectionMixin(object):
     get_visiblecell_slice
     getselectiondata
     selection_replace
-    selectnewcell
     delete
     
     """
@@ -296,23 +296,6 @@ class GridSelectionMixin(object):
         editor.SetValue(newval)
         editor.SetInsertionPoint(inspoint + len(data))
         editor.SetSelection(inspoint, inspoint + len(data))
-
-    def selectnewcell(self, key, event):
-        """ Selects the cell with position key.
-        
-        Parameters:
-        -----------
-        key: 3-tuple
-        \tPosition in grid(x,y,z)
-        """
-        
-        if key[2] != self.current_table:
-            self.cbox_z.SetSelection(key[2])
-            event.GetString = lambda x = 0: self.digest(key[2])
-            self.OnCombo(event)
-            self.SetFocus()
-        self.MakeCellVisible(*key[:2])
-        self.SetGridCursor(*key[:2])
     
     def delete(self, selection=None):
         """Deletes selection"""
@@ -470,82 +453,14 @@ class GridClipboard(object):
 class GridManipulationMixin(object):
     """Manipulates rows, columns and tables. Mixin for wx.grid.Grid
     
-    change_dim
-    insert_selected_rows
-    insert_selected_cols
-    insert_selected_tables
-    delete_selected_rows
-    delete_selected_cols
-    delete_selected_tables
+    insert_rows
+    insert_cols
+    insert_tables
+    delete_rows
+    delete_cols
+    delete_tables
     
     """
-    
-    def change_dim(self, dimension, number):
-        """
-        Appends/deletes a number of rows/cols/tables to a dimension of the grid
-        
-        Parameters
-        ----------
-        
-        dimension: int
-        \tThe dimension at which rows/cols/tables are appended
-        number: int
-        \tThe number of rows that shall be appended (if > 0) or deleted (if < 0)
-        
-        """
-        
-        assert dimension in xrange(3)
-        
-        if number == 0:
-            # Nothing to do
-            return None
-        
-        elif number < 0:
-            number = abs(number)
-            delete = True
-            
-            # Size of target grid dimension
-            size = self.pysgrid.sgrid.shape[dimension] - number
-            
-        else:
-            delete = False
-            
-            # Size of source grid dimension
-            size = self.pysgrid.sgrid.shape[dimension]
-        
-        # Append
-        if dimension == 0:
-            operations = \
-              [(self.pysgrid.insert, [[size, None, None], number])]
-            undo_operations = \
-              [(self.pysgrid.remove, [[size, None, None], number])]
-            
-        elif dimension == 1:
-            operations = \
-              [(self.pysgrid.insert, [[None, size, None], number])]
-            undo_operations = \
-              [(self.pysgrid.remove, [[None, size, None], number])]
-            
-        elif dimension == 2:
-            minsize = min(size, size + number)
-            maxsize = max(size, size + number)
-            operations = \
-              [(self.pysgrid.insert, [[None, None, size], number])] + \
-              [(self.cbox_z.Append, [unicode(i)]) \
-                    for i in xrange(minsize, maxsize)]
-            undo_operations = \
-              [(self.pysgrid.remove, [[None, None, size], number])] + \
-              [(self.cbox_z.Delete, [i-1]) \
-                    for i in range(minsize, maxsize + 1)[::-1]]
-        
-        if delete:
-            operations, undo_operations = undo_operations, operations
-        
-        for undo_operation, operation in zip(undo_operations, operations):
-            operation[0](*operation[1]) # Do the operation
-            self.pysgrid.unredo.append(undo_operation, operation)
-        
-        self.create_rowcol()
     
     def insert_rows(self, row, no_ins=1):
         """Inserts the number of rows of the imminent selection at cursor."""
@@ -566,13 +481,17 @@ class GridManipulationMixin(object):
         """Inserts one table before the current one."""
         
         current_table = self.current_table
-        no_selected_tables = 1
-        operation = (self.cbox_z.Append, [unicode(self.pysgrid.shape[2])])
-        undo_operation = (self.cbox_z.Delete, [self.pysgrid.shape[2]])
+        
+        new_shape = self.pysgrid.shape[0], \
+                    self.pysgrid.shape[1], \
+                    self.pysgrid.shape[2] + 1
+        
+        operation = (post_shape_change, [self.parent, new_shape])
+        undo_operation = (post_shape_change, [self.parent, self.pysgrid.shape])
         self.pysgrid.unredo.append(undo_operation, operation)
-        self.cbox_z.Append(unicode(self.pysgrid.shape[2]))
-        self.pysgrid.insert(insertionpoint=[None, None, current_table], \
-                            notoinsert=no_selected_tables)
+        
+        operation[0](*operation[1])
+        
         self.pysgrid.unredo.mark()
 
     def delete_rows(self, row, no_del=1):
@@ -596,15 +515,20 @@ class GridManipulationMixin(object):
     def delete_tables(self, tab):
         """Deletes table tab."""
         
-        if self.pysgrid.shape[2] > 1:
-            no_selected_tables = 1
-            operation = (self.cbox_z.Delete, [self.pysgrid.shape[2] - 1])
-            undo_operation = (self.cbox_z.Append, \
-                              [unicode(self.pysgrid.shape[2] - 1)])
-            self.pysgrid.unredo.append(undo_operation, operation)
-            self.cbox_z.Delete(self.pysgrid.shape[2] - 1)
-            self.pysgrid.remove(removalpoint=[None, None, tab], \
-                                notoremove=1)
+        if self.pysgrid.shape[2] <= 1:
+            return
+            
+        new_shape = self.pysgrid.shape[0], \
+                    self.pysgrid.shape[1], \
+                    self.pysgrid.shape[2]
+
+        operation = (post_shape_change, [self.parent, new_shape])
+        undo_operation = (post_shape_change, [self.parent, self.pysgrid.shape])
+
+        self.pysgrid.unredo.append(undo_operation, operation)
+
+        operation[0](*operation[1])
+
         self.pysgrid.unredo.mark()
     
 # end of class GridManipulationMixin

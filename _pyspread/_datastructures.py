@@ -97,7 +97,12 @@ class PyspreadGrid(object):
         
         return self.sgrid.shape
     
-    shape = property(_getshape)
+    def _set_shape(self, shape):
+        """Sets the shape of the array sgrid"""
+        
+        self.sgrid.set_shape(shape)
+    
+    shape = property(_getshape, _set_shape)
     
     def _eval_cell(self, key):
         """Evaluates one cell"""
@@ -355,7 +360,7 @@ class PyspreadGrid(object):
         
         """
         
-        length = self.sgrid.shape[dim]
+        length = self.shape[dim]
         
         if slc.step is None:
             slc = slice(slc.start, slc.stop, 1)
@@ -441,9 +446,9 @@ class PyspreadGrid(object):
         for key in del_keys:
             sgrid.pop(key)
         
-        shape = list(sgrid.shape)
+        shape = list(self.shape)
         shape[axis] += notoinsert
-        sgrid.set_shape(shape)
+        self.shape = shape
         
         sgrid.update(key_update)
         
@@ -495,10 +500,10 @@ class PyspreadGrid(object):
         for key in del_keys:
             sgrid.pop(key)
         
-        shape = list(sgrid.shape)
+        shape = list(self.shape)
         shape[axis] -= min(notoremove, max(0, shape[axis] - rmp))
         shape[axis] = max(1, shape[axis])
-        sgrid.set_shape(shape)
+        self.shape = shape
         
         sgrid.update(key_update)
         
@@ -917,7 +922,7 @@ class DictGrid(UserDict.IterableUserDict):
         """This method MUST be used in order to change the grid shape"""
         
         self.shape = shape
-        self.indices = [list(irange(size)) for size in self.shape]
+        self.indices = [range(size) for size in self.shape]
 
     def execute_macros(self, safe_mode):
         """Executes all macros and returns result string if not safe_mode"""

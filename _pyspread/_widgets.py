@@ -35,8 +35,9 @@ Provides:
   5. FontChoiceCombobox: ComboBox for font selection
   6. BorderEditChoice: ComboBox for border selection
   7. BitmapToggleButton: Button that toggles through a list of bitmaps
-  8. EntryLine
-  9. StatusBar
+  8. EntryLine: The line for entering cell code
+  9. StatusBar: Main window statusbar
+  10. TableChoiceCombobox: ComboBox for choosing the current grid table
 
 """
 
@@ -46,13 +47,14 @@ import wx
 import wx.grid
 import wx.combo
 import wx.stc  as  stc
+from wx.lib.intctrl import IntCtrl, EVT_INT
 
 from _pyspread._events import EVT_STATUSBAR_MSG, EVT_ENTRYLINE_MSG
-from _pyspread._events import EVT_ENTRYLINE_SELECTION_MSG
-from _pyspread._events import post_grid_text
+from _pyspread._events import EVT_ENTRYLINE_SELECTION_MSG, EVT_GRID_SHAPE
+from _pyspread._events import post_grid_text, post_table_change
 
 from _pyspread.config import faces, text_styles, fold_symbol_style
-from _pyspread.config import icons, pen_styles
+from _pyspread.config import icons, icon_size, pen_styles
 
 class CollapsiblePane(wx.CollapsiblePane):
     """Collapsible pane with basic toggle mechanism
@@ -510,6 +512,8 @@ class EntryLine(wx.TextCtrl):
         parent.Bind(EVT_ENTRYLINE_MSG, self.OnMessage)
         parent.Bind(EVT_ENTRYLINE_SELECTION_MSG, self.OnSelectionMsg)
         
+        self.SetToolTip(wx.ToolTip("Enter Python expression here."))
+        
         self.Bind(wx.EVT_TEXT, self.OnText)
         self.Bind(wx.EVT_CHAR, self.EvtChar)
     
@@ -558,10 +562,12 @@ class EntryLine(wx.TextCtrl):
 # end of class EntryLine
 
 class StatusBar(wx.StatusBar):
-    """Statusbar in main window"""
+    """Main window statusbar"""
     
     def __init__(self, parent):
         wx.StatusBar.__init__(self, parent, -1)
+        
+        self.SetToolTip(wx.ToolTip("Watch the status bar."))
         
         parent.Bind(EVT_STATUSBAR_MSG, self.OnMessage)
     
@@ -571,3 +577,69 @@ class StatusBar(wx.StatusBar):
         self.SetStatusText(event.text)
     
 # end of class StatusBar
+
+
+class TableChoiceIntCtrl(IntCtrl):
+    """ComboBox for choosing the current grid table"""
+    
+    def __init__(self, parent, no_tabs):
+        self.parent = parent
+        self.no_tabs = no_tabs
+        
+        IntCtrl.__init__(self, parent, limited=True, allow_long=True)
+        
+        self.SetMin(0)
+        self.SetMax(no_tabs - 1)
+        
+        self.SetToolTip(wx.ToolTip( \
+            "Enter grid table number or use mouse wheel to change tables."))
+        
+        self.Bind(EVT_INT, self.OnInt)
+        self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
+        
+        self.parent.Bind(EVT_GRID_SHAPE, self.OnShapeChange)
+
+    def change_max(self, no_tabs):
+        """Updates to a new number of tables
+        
+        Fixes current table if out of bounds.
+        
+        Parameters
+        ----------
+        tab: Integer
+        \tCurrent table
+        no_tabs: Integer
+        \tNumber of tables for choice
+        
+        """
+        
+        if self.GetValue() >= no_tabs:
+            self.SetValue(no_tabs - 1)
+        
+        if no_tabs != self.no_tabs:
+            self.SetMax(no_tabs - 1)
+    
+    def OnInt(self, event):
+        """IntCtrl event method that updates the current table"""
+        
+        post_table_change(self.parent, event.GetValue())
+        
+        event.Skip()
+    
+    def OnMouseWheel(self, event):
+        """Mouse wheel event handler"""
+        
+        if event.GetWheelRotation() > 0:
+            new_table = self.GetValue() + 1
+        else:
+            new_table = self.GetValue() - 1
+        
+        if self.IsInBounds(new_table):
+            self.SetValue(new_table)
+
+    def OnShapeChange(self, event):
+        """Grid shape change event handler"""
+        
+        self.change_max(event.shape[2])
+        
+        event.Skip()
