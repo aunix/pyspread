@@ -7,6 +7,9 @@ _pyspread/_windows.py
 _pyspread/config.py
 _pyspread/_interfaces.py
 _pyspread/_grid.py
+_pyspread/_grid_view.py
+_pyspread/_grid_controller.py
+_pyspread/_grid_model.py
 _pyspread/_datastructures.py
 _pyspread/irange.py
 _pyspread/xrect.py

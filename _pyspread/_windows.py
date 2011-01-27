@@ -361,6 +361,11 @@ class MainWindow(wx.Frame):
         """Opens file dialog and loads file"""
         
         filepath, _ = self._get_filepath(style=wx.OPEN|wx.CHANGE_DIR, safe=True)
+        
+        # Set Window title to new filename
+        
+        self.SetTitle("pyspread - " + filepath.split("/")[-1])
+        
         self.loadfile(filepath)
     
     def loadfile(self, filepath):
@@ -412,7 +417,7 @@ class MainWindow(wx.Frame):
         if self.filepath is None:
             self.OnFileSaveAs(event)
         else:
-            self.MainGrid.savefile(self.filepath, self.wildcard_interface)
+            self.MainGrid.model.save(self.filepath, self.wildcard_interface)
             if self.MainGrid.model.pysgrid.safe_mode:
                 post_status_text(self, "Untrusted file saved")
             else:
@@ -433,10 +438,11 @@ class MainWindow(wx.Frame):
                 filepath += ".pys"
             
             self.filepath = filepath
+            self.SetTitle("pyspread - " + filepath.split("/")[-1])
                 
             self.wildcard_interface = self.wildcard_interfaces[filterindex]()
             
-            self.MainGrid.savefile(filepath, self.wildcard_interface)
+            self.MainGrid.model.save(filepath, self.wildcard_interface)
             
             if self.MainGrid.model.pysgrid.safe_mode or filterindex == 1:
                 post_status_text(self, "Untrusted file saved")
@@ -473,8 +479,9 @@ class MainWindow(wx.Frame):
         
         # The actual data import
         csv_interface = CsvInterfaces(path, dialect, digest_types, has_header)
-        topleftcell = tuple(list(self.MainGrid.get_currentcell()) + \
-                            [self.MainGrid.current_table])
+        
+        topleftcell = self.MainGrid.controller.cursor
+        
         try:
             csv_interface.read(self.MainGrid.model.pysgrid, key=topleftcell)
         except ValueError, err:
@@ -491,8 +498,8 @@ class MainWindow(wx.Frame):
     def txt_import(self, path):
         """Whitespace-delimited txt import workflow. This should be fast."""
         
-        topleftcell = tuple(list(self.MainGrid.get_currentcell()) + \
-                            [self.MainGrid.current_table])
+        topleftcell = self.MainGrid.controller.cursor
+        
         txt_interface = TxtInterfaces(path)
         txt_interface.read(self.MainGrid.model.pysgrid, key=topleftcell)
 
@@ -533,15 +540,12 @@ class MainWindow(wx.Frame):
         """Exports files. Currently only CSV files supported"""
         
         # Get Selection --> iterable
-        selection = self.MainGrid.get_selection()
-        if len(selection) == 1:
-            slice_x, slice_y = self.MainGrid.get_visiblecell_slice()[:2]
-            selection = [(x, y) for x in xrange(slice_x.start, slice_x.stop)
-                                for y in xrange(slice_y.start, slice_y.stop)]
+        selection = self.MainGrid.controller.selection()
+        rowslice, colslice = self._get_export_area_slices(selection)
         
-        rowslice, colslice = self.MainGrid.get_selected_rows_cols(selection)
-        data = self.MainGrid.getselectiondata(self.MainGrid.model.pysgrid, \
-                                    rowslice, colslice, omittedfield_repr=' ')
+        data = self.MainGrid.controller.selection.get_data( \
+            self.MainGrid.model.pysgrid, rowslice, colslice, 
+            omittedfield_repr=' ')
                                     
         # Get CSV export options via dialog
         filterdlg = CsvExportDialog(self, data=data)
@@ -613,6 +617,28 @@ class MainWindow(wx.Frame):
             # Refresh grid
             self.MainGrid.view.force_refresh()
     
+    def _get_export_area_slices(self, selection):
+        """Returns 2-tuple of slice that comprise selected or visible cells
+        
+        If there is no selection but the current cell then the visible area 
+        is used instead of the selection area.
+        
+        """
+        
+        # No selection --> use visible area instead
+        if selection is None or len(selection) <= 1:
+            slice_x, slice_y = self.MainGrid.view.get_visiblecell_slice()[:2]
+            
+            selection = [(x, y) for x in irange(slice_x.start, slice_x.stop)
+                                for y in irange(slice_y.start, slice_y.stop)]
+        
+        selection_rows, selection_cols = zip(*selection)
+        rowslice = slice(min(selection_rows), max(selection_rows) + 1)
+        colslice = slice(min(selection_cols), max(selection_cols) + 1)
+        
+        return rowslice, colslice
+    
+    
     def OnFilePrint(self, event):
         """Displays print dialog"""
         
@@ -623,19 +649,12 @@ class MainWindow(wx.Frame):
         
         printer = wx.Printer(pdd)
         
-        selection = self.MainGrid.get_selection()
-        #print selection
+        selection = self.MainGrid.controller.selection()
         
-        if len(selection) == 1:
-            slice_x, slice_y = self.MainGrid.get_visiblecell_slice()[:2]
-            #print slice_x, slice_y
-            selection = [(x, y) for x in irange(slice_x.start, slice_x.stop)
-                                for y in irange(slice_y.start, slice_y.stop)]
+        rowslice, colslice = self._get_export_area_slices(selection)
         
-        rowslice, colslice = self.MainGrid.get_selected_rows_cols(selection)
-        tab = self.MainGrid.current_table
-        canvas = printout.MyCanvas(self, self.MainGrid, 
-                                   rowslice, colslice, tab)
+        tab = self.MainGrid.controller.cursor[2]
+        canvas = printout.MyCanvas(self, self.MainGrid, rowslice, colslice, tab)
         
         __printout = printout.MyPrintout(canvas)
 
@@ -745,13 +764,13 @@ class MainWindow(wx.Frame):
     def OnInsertRows(self, event):
         """Insert the maximum of 1 and the number of selected rows"""
         
-        self.MainGrid.controller.grid_selection.insert(axis=0)
+        self.MainGrid.controller.selection.insert(axis=0)
         event.Skip()
     
     def OnInsertColumns(self, event):
         """Inserts the maximum of 1 and the number of selected columns"""
         
-        self.MainGrid.controller.grid_selection.insert(axis=1)
+        self.MainGrid.controller.selection.insert(axis=1)
         event.Skip()
     
     def OnInsertTable(self, event):
@@ -759,7 +778,7 @@ class MainWindow(wx.Frame):
         
         row, col, tab = self.MainGrid.controller.cursor
         
-        self.MainGrid.controller.grid_selection.insert(axis=2)
+        self.MainGrid.controller.selection.insert(axis=2)
         self.MainGrid.controller.cursor = row, col, tab + 1
         
         event.Skip()
@@ -767,13 +786,13 @@ class MainWindow(wx.Frame):
     def OnDeleteRows(self, event):
         """Deletes rows from all tables of the grid"""
         
-        self.MainGrid.controller.grid_selection.delete(axis=0)
+        self.MainGrid.controller.selection.delete(axis=0)
         event.Skip()
     
     def OnDeleteColumns(self, event):
         """Deletes columnss from all tables of the grid"""
         
-        self.MainGrid.controller.grid_selection.delete(axis=1)
+        self.MainGrid.controller.selection.delete(axis=1)
         event.Skip()
     
     def OnDeleteTable(self, event):
@@ -781,7 +800,7 @@ class MainWindow(wx.Frame):
         
         row, col, tab = self.MainGrid.controller.cursor
         
-        self.MainGrid.controller.grid_selection.delete(axis=2)
+        self.MainGrid.controller.selection.delete(axis=2)
         
         if self.MainGrid.model.shape[2] < tab:
             tab = self.MainGrid.model.shape[2]
@@ -1024,7 +1043,7 @@ class MainWindow(wx.Frame):
         """Event handler for refreshing the selected cells via menu"""
         
         # Get selected cells
-        selected_cells = self.MainGrid.get_selection()
+        selected_cells = self.MainGrid.controller.selection()
         
         # Update each selected cell regardless of frozen state
         frozen_cache = {}  

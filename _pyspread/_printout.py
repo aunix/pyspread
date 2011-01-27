@@ -36,8 +36,8 @@ class MyCanvas(wx.ScrolledWindow):
     def _get_dc_size(self, grid, rowslice, colslice):
         """Returns width and height of print dc"""
         
-        ul_rect = grid.CellToRect(rowslice.start, colslice.start)
-        lr_rect = grid.CellToRect(rowslice.stop, colslice.stop)
+        ul_rect = grid.view.cell_to_rect(rowslice.start, colslice.start)
+        lr_rect = grid.view.cell_to_rect(rowslice.stop, colslice.stop)
         
         width  = lr_rect.x + lr_rect.width  - ul_rect.x
         height = lr_rect.y + lr_rect.height - ul_rect.y
@@ -47,8 +47,9 @@ class MyCanvas(wx.ScrolledWindow):
     def draw_func(self, dc, rect, row, col):
         """Redirected Draw function from Maingrid"""
         
-        return self.grid.text_renderer.Draw(self.grid, self.grid_attr, dc, 
-                                      rect, row, col, False, printing=True)
+        return self.grid._main_grid.text_renderer.Draw( \
+            self.grid._main_grid, self.grid_attr, dc, rect, 
+            row, col, False, printing=True)
 
     def DoDrawing(self, dc):
         """Main drawing method"""
@@ -57,20 +58,20 @@ class MyCanvas(wx.ScrolledWindow):
         
         for row in irange(self.rowslice.stop-1, self.rowslice.start-1, -1):
             for col in irange(self.colslice.stop-1, self.colslice.start-1, -1):
-                rect = self.grid.CellToRect(row, col)
+                rect = self.grid.view.cell_to_rect(row, col)
                 
                 rect = wx.Rect(rect.x - \
-                               self.grid.GetScrollPos(wx.HORIZONTAL) * \
-                               self.grid.GetScrollLineX(), 
-                               rect.y - \
-                               self.grid.GetScrollPos(wx.VERTICAL) * \
-                               self.grid.GetScrollLineY(), 
-                               rect.width, 
-                               rect.height)
+                    self.grid.view.get_scroll_pos(wx.HORIZONTAL) * \
+                    self.grid.view.get_scroll_line_x(), 
+                    rect.y - \
+                    self.grid.view.get_scroll_pos(wx.VERTICAL) * \
+                    self.grid.view.get_scroll_line_y(), 
+                    rect.width, 
+                    rect.height)
                 
                 self.draw_func(dc, rect, row, col)
                 
-                self.grid.text_renderer.redraw_imminent = False
+                self.grid._main_grid.text_renderer.redraw_imminent = False
                 if col == self.colslice.start:
                     dc.DrawLine(rect.x, rect.y, rect.x, rect.y + rect.height)
                 elif col == self.colslice.stop-1:

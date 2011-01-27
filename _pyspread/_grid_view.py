@@ -2,6 +2,8 @@ from math import pi, sin, cos
 
 import types
 
+import numpy
+
 import wx
 
 from _pyspread.irange import irange
@@ -14,6 +16,39 @@ from _pyspread.config import odftags, selected_cell_brush
 
 # Grid level view
 # ---------------
+
+
+class MemoryMap(object):
+    """Memory representation of grid canvas using numpy arrays
+    
+    Parameters
+    ----------
+     * size: 2-tuple of Integer
+    \tSize of grid canvas in pixels
+    
+    """
+    
+    def __init__(self, size):
+        self.resize(size)
+
+
+    def resize(self, size):
+        self.width, self.height = width, height = self.size = size
+        
+        self.background_layer = numpy.zeros((width, height, 3), dtype="uint8")
+        self.border_layer     = numpy.zeros((width, height, 4), dtype="uint8")
+        self.text_layer       = numpy.zeros((width, height, 4), dtype="uint8")
+    
+    def ndarray_to_wxbmp(self, ndarray):
+        """Returns a wxBitmaop from a numpy array"""
+        
+        width, height = ndarray.shape[:2]
+        
+        image = wx.EmptyImage(width, height)
+        image.SetData(array.tostring())
+        
+        # wx.BitmapFromImage(image)
+        return image.ConvertToBitmap() 
 
 class GridCollisionMixin(object):
     """Collison helper functions for grid drawing"""

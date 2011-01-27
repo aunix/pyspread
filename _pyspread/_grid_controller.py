@@ -17,8 +17,12 @@ from _pyspread._events import post_shape_change
 
 class GridSelectionMask(object):
     """incl. insert and delete, {"rows": [], "cols":[], "tabs":[]}"""
-    def __init__(self, grid):
+    
+    def __init__(self, controller, grid):
+        self.controller = controller
         self.grid = grid
+        
+        self.get_data = grid.getselectiondata
         
     def __call__(self):
         """Returns list of row, col, tab tuples of selection"""
@@ -39,14 +43,18 @@ class GridSelectionMask(object):
         
         return set(c[axis] for c in self.grid.get_selection())
     
-    def _get_selected_rows_cols(self, axis):
-        """Returns tuple of current insertion position and selected rows"""
+    def _get_selected_rowcol_number(self, axis):
+        """Returns current insertion position and number of selected rowcols
+        
+         * axis: Integer
+        \tIf axis == 0, the number of selected rows is returned.
+        \tIf axis == 1, the number of selected cols is returned.
+        
+        """
+        
         selected_rowcols = self[axis]
-        current_rowcol = min(selected_rowcols)
-        no_selected_rowcols = max(1, len(selected_rowcols))
-        
-        return current_rowcol, no_selected_rowcols
-        
+        return max(1, len(selected_rowcols))
+    
     def insert(self, axis):
         """Inserts the number of selected rows/cols/tabs before cursor
         
@@ -56,7 +64,9 @@ class GridSelectionMask(object):
         
         """
         
-        rowcol, no_ins = self._get_selected_rows_cols(axis)
+        no_ins = self._get_selected_rowcol_number(axis)
+        rowcol = self.controller.cursor[axis]
+        
         if axis == 0:
             self.grid.insert_rows(rowcol, no_ins)
         elif axis == 1:
@@ -75,7 +85,7 @@ class GridSelectionMask(object):
         
         """
         
-        rowcol, no_del = self._get_selected_rows_cols(axis)
+        rowcol, no_del = self._get_selected_rowcol_number(axis)
         if axis == 0:
             self.grid.delete_rows(rowcol, no_del)
         elif axis == 1:
@@ -90,32 +100,15 @@ class GridSelectionMixin(object):
     
     Public methods:
     ---------------
-    get_selected_rows_cols
     get_selection
     get_selection_code
-    get_currentcell
+    _get_currentcell
     get_visiblecell_slice
     getselectiondata
     selection_replace
     delete
     
     """
-    
-    def get_selected_rows_cols(self, selection = None):
-        """ Get the slices of selected rows and cols, None if no selection """
-        if selection is None:
-            selection = self.get_selection()
-        try:
-            rowslice = slice(min(c[0] for c in selection), \
-                             max(c[0] for c in selection) + 1)
-        except IndexError:
-            rowslice = None
-        try: 
-            colslice = slice(min(c[1] for c in selection), \
-                             max(c[1] for c in selection) + 1)
-        except IndexError: 
-            colslice = None
-        return rowslice, colslice
     
     def get_selection(self):
         """ Returns an index list of all cells that are selected in the grid.
@@ -148,7 +141,7 @@ class GridSelectionMixin(object):
                                  for y in xrange(topleft[1], bottomright[1]+1)]
         
         if selection == []:
-            selection = [(self.get_currentcell())]
+            selection = [(self._get_currentcell())]
         selection = sorted(list(set(selection)))
         
         return selection
@@ -186,7 +179,7 @@ class GridSelectionMixin(object):
         return code
 
     
-    def get_currentcell(self):
+    def _get_currentcell(self):
         """Get cursor position"""
         
         row = self.GetGridCursorRow()
@@ -375,7 +368,10 @@ class GridClipboard(object):
         
         selection = self.grid.get_selection()
         
-        rowslice, colslice = self.grid.get_selected_rows_cols(selection)
+        selection_rows, selection_cols = zip(*selection)
+        rowslice = slice(min(selection_rows), max(selection_rows) + 1)
+        colslice = slice(min(selection_cols), max(selection_cols) + 1)
+        
         data = self.grid.getselectiondata(source, rowslice, colslice, selection)
         
         self.grid.copy_selection = [ \

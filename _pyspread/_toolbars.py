@@ -656,14 +656,6 @@ class AttributesToolbar(wx.ToolBar):
     # Attributes toolbar event handlers
     # ---------------------------------
     
-    def _getkey(self):
-        """Returns the key of the currentky selected cell"""
-        
-        row, col = self.grid.get_currentcell()
-        tab = self.grid.current_table 
-        
-        return row, col, tab
-    
     def _get_key_list(self):
         """Returns a key list of selected cells
         
@@ -671,12 +663,12 @@ class AttributesToolbar(wx.ToolBar):
         
         """
         
-        selected_cells = self.grid.controller.grid_selection()
+        selected_cells = self.grid.controller.selection()
         if selected_cells:
             tab = self.grid.controller.cursor[2]
             return [(row, col, tab) for row, col in selected_cells]
         else:
-            return [self._getkey()]
+            return [self.grid.controller.cursor]
     
     def OnBorderChoice(self, event):
         """Change the borders that are affected by color and width changes"""

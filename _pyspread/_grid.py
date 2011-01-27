@@ -43,7 +43,7 @@ from _pyspread._grid_controller import GridSelectionMixin, \
 
 from _pyspread._grid_model import MainGridTable
 
-from _pyspread._grid_view import GridCollisionMixin, TextRenderer
+from _pyspread._grid_view import GridCollisionMixin, TextRenderer, MemoryMap
 
 from _pyspread._events import post_status_text, post_entryline_text
 from _pyspread._events import post_entryline_selection
@@ -81,7 +81,8 @@ class MainGrid(object):
         
         self.model = MainGridModel(parent, self._main_grid)
         
-        self.controller = MainGridController(parent, self._main_grid, self.model)
+        self.controller = MainGridController(parent, self._main_grid, 
+                                             self.model)
         
         self.view = MainGridView(parent, self._main_grid, self.model)
 
@@ -101,6 +102,7 @@ class MainGridModel(object):
         self.frozen_cells = self.pysgrid.sgrid.frozen_cells
         
         self.load = grid.loadfile
+        self.save = grid.savefile
         
         self.parent.Bind(EVT_GRID_SHAPE, self.OnShapeChange)
     
@@ -124,7 +126,7 @@ class MainGridController(object):
         self.undo = grid.undo
         self.redo = grid.redo
         
-        self.grid_selection = GridSelectionMask(grid)
+        self.selection = GridSelectionMask(self, grid)
         
         self.clipboard = GridClipboard(grid, model)
         
@@ -222,7 +224,14 @@ class MainGridView(object):
         self.freeze = grid.Freeze
         self.thaw = grid.Thaw
         
+        self.get_size = grid.GetSize
+        self.memory_map = MemoryMap(self.get_size())
+        
         self.get_visiblecell_slice = grid.get_visiblecell_slice
+        self.cell_to_rect = grid.CellToRect
+        self.get_scroll_pos = grid.GetScrollPos
+        self.get_scroll_line_x = grid.GetScrollLineX
+        self.get_scroll_line_y = grid.GetScrollLineY
     
     def refocus(self):
         """Refreshes the grid and focuses it"""
@@ -234,7 +243,7 @@ class MainGridView(object):
         return self.grid.zoom
     
     def set_zoom(self, zoom):
-        old_zoom = self.MainGrid.zoom
+        old_zoom = self.grid.zoom
         
         self.grid.Freeze()
         
@@ -249,7 +258,7 @@ class MainGridView(object):
         self.grid.zoom_rows()
         self.grid.zoom_cols()
         self.grid.zoom_labels()
-
+        
         self.force_refresh()
         
         self.grid.Thaw()
@@ -341,6 +350,7 @@ class MGrid(wx.grid.Grid,
         # Event bindings
         
         self.Bind(wx.EVT_TEXT, self.OnText)
+        self.Bind(wx.EVT_SIZE, self.OnSize)
         
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnContextMenu)
         self.Bind(wx.grid.EVT_GRID_CMD_EDITOR_HIDDEN, self.OnCellEditorHidden)
@@ -458,7 +468,7 @@ class MGrid(wx.grid.Grid,
         
 
         # Now update the EntryLine to the current string
-        pos = tuple(list(self.get_currentcell())+[self.current_table])
+        pos = tuple(list(self._get_currentcell())+[self.current_table])
         currstr = self.table.GetSource(*pos)
         try:
             post_entryline_text(self, currstr)
@@ -770,12 +780,17 @@ class MGrid(wx.grid.Grid,
             
             self.backgrounds = {}
             
-            self.zoom_rows()
-            self.zoom_cols()
-            self.zoom_labels()
+            self.parent.MainGrid.view.zoom = self.zoom
             
         else:
             event.Skip()
+
+    def OnSize(self, event):
+        """Resize event handler"""
+        
+        self.parent.MainGrid.view.memory_map.resize(event.GetSize())
+        
+        event.Skip()
 
     def OnMessage(self, event):
         """Updates the pysgrid from event"""
