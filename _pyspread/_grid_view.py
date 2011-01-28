@@ -11,7 +11,7 @@ from _pyspread.irange import irange
 import _pyspread.xrect as xrect
 
 from _pyspread._interfaces import get_brush_from_data, get_pen_from_data, \
-                                  get_font_from_data
+                                  get_font_from_data, hex_to_rgb
 from _pyspread.config import odftags, selected_cell_brush
 
 # Grid level view
@@ -38,17 +38,46 @@ class MemoryMap(object):
         self.background_layer = numpy.zeros((width, height, 3), dtype="uint8")
         self.border_layer     = numpy.zeros((width, height, 4), dtype="uint8")
         self.text_layer       = numpy.zeros((width, height, 4), dtype="uint8")
+        
+    def draw_rect(self, target, key, color=(0, 0, 0)):
+        """Draws colors rectangle on target memory map
+        
+        Parameters
+        ----------
+         * target: numpy array
+        \tTarget memory map
+         * key: 2-tuple of sice
+        \tCell slice of rectangle (Works also for non-rectangle slices)
+         * color: Tuple of uint8
+        \tColor 3-tuple for rgb, 4-tuple for rgba
+        
+        """
+        
+        if len(color) == 3:
+            color += (255, )
+        
+        target[key[0], key[1], :] = numpy.array(color)
     
-    def ndarray_to_wxbmp(self, ndarray):
-        """Returns a wxBitmaop from a numpy array"""
+    def draw_h_line(self, target, x1, x2, y, color=(0, 0, 0), width=1):
+        """Draws horizontal line from (x1, y) to (x2, y) on target memory map"""
         
-        width, height = ndarray.shape[:2]
+        y_max = y + width // 2
+        y_min = y - width // 2
         
-        image = wx.EmptyImage(width, height)
-        image.SetData(array.tostring())
+        key = (slice(x1, x2 + 1), slice(y_min, y_max + 1))
         
-        # wx.BitmapFromImage(image)
-        return image.ConvertToBitmap() 
+        self.draw_rect(target, key, color)
+
+    def draw_v_line(self, target, x, y1, y2, color=(0, 0, 0), width=1):
+        """Draws horizontal line from (x1, y) to (x2, y) on target memory map"""
+        
+        x_max = x + width // 2
+        x_min = x - width // 2
+        
+        key = (slice(x_min, x_max + 1), slice(y1, y2 + 1))
+        
+        self.draw_rect(target, key, color)
+
 
 class GridCollisionMixin(object):
     """Collison helper functions for grid drawing"""
@@ -144,15 +173,7 @@ class GridCollisionMixin(object):
                        [tuple(self.pysgrid.get_sgrid_attr(key, bgc)) \
                             for bgc in bg_components])
 
-        try:
-            bg = self.backgrounds[bg_key]
-
-        except KeyError:
-            if len(self.backgrounds) > 10000:
-                # self.table.backgrounds may grow quickly
-                self.backgrounds = {}
-
-            bg = self.backgrounds[bg_key] = Background(self, *key)
+        bg = Background(self, *key)
         
         return bg
 
@@ -531,7 +552,25 @@ class Background(object):
         dc.SetBrush(bgbrush)
         dc.SetPen(wx.TRANSPARENT_PEN)
         dc.DrawRectangle(0, 0, self.rect.width, self.rect.height)
-
+    
+    def zoom_line_width(self, width):
+        """Zooms line width according to self.grid.zoom"""
+        
+        return max(1, int(round(width * self.grid.zoom)))
+    
+    def get_pen_attr(self, key, pen_name):
+        """Returns color, zoomed width and style of a pen defined in cell key"""
+        
+        cell_attr = self.grid.pysgrid.get_sgrid_attr
+        
+        int_color, width, style = cell_attr(key, pen_name)
+        
+        # Color conversion from rgb packed in an int
+        color = hex_to_rgb(int_color)
+        zoomed_width = self.zoom_line_width(width)
+        
+        return color, zoomed_width, style
+    
     def draw_border_lines(self, dc):
         """Draws lines"""
         
@@ -539,46 +578,93 @@ class Background(object):
         grid = self.grid
         row, col, tab = key = self.key
         
-        # Get borderpens and bgbrushes for rects        
-        # Each cell draws its bottom and its right line only
-        bottomline = x, y + h, x + w, y + h
-        rightline = x + w, y, x + w, y + h
-        lines = [bottomline, rightline]
+        # Draw to memory map
         
-        pen_names = ["borderpen_bottom", "borderpen_right"]
+        memory_map = self.grid.parent.MainGrid.view.memory_map
         
-        borderpens = [get_pen_from_data(grid.pysgrid.get_sgrid_attr(key, pen)) \
-                        for pen in pen_names]
+        color_btm, width_btm, _ = self.get_pen_attr(key, "borderpen_bottom")
+        color_right, width_right, _ = self.get_pen_attr(key, "borderpen_right")
+        
+        target = memory_map.border_layer
+        
+        memory_map.draw_h_line(target, x, x + w, y + h, color_btm, width_btm)
+        memory_map.draw_v_line(target, x + w, y, y + h, \
+                                                    color_right, width_right)
         
         # Topmost line if in top cell
         
         if row == 0:
-            lines.append((x, y, x + w, y))
             topkey = "top", col, tab
-            toppen_data  = grid.pysgrid.get_sgrid_attr(topkey, pen_names[0])
-            borderpens.append(get_pen_from_data(toppen_data))
+            
+            color_top, width_top, _ = \
+                self.get_pen_attr(topkey, "borderpen_bottom")
+            
+            memory_map.draw_h_line(target, x, x + w, y, color_top, width_top)
         
         # Leftmost line if in left cell
         
         if col == 0:
-            lines.append((x, y, x, y + h))
             leftkey = row, "left", tab
-            toppen_data  = grid.pysgrid.get_sgrid_attr(leftkey, pen_names[1])
-            borderpens.append(get_pen_from_data(toppen_data))
-        
-        zoomed_pens = []
-        
-        for pen in borderpens:
-            bordercolor = pen.GetColour()
-            borderwidth = pen.GetWidth()
-            borderstyle = pen.GetStyle()
             
-            zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
-            zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, borderstyle)
-            zoomed_pen.SetJoin(wx.JOIN_MITER)
+            color_left, width_left, _ = \
+                self.get_pen_attr(leftkey, "borderpen_right")
             
-            zoomed_pens.append(zoomed_pen)
+            memory_map.draw_v_line(target, x , y, y + h, color_left, width_left)
         
-        dc.DrawLineList(lines, zoomed_pens)
+        dummy = numpy.zeros((h + 1, w + 1, 4), dtype="uint8")
+        
+        dummy[:,:,:] = memory_map.border_layer[x:x+w+1, y:y+h+1, ].\
+                                transpose(1,0,2)
+        
+        bmp = wx.BitmapFromBufferRGBA(w + 1, h + 1, dummy)
+        #print dummy, bmp.GetSize()
+        
+        dc.DrawBitmap(bmp, x, y)
+
+        
+        ## OLD VERSION WITHOUT MEMORY MAP below
+        
+        
+#        # Get borderpens and bgbrushes for rects        
+#        # Each cell draws its bottom and its right line only
+#        bottomline = x, y + h, x + w, y + h
+#        rightline = x + w, y, x + w, y + h
+#        lines = [bottomline, rightline]
+#        
+#        pen_names = ["borderpen_bottom", "borderpen_right"]
+#        
+#        borderpens = [get_pen_from_data(grid.pysgrid.get_sgrid_attr(key, pen)) \
+#                        for pen in pen_names]
+#        
+#        # Topmost line if in top cell
+#        
+#        if row == 0:
+#            lines.append((x, y, x + w, y))
+#            topkey = "top", col, tab
+#            toppen_data  = grid.pysgrid.get_sgrid_attr(topkey, pen_names[0])
+#            borderpens.append(get_pen_from_data(toppen_data))
+#        
+#        # Leftmost line if in left cell
+#        
+#        if col == 0:
+#            lines.append((x, y, x, y + h))
+#            leftkey = row, "left", tab
+#            toppen_data  = grid.pysgrid.get_sgrid_attr(leftkey, pen_names[1])
+#            borderpens.append(get_pen_from_data(toppen_data))
+#        
+#        zoomed_pens = []
+#        
+#        for pen in borderpens:
+#            bordercolor = pen.GetColour()
+#            borderwidth = pen.GetWidth()
+#            borderstyle = pen.GetStyle()
+#            
+#            zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
+#            zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, borderstyle)
+#            zoomed_pen.SetJoin(wx.JOIN_MITER)
+#            
+#            zoomed_pens.append(zoomed_pen)
+#        
+#        dc.DrawLineList(lines, zoomed_pens)
 
 # end of class Background

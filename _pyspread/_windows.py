@@ -204,7 +204,7 @@ class MainWindow(wx.Frame):
         
         self._mgr.AddPane(self.entry_line, wx.aui.AuiPaneInfo().
                           Name("entry_line").Caption("Entry line").
-                          ToolbarPane().MinSize((800, 10)).Row(2).
+                          ToolbarPane().MinSize((10, 10)).Row(2).
                           Top().CloseButton(False).MaximizeButton(False).
                           LeftDockable(True).RightDockable(True))
         

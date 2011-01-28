@@ -507,6 +507,15 @@ def get_font_from_data(fontdata):
     
     return textfont
 
+def hex_to_rgb(value):
+    """Hex conversion for wx.Color RGB"""
+    
+    color = wx.Colour()
+    color.SetRGB(value)
+    return color.Get(includeAlpha=True)
+
+def rgb_to_hex(rgb):
+    return '#%02x%02x%02x' % rgb
 
 def get_pen_from_data(pendata):
     """Returns wx.Pen from pendata attribute list"""

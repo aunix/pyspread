@@ -219,7 +219,7 @@ class MainGridView(object):
         self.model = model
         
         self.update = grid.Update
-        self.force_refresh = grid.ForceRefresh
+        self.force_refresh = self.refocus
         
         self.freeze = grid.Freeze
         self.thaw = grid.Thaw
@@ -236,7 +236,8 @@ class MainGridView(object):
     def refocus(self):
         """Refreshes the grid and focuses it"""
         
-        self.force_refresh()
+        self.memory_map.resize(self.get_size())
+        self.grid.ForceRefresh()
         self.grid.SetFocus
     
     def get_zoom(self):
@@ -259,7 +260,7 @@ class MainGridView(object):
         self.grid.zoom_cols()
         self.grid.zoom_labels()
         
-        self.force_refresh()
+        self.refocus()
         
         self.grid.Thaw()
     
