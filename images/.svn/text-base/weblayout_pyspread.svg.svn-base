@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="weblayout_pyspread.svg">
+  <defs
+     id="defs4">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       id="perspective10" />
+    <inkscape:perspective
+       id="perspective2920"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3254"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3328"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3346"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3421"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4"
+     inkscape:cx="-183.13269"
+     inkscape:cy="998.11719"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1280"
+     inkscape:window-height="975"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <image
+       y="21.106869"
+       x="16.48638"
+       id="image2922"
+       height="57"
+       width="44"
+       xlink:href="file:///home/mn/prog/pyspread/website/images/pyspread.png" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Skeletor Stance;-inkscape-font-specification:Skeletor Stance Bold"
+       x="74.285713"
+       y="46.6479"
+       id="text2926"><tspan
+         sodipodi:role="line"
+         id="tspan2928"
+         x="74.285713"
+         y="46.6479"
+         style="-inkscape-font-specification:'Switzera ADF Extra Bold, Bold';font-family:Switzera ADF Extra Bold;font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal">pyspread</tspan><tspan
+         sodipodi:role="line"
+         x="74.285713"
+         y="96.647896"
+         id="tspan2930"
+         style="-inkscape-font-specification:'Switzera ADF Extra Bold, Bold';font-family:Switzera ADF Extra Bold;font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal;font-size:20">Python power for your tables </tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Switzera ADF Bold;-inkscape-font-specification:'Switzera ADF Bold, Bold'"
+       x="8.5714273"
+       y="120.93361"
+       id="text2932"><tspan
+         sodipodi:role="line"
+         id="tspan2934"
+         x="8.5714273"
+         y="120.93361"
+         style="font-size:16px">HOME  |   SF-SITE  |   DOWNLOAD  |   SCREENSHOTS  |   FORUM  |   BUG TRACKER  |   WIKI </tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.60356748px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 7.714286,97.005039 721.428574,0"
+       id="path2936" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot2938"
+       style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:justify;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Switzera ADF Bold;-inkscape-font-specification:'Switzera ADF Bold, Bold'"
+       transform="translate(217.14285,-31.714286)"><flowRegion
+         id="flowRegion2940"><rect
+           id="rect2942"
+           width="264.28571"
+           height="195.71443"
+           x="12.857142"
+           y="183.79076"
+           style="text-align:justify;text-anchor:start" /></flowRegion><flowPara
+         id="flowPara2948"
+         style="font-size:14px;text-align:justify;text-anchor:start">Pyspread is a cross-platform Python spreadsheet application. It is based on and written in the programming language Python.Instead of spreadsheet formulas, Python expressions are entered into the spreadsheet cells. Each expression returns a Python object that can be accessed from other cells. These objects can represent anything including lists or matrices. </flowPara><flowPara
+         id="flowPara2950" /><flowPara
+         id="flowPara2952" /></flowRoot>    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Switzera ADF Bold;-inkscape-font-specification:'Switzera ADF Bold, Bold'"
+       x="34.285713"
+       y="185.21935"
+       id="text2958"><tspan
+         sodipodi:role="line"
+         id="tspan2960"
+         x="34.285713"
+         y="185.21935">about</tspan></text>
+    <image
+       y="153.2193"
+       x="551.13025"
+       id="image3330"
+       height="126.47166"
+       width="176.08208"
+       xlink:href="file:///home/mn/prog/pyspread/website/images/screenshot_wagner2.png" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Switzera ADF Bold;-inkscape-font-specification:'Switzera ADF Bold, Bold'"
+       x="22.857141"
+       y="456.64789"
+       id="text3334"><tspan
+         sodipodi:role="line"
+         id="tspan3336"
+         x="22.857141"
+         y="456.64789">features</tspan></text>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot2938-5"
+       style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:justify;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Switzera ADF Bold;-inkscape-font-specification:'Switzera ADF Bold, Bold'"
+       transform="translate(213.02105,232.39485)"><flowRegion
+         id="flowRegion2940-3"><rect
+           id="rect2942-2"
+           width="285.71429"
+           height="438.57156"
+           x="12.857142"
+           y="183.79076"
+           style="text-align:justify;text-anchor:start" /></flowRegion><flowPara
+         id="flowPara2948-8"
+         style="font-size:14px;text-align:justify;text-anchor:start">Direct access to all Python modules from each cell</flowPara><flowPara
+         style="font-size:14px;text-align:justify;text-anchor:start"
+         id="flowPara3375">Up to 85,899,345 rows and 14,316,555 columns (64 bit-systems, depends on row height and column width)</flowPara><flowPara
+         style="font-size:14px;text-align:justify;text-anchor:start"
+         id="flowPara3377">GPG signature based trust model for spreadsheet files</flowPara><flowPara
+         style="font-size:14px;text-align:justify;text-anchor:start"
+         id="flowPara3379">Safe file mode for foreign, untrusted spreadsheets</flowPara><flowPara
+         style="font-size:14px;text-align:justify;text-anchor:start"
+         id="flowPara3381">Three-dimensional grid</flowPara><flowPara
+         style="font-size:14px;text-align:justify;text-anchor:start"
+         id="flowPara3383">Macros for more complex Python functions</flowPara><flowPara
+         style="font-size:14px;text-align:justify;text-anchor:start"
+         id="flowPara3405">Unicode support</flowPara><flowPara
+         style="font-size:14px;text-align:justify;text-anchor:start"
+         id="flowPara3407">CSV import and exportSince Python modules can be easily used without external scripts</flowPara><flowPara
+         style="font-size:14px;text-align:justify;text-anchor:start"
+         id="flowPara3409">arbitrary size rational numbers (via gmpy),</flowPara><flowPara
+         style="font-size:14px;text-align:justify;text-anchor:start"
+         id="flowPara3411">fixed point decimal numbers for business calculations, (via the decimal module from the standard library) and    advanced statistics including plotting functions (via RPy)can be used in the spreadsheet. Everything is directly available from each cell. Just use the grid.</flowPara><flowPara
+         id="flowPara2950-5" /><flowPara
+         id="flowPara2952-2" /><flowPara
+         id="flowPara3385" /><flowPara
+         id="flowPara3387" /><flowPara
+         id="flowPara3389" /><flowPara
+         id="flowPara3391" /><flowPara
+         id="flowPara3393" /><flowPara
+         id="flowPara3395" /><flowPara
+         id="flowPara3397" /><flowPara
+         id="flowPara3399" /><flowPara
+         id="flowPara3401" /><flowPara
+         id="flowPara3403" /></flowRoot>    <image
+       y="423.41208"
+       x="550.5304"
+       id="image3330-9"
+       height="126.47166"
+       width="176.08208"
+       xlink:href="file:///home/mn/prog/pyspread/website/images/screenshot_wagner2.png" />
+  </g>
+</svg>

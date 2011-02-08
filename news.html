@@ -1,0 +1,275 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><title>Pyspread - News</title>
+
+
+  
+
+  
+  
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  
+  <meta name="Author" content="Martin Manns">
+
+  
+  <meta name="description" content="Pyspread is a cross-platform Python spreadsheet.">
+
+  
+  <meta name="keywords" content="pyspread, spreadsheet, python, python spreadsheet, numpy, wxpython, csv, data mining">
+
+  
+  <style type="text/css">
+<!--
+body
+{
+background-color:#ffffff;
+}
+
+h1: {font-size: 28}
+
+a:link, a:visited, a:active, a:hover
+{
+text-decoration:underline;
+font-weight:bold;
+color:#777777;
+}
+a:active, a:hover
+{
+color:#000000;
+}
+a.menu:link, a.menu:visited
+{
+color:#777777;
+}
+a.menu:active, a.menu:hover
+{
+color:#000000;
+}
+
+/* Title box */
+#title {
+font-size:28px;
+font-weight:bold;
+padding-top:0px;
+height:28px;
+margin: 15;
+}
+
+/* Menu */
+#menu {
+color:#000000;
+text-align:center;
+padding:10px 0px;
+border-top:1px solid #999999;
+border-bottom:1px solid #999999;
+clear:left;
+}
+
+/* Content */
+#content {
+border:1px solid #000000;
+background-color:#f2f2f2;
+padding:5px 15px;
+color:#000000;
+}
+
+//--></style><!-- SF Logo -->
+  
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+
+  
+  <style type="text/css">
+th {
+  font-size: large;
+  font-weight: bold;
+  text-transform: lowercase;
+  font-family: Arial,Helvetica,sans-serif;
+  margin-top: 0.5em;
+  background-attachment: fixed;
+  text-decoration: overline;
+}
+td {
+  font-family: Arial,Helvetica,sans-serif;
+  font-weight: lighter;
+  font-style: normal;
+  text-align: justify;
+  line-height: 1.3em;
+}
+h1 {
+  font-family: Arial,Helvetica,sans-serif;
+  font-size: 2em;
+  font-weight: bold;
+}
+h3 {
+  font-family: Arial,Helvetica,sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  text-transform: none;
+  text-align: left;
+  font-size: 1em;
+}
+#menu {
+  font-family: Arial,Helvetica,sans-serif;
+}
+
+  </style></head><body>
+<div style="float: right;">
+<a href="http://sourceforge.net/projects/pyspread"><img src="http://sflogo.sourceforge.net/sflogo.php?group_id=224598&amp;type=9" alt="Get pyspread at SourceForge.net. Fast, secure and Free Open Source software downloads" height="15" width="80"></a></div>
+
+<!-- Title -->
+<div style="float: left; width: 80px; height: 80px;"><img src="images/pyspread.png" style="margin-left: 15px; margin-right: 30px; margin-top: 10px;" alt="Logo" height="57" width="44"></div>
+
+<div style="width: 400px; height: 80px;">
+<h1 id="title">pyspread</h1>
+<h3>Python power for your tables</h3>
+</div>
+
+<!-- Menu -->
+<div id="menu"><a class="menu" href="index.html">home</a>&nbsp;
+|&nbsp;&nbsp; <a style="text-decoration: overline; color: black;" class="menu" href="news.html">news</a>&nbsp;
+|&nbsp;&nbsp; <a class="menu" href="download.html">download</a>&nbsp;
+|&nbsp;&nbsp; <a class="menu" href="docs.html">docs</a>&nbsp;
+|&nbsp;&nbsp; <a class="menu" href="http://sourceforge.net/forum/?group_id=224598" target="_blank">forum</a>&nbsp;
+|&nbsp;&nbsp; <a class="menu" href="http://sourceforge.net/tracker/?group_id=224598" target="_blank">bugs</a>&nbsp;
+|&nbsp;&nbsp; <a class="menu" href="http://pyspread.wiki.sourceforge.net/" target="_blank">wiki</a>
+</div>
+
+<p>
+</p>
+
+<table style="text-align: left; width: 100%; margin-left: auto; margin-right: auto;" border="0" cellpadding="15" cellspacing="0">
+
+  <tbody>
+    <tr>
+<th style="vertical-align: top;">Release</th>
+<td style="vertical-align: top;">
+<h3 style="font-weight: bold; margin-top: 0px; height: 20px;"><span style="font-weight: bold;">pyspread 0.1.2 released </span><span style="font-size: small; font-weight: normal;">(2010-10-29)</span></h3>
+Release with many bug fixes and speed ups.<br>
+<br>
+New features:<br>
+<ul><li>Added function to make a cell visible</li><li>Third cell justification "center" added</li><li>Ctrl-F now points to find toolbar instead of find dialog</li><li>Frozen state is now saved</li><li>Entering text in a cell now deletes old text</li><li>Added function F5 (in menu View) for refreshing selected cells</li><li>Save option "pys file with/without gpg signature" added</li></ul>
+
+      
+      
+<p>Bug fixes: </p>
+
+      
+<ul><li>Grid flicker reduced</li><li>Printing works again</li><li>Changing the table now empties the entry line and does not mess up&nbsp; data any more (BUG 3030172)</li><li>1D printing bug fixed (BUG 2790444)</li><li>Loading a file from command line no longer deletes cell 0,0,0 (BUG 3030880)</li><li>Undoing paste operations now works (BUG 3019334)</li><li>Bitmap toggle buttons now work in Windows as well</li><li>Marks undo and redo operation do not accumulate any more</li><li>Undoing text font and textattribute changes works now</li><li>CSV import dialog apply button removed</li><li>Cell limit (2**26) for 32 bit systems removed</li><li>Prints of off-screen areas now correctly center on page</li><li>Help now works when not in the home directory</li><li>Double underscores in Tutorial corrected</li><li>Pyspread gpg key name changed to pyspread_&lt;user-id&gt;</li><li>Deleting rows and columns can be undone again</li><li>When reversing search, all values are now found</li><li>Saved pys files now have .pys suffix added automatically</li><li>Fixed font size reset bug when setting font attributes</li><li>Loading a file from command line now checks signature correctly</li><li>Fixed moving cells bug for edits in non top-left grid position in wx.GTK<br>
+  </li></ul>
+</td>
+    </tr>
+<tr>
+      <th style="vertical-align: top; background-color: white; width: 102px;">Podcast</th>
+      <td>
+      <h3 style="font-weight: bold; margin-top: 0px; height: 20px;"><span style="font-weight: bold;">Importing large data files </span><span style="font-size: small; font-weight: normal;">(2010-08-17)</span></h3>
+The first pyspread podcast is available in the docs section. It
+describes how to import large amounts of data into pyspread. </td></tr><tr>
+      <th style="vertical-align: top; background-color: white; width: 102px;">Release</th>
+      <td>
+      <h3 style="font-weight: bold; margin-top: 0px; height: 20px;"><span style="font-weight: bold;">pyspread 0.1.1 released </span><span style="font-size: small; font-weight: normal;">(2010-05-08)</span></h3>
+Bugfix release with major speed ups.
+      <p>This version speeds up the grid by making use of Blit
+operations.
+On Windows, there are some issues about rotated text that is overlapped
+by backgrounds of cells that are above or left.
+No fix yet because the grid is slower in Windows anyways. On Linux
+everything should run fine. </p>
+      <p>Bug fixes: </p>
+      <ul>
+        <li>Grid is faster.</li>
+        <li>Copying only partly filled cells works now.</li>
+        <li>Cells that get attributes but no string no longer display
+None.</li>
+      </ul>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="width: 211px;"><br>
+      </td>
+    </tr>
+    <tr>
+      <th style="vertical-align: top; width: 102px;"> Release</th>
+      <td>
+      <h3 style="margin-top: 2px; height: 15px;"><span style="font-weight: bold;">pyspread 0.1 released</span> <span style="font-size: small; font-weight: normal;">(2010-03-20)</span></h3>
+After a long and eventful Alpha period, pyspread has finally reached
+Beta stage.<br>
+I thank all contributors and testers who have helped getting pyspread
+to this point.
+      <p>Pyspread runs pretty stable in CPython. Please note that old
+save files are not compatible. Load them in the old version and copy
+the code to a new version of pyspread via the clipboard.<br>
+Being in Beta means increased code stability. Save files are now going
+to be downwards compatible. However, major beta releases (e. g. 0.1 to
+0.2) may still break compatibility. Such a change may occur only after
+being announced in the previous major beta release. </p>
+      <p>New features: </p>
+      <ul>
+        <li>New macro editor dialog.</li>
+        <li>Macros can now contain any Python code.</li>
+        <li>Macros load and save files are now plain text files.</li>
+        <li>Macros are now saved within the pys-file.</li>
+        <li>Macros files are now signed and included in the trusted
+file concept.</li>
+      </ul>
+Bug fixes:
+      <ul>
+        <li>Cells can now be correctly accessed with negative index
+(BUG 2965144)</li>
+      </ul>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="width: 211px;"><br>
+      <a href="images/screenshot_fonts.png"><br>
+      </a> </td>
+    </tr>
+    <tr>
+      <th style="vertical-align: top; width: 102px;">feature<br>
+      </th>
+      <td>
+      <h3 style="margin-top: 1px; height: 16px;"><span style="font-weight: bold;">ODF format support but not for now</span> <span style="font-size: small; font-weight: normal;">(2009-11-19)</span></h3>
+Standardized file formats are great when it comes to data exchange with
+other Office packages.
+ODF seemed a good choice. However, the parsing code needs too much
+coding time and still performs much too slow.
+Therefore, I have removed the interface from the code base. Starting
+from 0.0.12a, the file format will be an improved pys format. In fact,
+it is compatible to the old pys files.
+      <p>If you need ODF support, you are welcome to contribute. The
+ODF code is still available. </p>
+      </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="width: 211px;"><br>
+      </td>
+    </tr>
+    <tr>
+      <th style="vertical-align: top;">contribute<br>
+      </th>
+      <td>
+      <h3 style="margin-top: 2px; height: 17px;"><span style="font-weight: bold;">Mac feedback</span> <span style="font-size: small; font-weight: normal;">(2009-10-02)</span></h3>
+Pyspread needs more love on the Mac. I am looking for testers who test
+pyspread
+on OS/X, give feedback. I am also looking for patches for
+wxPython-related user
+interface glitches, since I currently have no access to a Mac. </td>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td><a href="images/screenshot_sinus_large.png"><br>
+      </a> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+</p>
+
+<p><span style="font-style: italic;"><small>Copyright 2008-2010 Martin
+Manns</small></span><br style="font-style: italic;">
+<span style="font-style: italic;"><small>Last changed: 29. October 2010</small>
+</span></p>
+
+<p> <a href="http://validator.w3.org/check?uri=referer"><img src="http://www.w3.org/Icons/valid-html401" alt="Valid HTML 4.01 Strict" height="31" width="88"></a> </p>
+
+
+</body></html>
