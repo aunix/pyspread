@@ -43,7 +43,7 @@ from _pyspread._grid_controller import GridSelectionMixin, \
 
 from _pyspread._grid_model import MainGridTable
 
-from _pyspread._grid_view import GridCollisionMixin, TextRenderer, MemoryMap
+from _pyspread._grid_view import GridCollisionMixin, TextRenderer
 
 from _pyspread._events import post_status_text, post_entryline_text
 from _pyspread._events import post_entryline_selection
@@ -219,26 +219,34 @@ class MainGridView(object):
         self.model = model
         
         self.update = grid.Update
-        self.force_refresh = self.refocus
+        self.force_refresh = self.resize
         
         self.freeze = grid.Freeze
         self.thaw = grid.Thaw
         
         self.get_size = grid.GetSize
-        self.memory_map = MemoryMap(self.get_size())
+        #self.memory_map = MemoryMap(self.get_size())
         
         self.get_visiblecell_slice = grid.get_visiblecell_slice
         self.cell_to_rect = grid.CellToRect
         self.get_scroll_pos = grid.GetScrollPos
         self.get_scroll_line_x = grid.GetScrollLineX
         self.get_scroll_line_y = grid.GetScrollLineY
-    
-    def refocus(self):
-        """Refreshes the grid and focuses it"""
         
-        self.memory_map.resize(self.get_size())
+        self.memory_map_cache = {}
+    
+    def resize(self):
+        """Refeshes the grid on resize"""
+        
+        #self.memory_map_cache = {}
+        #self.memory_map.resize(self.get_size())
         self.grid.ForceRefresh()
-        self.grid.SetFocus
+    
+    def clear(self):
+        """Clears the grid but leaves size intact"""
+        
+        #self.memory_map.clear()
+        pass
     
     def get_zoom(self):
         return self.grid.zoom
@@ -260,7 +268,7 @@ class MainGridView(object):
         self.grid.zoom_cols()
         self.grid.zoom_labels()
         
-        self.refocus()
+        self.resize()
         
         self.grid.Thaw()
     
@@ -353,6 +361,8 @@ class MGrid(wx.grid.Grid,
         self.Bind(wx.EVT_TEXT, self.OnText)
         self.Bind(wx.EVT_SIZE, self.OnSize)
         
+        self.Bind(wx.EVT_SCROLLWIN, self.OnScroll)
+        
         self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.OnContextMenu)
         self.Bind(wx.grid.EVT_GRID_CMD_EDITOR_HIDDEN, self.OnCellEditorHidden)
         self.Bind(wx.grid.EVT_GRID_CMD_EDITOR_SHOWN, self.OnCellEditorShown)
@@ -387,6 +397,7 @@ class MGrid(wx.grid.Grid,
             pass
             
         self.table.ResetView()
+        self.table.resize()
 
     def get_visible_rows(self):
         """Returns a lists of the visible rows"""
@@ -523,6 +534,13 @@ class MGrid(wx.grid.Grid,
         self.ClearGrid()
         self.Update()
         self.create_rowcol()
+    
+    def OnScroll(self, event):
+        """Event handler for grid scroll event"""
+        
+        self.parent.MainGrid.view.clear()
+        
+        event.Skip()
     
     def OnText(self, event):
         """Text entry event method in grid"""
@@ -669,6 +687,8 @@ class MGrid(wx.grid.Grid,
             self.pysgrid.sgrid.rows[rowno] = {}
             self.pysgrid.sgrid.rows[rowno][tag] = rowsize
         
+        #self.parent.MainGrid.view.memory_map.resize(self.GetSize())
+        
         event.Skip()
         
     def OnColSize(self, event):
@@ -692,7 +712,9 @@ class MGrid(wx.grid.Grid,
             self.pysgrid.sgrid.cols = {}
             self.pysgrid.sgrid.cols[colno] = {}
             self.pysgrid.sgrid.cols[colno][tag] = colsize
-
+        
+        #self.parent.MainGrid.view.memory_map.resize(self.GetSize())
+        
         event.Skip()
     
     def OnLeftUp(self, event):
@@ -789,7 +811,7 @@ class MGrid(wx.grid.Grid,
     def OnSize(self, event):
         """Resize event handler"""
         
-        self.parent.MainGrid.view.memory_map.resize(event.GetSize())
+        #self.parent.MainGrid.view.memory_map.resize(event.GetSize())
         
         event.Skip()
 

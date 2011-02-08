@@ -18,65 +18,94 @@ from _pyspread.config import odftags, selected_cell_brush
 # ---------------
 
 
-class MemoryMap(object):
-    """Memory representation of grid canvas using numpy arrays
-    
-    Parameters
-    ----------
-     * size: 2-tuple of Integer
-    \tSize of grid canvas in pixels
-    
-    """
-    
-    def __init__(self, size):
-        self.resize(size)
-
-
-    def resize(self, size):
-        self.width, self.height = width, height = self.size = size
-        
-        self.background_layer = numpy.zeros((width, height, 3), dtype="uint8")
-        self.border_layer     = numpy.zeros((width, height, 4), dtype="uint8")
-        self.text_layer       = numpy.zeros((width, height, 4), dtype="uint8")
-        
-    def draw_rect(self, target, key, color=(0, 0, 0)):
-        """Draws colors rectangle on target memory map
-        
-        Parameters
-        ----------
-         * target: numpy array
-        \tTarget memory map
-         * key: 2-tuple of sice
-        \tCell slice of rectangle (Works also for non-rectangle slices)
-         * color: Tuple of uint8
-        \tColor 3-tuple for rgb, 4-tuple for rgba
-        
-        """
-        
-        if len(color) == 3:
-            color += (255, )
-        
-        target[key[0], key[1], :] = numpy.array(color)
-    
-    def draw_h_line(self, target, x1, x2, y, color=(0, 0, 0), width=1):
-        """Draws horizontal line from (x1, y) to (x2, y) on target memory map"""
-        
-        y_max = y + width // 2
-        y_min = y - width // 2
-        
-        key = (slice(x1, x2 + 1), slice(y_min, y_max + 1))
-        
-        self.draw_rect(target, key, color)
-
-    def draw_v_line(self, target, x, y1, y2, color=(0, 0, 0), width=1):
-        """Draws horizontal line from (x1, y) to (x2, y) on target memory map"""
-        
-        x_max = x + width // 2
-        x_min = x - width // 2
-        
-        key = (slice(x_min, x_max + 1), slice(y1, y2 + 1))
-        
-        self.draw_rect(target, key, color)
+#class MemoryMap(object):
+#    """Memory representation of grid canvas using numpy arrays
+#    
+#    Parameters
+#    ----------
+#     * size: 2-tuple of Integer
+#    \tSize of grid canvas in pixels
+#    
+#    """
+#    
+#    def __init__(self, size):
+#        self.resize(size)
+#
+#
+#    def resize(self, size):
+#        """Creates a new memory map with a new size"""
+#        
+#        self.width, self.height = width, height = self.size = size
+#        
+#        width = width * 4
+#        height = height * 4
+#        
+#        self.x_offset = width // 2
+#        self.y_offset = height // 2
+#        
+#        self.background_layer = numpy.zeros((width, height, 4), dtype="uint8")
+#        self.border_layer     = numpy.zeros((width, height, 4), dtype="uint8")
+#        self.text_layer       = numpy.zeros((width, height, 4), dtype="uint8")
+#    
+#    def clear(self):
+#        """Sets the memory maps to 0"""
+#        
+#        self.background_layer[:, :, :] = 0
+#        self.border_layer[:, :, :] = 0
+#        self.text_layer[:, :, :] = 0
+#    
+#    def draw_rect(self, target, key, color=(0, 0, 0)):
+#        """Draws colors rectangle on target memory map
+#        
+#        Parameters
+#        ----------
+#         * target: numpy array
+#        \tTarget memory map
+#         * key: 2-tuple of slice
+#        \tCell slice of rectangle (Works also for non-rectangle slices)
+#         * color: Tuple of uint8
+#        \tColor 3-tuple for rgb, 4-tuple for rgba
+#        
+#        """
+#        
+#        if len(color) == 3:
+#            color += (255, )
+#        
+#        target[key[0], key[1], :] = numpy.array(color)
+#    
+#    def draw_h_line(self, target, x1, x2, y, color=(0, 0, 0), width=1):
+#        """Draws horizontal line from (x1, y) to (x2, y) on target memory map"""
+#        
+#        width = max(1, int(round(width)))
+#        width_2 = int(round(width / 2.0))
+#        
+#        y_min = y - width_2
+#        y_max = y_min + width
+#        
+#        x1_off = x1 + self.x_offset
+#        x2_off = x2 + self.x_offset
+#        
+#        key = (slice(x1_off - width_2, x2_off + 1 + width_2), 
+#               slice(y_min + self.y_offset, y_max + self.y_offset + 1))
+#        
+#        self.draw_rect(target, key, color)
+#
+#    def draw_v_line(self, target, x, y1, y2, color=(0, 0, 0), width=1):
+#        """Draws horizontal line from (x1, y) to (x2, y) on target memory map"""
+#        
+#        width = max(1, int(round(width)))
+#        width_2 = int(round(width / 2.0))
+#        
+#        x_min = x - width_2
+#        x_max = x_min + width
+#        
+#        y1_off = y1 + self.y_offset
+#        y2_off = y2 + self.y_offset
+#        
+#        key = (slice(x_min + self.x_offset, x_max + self.x_offset + 1), 
+#               slice(y1_off - width_2, y2_off + width_2 + 1))
+#        
+#        self.draw_rect(target, key, color)
 
 
 class GridCollisionMixin(object):
@@ -271,7 +300,64 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         dc.DrawLine(pt_lr[0], pt_lr[1], pt_ur[0], pt_ur[1])
         dc.DrawLine(pt_ur[0], pt_ur[1], pt_ul[0], pt_ul[1])
 
+    def _get_empty_cells(self, dc, grid, key, text_pos, text_extent):
+        """Generator of empty cells from key in direction
+        
+        Parameters
+        ----------
+        key: 3-tuple of Integer
+        \tCurrent cell
+        text_pos: 3-tuple
+        \tPosition and direction of text
 
+        """
+        
+        row, col, tab = key
+        
+        blocking_distance = None
+        
+        textbox = self.get_text_rotorect(text_pos, text_extent)
+        
+        for distance, __row, __col in grid.colliding_cells(row, col, textbox):
+            # Draw blocking arrows if locking cell is not empty
+            
+            if (blocking_distance is None or distance == blocking_distance) \
+               and not grid.pysgrid[__row, __col, tab]:
+               
+                yield __row, __col, tab
+    
+    def _get_available_space_rect(self, dc, grid, key, rect, text_pos, text_extent,
+                                  res_text):
+        """Returns rect of available space"""
+
+        space_x = rect.x
+        space_y = rect.y
+        space_width = rect.width
+        space_height = rect.height
+        
+        for cell in self._get_empty_cells(dc, grid, key, text_pos, text_extent):
+            __row, __col, _ = cell
+            cell_rect = grid.CellToRect(__row, __col)
+            
+            if cell_rect.x > space_x:
+                # Cell is right of current cell
+                space_width = cell_rect.x - space_x + cell_rect.width
+                
+            if cell_rect.x + cell_rect.width < space_x:
+                # Cell is right of current cell
+                space_width += space_x - cell_rect.x
+                space_x = cell_rect.x
+
+            if cell_rect.y > space_y + space_height:
+                # Cell is below current cell
+                space_height = cell_rect.y - space_y + cell_rect.height
+
+            if cell_rect.y + cell_rect.height < space_y:
+                # Cell is above of current cell
+                space_height += space_y - cell_rect.y
+                space_y = cell_rect.y
+
+        return wx.Rect(space_x, space_y, space_width, space_height)
 
     def draw_text_label(self, dc, res, rect, grid, pysgrid, key):
         """Draws text label of cell"""
@@ -292,50 +378,31 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
         text_pos = self.get_text_position(dc, rect, res_text, 
                                           textattributes)
-        ##TODO: Cut drawn text into pieces
-        
-        dc.DrawRotatedText(res_text, *text_pos)
-        
-        
-        text_extent = dc.GetTextExtent(res_text)
-        
-        self._draw_strikethrough_line(grid, dc, rect, text_pos, text_extent,
-                textattributes)
-        
-        # Collision detection
         
         __rect = xrect.Rect(rect.x, rect.y, rect.width, rect.height)
         
-        # If cell rect stays inside cell, we do nothing
+        text_extent = dc.GetTextExtent(res_text)
+        
+        # If cell rect stays inside cell, we simply draw
+        
         if all(__rect.is_point_in_rect(*textedge) \
           for textedge in self.get_textbox_edges(text_pos, text_extent)):
-            return
-            
-        textbox = self.get_text_rotorect(text_pos, text_extent)
-        self.draw_textbox(dc, text_pos, text_extent)
+            clipping = False
+        else:
+            clipping = True
+            clip_rect = self._get_available_space_rect(dc, grid, key, rect, 
+                                text_pos, text_extent, res_text)
         
-        dc.SetPen(wx.BLACK_PEN)
-        dc.SetBrush(wx.TRANSPARENT_BRUSH)
+        if clipping:
+            dc.SetClippingRect(clip_rect)
         
-        blocking_distance = None
+        dc.DrawRotatedText(res_text, *text_pos)
+        text_extent = dc.GetTextExtent(res_text)
+        self._draw_strikethrough_line(grid, dc, rect, text_pos, text_extent,
+                                      textattributes)
+        if clipping:
+            dc.DestroyClippingRegion()
         
-        for distance, __row, __col in grid.colliding_cells(row, col, textbox):
-            
-            # Rectangles around colliding rects
-            
-            cell_rect = grid.CellToRect(__row, __col)
-            dc.DrawRectangleRect(cell_rect)
-            
-            # Draw blocking arrows if locking cell is not empty
-            
-            if (blocking_distance is None or distance == blocking_distance) \
-               and grid.pysgrid[__row, __col, tab] is not None:
-                blocking_distance = distance
-                
-                block_direction = grid.get_block_direction(row, col, 
-                                                           __row, __col)
-                self.draw_blocking_rect(dc, cell_rect, block_direction)
-
         
     def _draw_strikethrough_line(self, grid, dc, rect, 
                                  text_pos, text_extent, textattributes):
@@ -484,7 +551,23 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             bg = Background(grid, row, col, self.table.current_table,
                             isSelected)
         else:
-            bg = grid.get_background(key)
+            _, _, width, height = grid.CellToRect(row, col)
+            
+            bg_components = ["bgbrush", "borderpen_bottom", "borderpen_right"]
+            
+            bg_key = tuple([width, height] + \
+                           [tuple(grid.pysgrid.get_sgrid_attr(key, bgc)) \
+                                for bgc in bg_components])
+            
+            try:
+                bg = self.table.backgrounds[bg_key]
+                
+            except KeyError:
+                if len(self.table.backgrounds) > 10000:
+                    # self.table.backgrounds may grow quickly
+                    self.table.backgrounds = {}
+                
+                bg = self.table.backgrounds[bg_key] = Background(grid, *key)
             
         if wx.Platform == "__WXGTK__" and not printing:
             mask_type = wx.AND
@@ -512,6 +595,7 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         
 # end of class TextRenderer
 
+
 class Background(object):
     """Memory DC with background content for given cell"""
     
@@ -521,18 +605,16 @@ class Background(object):
         
         self.dc = wx.MemoryDC() 
         self.rect = grid.CellToRect(row, col)
-        self.bmp = wx.EmptyBitmap(self.rect.width, self.rect.height)
+        self.bmp = wx.EmptyBitmap(self.rect.width,self.rect.height)
         
         self.selection = selection
-        self.dc.SelectObject(wx.NullBitmap)
-        self.dc.SelectObject(self.bmp)
         
+        self.dc.SelectObject(self.bmp)
         self.dc.SetBackgroundMode(wx.TRANSPARENT)
 
         self.dc.SetDeviceOrigin(0,0)
         
         self.draw()
-        
         
     def draw(self):
         """Does the actual background drawing"""
@@ -544,7 +626,7 @@ class Background(object):
         """Draws the background of the background"""
         
         if self.selection:
-            bgbrush = selected_cell_brush
+            bgbrush = wx.Brush(selected_cell_brush)
         else:
             bgbrush = get_brush_from_data( \
                 self.grid.pysgrid.get_sgrid_attr(self.key, "bgbrush"))
@@ -552,25 +634,7 @@ class Background(object):
         dc.SetBrush(bgbrush)
         dc.SetPen(wx.TRANSPARENT_PEN)
         dc.DrawRectangle(0, 0, self.rect.width, self.rect.height)
-    
-    def zoom_line_width(self, width):
-        """Zooms line width according to self.grid.zoom"""
-        
-        return max(1, int(round(width * self.grid.zoom)))
-    
-    def get_pen_attr(self, key, pen_name):
-        """Returns color, zoomed width and style of a pen defined in cell key"""
-        
-        cell_attr = self.grid.pysgrid.get_sgrid_attr
-        
-        int_color, width, style = cell_attr(key, pen_name)
-        
-        # Color conversion from rgb packed in an int
-        color = hex_to_rgb(int_color)
-        zoomed_width = self.zoom_line_width(width)
-        
-        return color, zoomed_width, style
-    
+
     def draw_border_lines(self, dc):
         """Draws lines"""
         
@@ -578,93 +642,269 @@ class Background(object):
         grid = self.grid
         row, col, tab = key = self.key
         
-        # Draw to memory map
+        # Get borderpens and bgbrushes for rects        
+        # Each cell draws its bottom and its right line only
+        bottomline = x, y + h, x + w, y + h
+        rightline = x + w, y, x + w, y + h
+        lines = [bottomline, rightline]
         
-        memory_map = self.grid.parent.MainGrid.view.memory_map
+        pen_names = ["borderpen_bottom", "borderpen_right"]
         
-        color_btm, width_btm, _ = self.get_pen_attr(key, "borderpen_bottom")
-        color_right, width_right, _ = self.get_pen_attr(key, "borderpen_right")
-        
-        target = memory_map.border_layer
-        
-        memory_map.draw_h_line(target, x, x + w, y + h, color_btm, width_btm)
-        memory_map.draw_v_line(target, x + w, y, y + h, \
-                                                    color_right, width_right)
+        borderpens = [get_pen_from_data(grid.pysgrid.get_sgrid_attr(key, pen)) \
+                        for pen in pen_names]
         
         # Topmost line if in top cell
         
         if row == 0:
+            lines.append((x, y, x + w, y))
             topkey = "top", col, tab
-            
-            color_top, width_top, _ = \
-                self.get_pen_attr(topkey, "borderpen_bottom")
-            
-            memory_map.draw_h_line(target, x, x + w, y, color_top, width_top)
+            toppen_data  = grid.pysgrid.get_sgrid_attr(topkey, pen_names[0])
+            borderpens.append(get_pen_from_data(toppen_data))
         
         # Leftmost line if in left cell
         
         if col == 0:
+            lines.append((x, y, x, y + h))
             leftkey = row, "left", tab
+            toppen_data  = grid.pysgrid.get_sgrid_attr(leftkey, pen_names[1])
+            borderpens.append(get_pen_from_data(toppen_data))
+        
+        zoomed_pens = []
+        
+        for pen in borderpens:
+            bordercolor = pen.GetColour()
+            borderwidth = pen.GetWidth()
+            borderstyle = pen.GetStyle()
             
-            color_left, width_left, _ = \
-                self.get_pen_attr(leftkey, "borderpen_right")
+            zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
+            zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, borderstyle)
+            zoomed_pen.SetJoin(wx.JOIN_MITER)
             
-            memory_map.draw_v_line(target, x , y, y + h, color_left, width_left)
+            zoomed_pens.append(zoomed_pen)
         
-        dummy = numpy.zeros((h + 1, w + 1, 4), dtype="uint8")
-        
-        dummy[:,:,:] = memory_map.border_layer[x:x+w+1, y:y+h+1, ].\
-                                transpose(1,0,2)
-        
-        bmp = wx.BitmapFromBufferRGBA(w + 1, h + 1, dummy)
-        #print dummy, bmp.GetSize()
-        
-        dc.DrawBitmap(bmp, x, y)
+        dc.DrawLineList(lines, zoomed_pens)
 
-        
-        ## OLD VERSION WITHOUT MEMORY MAP below
-        
-        
-#        # Get borderpens and bgbrushes for rects        
-#        # Each cell draws its bottom and its right line only
-#        bottomline = x, y + h, x + w, y + h
-#        rightline = x + w, y, x + w, y + h
-#        lines = [bottomline, rightline]
+# end of class Background
+
+#class Background(object):
+#    """Memory DC with background content for given cell"""
+#    
+#    def __init__(self, grid, row, col, tab, selection=False):
+#        self.grid = grid
+#        self.key = row, col, tab
 #        
-#        pen_names = ["borderpen_bottom", "borderpen_right"]
+#        #self.memory_map = self.grid.parent.MainGrid.view.memory_map
 #        
-#        borderpens = [get_pen_from_data(grid.pysgrid.get_sgrid_attr(key, pen)) \
-#                        for pen in pen_names]
+#        self.dc = wx.MemoryDC()
+#        
+#        rect = grid.CellToRect(row, col)
+#        self.bmp = None
+#        
+#        self.selection = selection
+#
+#        
+#        self.draw()
+#    
+#    def _get_screen_pos(self, x, y):
+#        """Returns screen position of grid point"""
+#        
+#        grid = self.grid
+#        
+#        yunit, xunit = grid.GetScrollPixelsPerUnit()
+#        self.xoff =  grid.GetScrollPos(wx.HORIZONTAL) * xunit
+#        self.yoff = grid.GetScrollPos(wx.VERTICAL) * yunit
+#        
+#        return x - self.xoff, y - self.yoff
+#    
+#    def get_pasted_map(self, base_map, top_map):
+#        """Returns rgba map with top_map on base_map"""
+#        
+#        alpha_map = numpy.array([(top_map[:, :, 3] / 255.0).tolist()] * 3).\
+#                        transpose(1, 2, 0)
+#        
+#        resultmap = base_map[:, :, :]
+#        
+#        resultmap[:, :, :3] = numpy.uint8( \
+#                                base_map[:, :, :3] * (1 - alpha_map) + \
+#                                top_map[:, :, :3] * alpha_map)
+#        
+#        return resultmap
+#    
+##    def _adjust_partly_visible_cells(self, x, y, width, height):
+##        """Returns x, y, width, height so that rect stays inside memory map"""
+##        
+##        memshape = self.memory_map.background_layer.shape
+##        
+##        if x < -self.memory_map.x_offset:
+##            width = width + x + self.memory_map.x_offset
+##            x = 0
+##            if width < 0:
+##                raise AssertionError, "Cell invisible."
+##                
+##        if y < -self.memory_map.x_offset:
+##            height = height + y + self.memory_map.x_offset
+##            y = 0
+##            if height < 0:
+##                raise AssertionError, "Cell invisible."
+##        
+##        return x, y, width, height
+#    
+#    def _get_rect_coords(self, row, col):
+#        """Returns rect coordinates if successful else raises assertion"""
+#        
+#        rect = self.grid.CellToRect(row, col)
+#        x, y, width, height  = rect.Get()
+#        x, y = self._get_screen_pos(x, y)
+#        
+#        return self._adjust_partly_visible_cells(x, y, width, height)
+#    
+#    def draw(self):
+#        """Does the actual background drawing"""
+#        
+#        row, col, tab = self.key
+#        
+#        memory_map_cache = self.grid.parent.MainGrid.view.memory_map_cache
+#        
+#        for key in [(row - 1, col - 1, tab),
+#                    (row,     col - 1, tab),
+#                    (row + 1, col - 1, tab),
+#                    (row - 1, col,     tab),
+#                    (row,     col,     tab),
+#                    (row + 1, col,     tab),
+#                    (row - 1, col + 1, tab),
+#                    (row    , col + 1, tab),
+#                    (row + 1, col + 1, tab)]:
+#            try:
+#                self.grid.parent.MainGrid.view.memory_map_cache.pop(key)
+#            except KeyError:
+#                pass
+#        
+#        x, y, width, height = self._get_rect_coords(row, col)
+#        
+#        self.draw_background()
+#        self.draw_border_lines()
+#        
+#        x_offset = self.memory_map.x_offset
+#        y_offset = self.memory_map.y_offset
+#        
+#        key = slice(x + x_offset, x + x_offset + width), \
+#              slice(y + y_offset, y + y_offset + height), slice(None, None)
+#        
+#        pasted_map = self.get_pasted_map(self.memory_map.background_layer[key],
+#                                         self.memory_map.border_layer[key])
+#        
+#        # Note ther eversed w, h notation of wxPython
+#        
+#        transposed_pasted_map = pasted_map.transpose(1, 0, 2)
+#        
+#        dummy = numpy.zeros(transposed_pasted_map.shape, dtype="uint8")
+#        
+#        dummy[:,:,:] = transposed_pasted_map
+#        
+#        self.bmp = wx.EmptyBitmap(width, height)
+#        
+#        dc = self.dc
+#        
+#        dc.SelectObject(wx.NullBitmap)
+#        dc.SelectObject(self.bmp)
+#        dc.SetBackgroundMode(wx.TRANSPARENT)
+#        dc.SetDeviceOrigin(0,0)
+#        
+#        bmp = wx.BitmapFromBufferRGBA(dummy.shape[1], dummy.shape[0], dummy)
+#        
+#        dc.DrawBitmap(bmp, 0, 0)
+#
+#    def draw_background(self):
+#        """Draws the background of the background"""
+#        
+#        row, col, _ = self.key
+#        
+#        rect = self.grid.CellToRect(row, col)
+#        x, y, width, height  = rect.Get()
+#        x, y = self._get_screen_pos(x, y)
+#        
+#        if self.selection:
+#            color = selected_cell_brush
+#        else:
+#            int_col, _ = self.grid.pysgrid.get_sgrid_attr(self.key, "bgbrush")
+#            color = hex_to_rgb(int_col)
+#        
+#        target = self.memory_map.background_layer
+#        
+#        x_offset = self.memory_map.x_offset
+#        y_offset = self.memory_map.y_offset
+#        
+#        key = slice(x + x_offset, x + x_offset+ width), \
+#              slice(y + y_offset, y + y_offset + height)
+#        
+#        self.memory_map.draw_rect(target, key, color=color)
+#    
+#    def zoom_line_width(self, width):
+#        """Zooms line width according to self.grid.zoom"""
+#        
+#        return width * self.grid.zoom
+#    
+#    def get_pen_attr(self, key, pen_name):
+#        """Returns color, zoomed width and style of a pen defined in cell key"""
+#        
+#        cell_attr = self.grid.pysgrid.get_sgrid_attr
+#        
+#        int_color, width, style = cell_attr(key, pen_name)
+#        
+#        # Color conversion from rgb packed in an int
+#        color = hex_to_rgb(int_color)
+#        
+#        zoomed_width = self.zoom_line_width(width)
+#        
+#        return color, zoomed_width, style
+#    
+#    def draw_border_lines(self):
+#        """Draws lines"""
+#        
+#        row, col, _ = self.key
+#        
+#        rect = self.grid.CellToRect(row, col)
+#        x, y, width, height  = rect.Get()
+#        x, y = self._get_screen_pos(x, y)
+#        
+#        grid = self.grid
+#        row, col, tab = key = self.key
+#        
+#        # Draw to memory map
+#        
+#        memory_map = self.memory_map
+#        
+#        color_btm, width_btm, _ = self.get_pen_attr(key, "borderpen_bottom")
+#        color_right, width_right, _ = self.get_pen_attr(key, "borderpen_right")
+#        
+#        target = memory_map.border_layer
+#        
+#        memory_map.draw_h_line(target, x, x + width, y + height,
+#                               color_btm, width=width_btm)
+#        memory_map.draw_v_line(target, x + width, y, y + height,
+#                               color_right, width=width_right)
 #        
 #        # Topmost line if in top cell
 #        
 #        if row == 0:
-#            lines.append((x, y, x + w, y))
 #            topkey = "top", col, tab
-#            toppen_data  = grid.pysgrid.get_sgrid_attr(topkey, pen_names[0])
-#            borderpens.append(get_pen_from_data(toppen_data))
+#            
+#            color_top, width_top, _ = \
+#                self.get_pen_attr(topkey, "borderpen_bottom")
+#            
+#            memory_map.draw_h_line(target, x, x + width, y, 
+#                                   color_top, width=width_top)
 #        
 #        # Leftmost line if in left cell
 #        
 #        if col == 0:
-#            lines.append((x, y, x, y + h))
 #            leftkey = row, "left", tab
-#            toppen_data  = grid.pysgrid.get_sgrid_attr(leftkey, pen_names[1])
-#            borderpens.append(get_pen_from_data(toppen_data))
-#        
-#        zoomed_pens = []
-#        
-#        for pen in borderpens:
-#            bordercolor = pen.GetColour()
-#            borderwidth = pen.GetWidth()
-#            borderstyle = pen.GetStyle()
 #            
-#            zoomed_borderwidth = max(1, int(round(borderwidth * grid.zoom)))
-#            zoomed_pen = wx.Pen(bordercolor, zoomed_borderwidth, borderstyle)
-#            zoomed_pen.SetJoin(wx.JOIN_MITER)
+#            color_left, width_left, _ = \
+#                self.get_pen_attr(leftkey, "borderpen_right")
 #            
-#            zoomed_pens.append(zoomed_pen)
+#            memory_map.draw_v_line(target, x , y, y + height, 
+#                                   color_left, width=width_left)
 #        
-#        dc.DrawLineList(lines, zoomed_pens)
 
 # end of class Background

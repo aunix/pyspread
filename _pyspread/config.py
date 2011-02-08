@@ -169,7 +169,7 @@ Default cell font size
 
 FONT_SIZES = range(3, 14) + range(16, 32, 2) + range(36, 99, 4)
 
-selected_cell_brush = wx.Brush(wx.Colour(127, 127, 255), wx.SOLID)
+selected_cell_brush = 127, 127, 255
 
 default_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
 
