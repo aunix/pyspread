@@ -550,7 +550,7 @@ class EntryLine(wx.TextCtrl):
         
         if event.GetKeyCode() == 13:
             self.parent.Freeze()
-            self.parent.MainGrid.view.refocus()
+            self.parent.MainGrid.view.update()
             self.parent.Thaw()
             
         elif event.GetKeyCode() == wx.WXK_INSERT and \

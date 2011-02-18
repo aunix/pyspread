@@ -300,6 +300,33 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
         dc.DrawLine(pt_lr[0], pt_lr[1], pt_ur[0], pt_ur[1])
         dc.DrawLine(pt_ur[0], pt_ur[1], pt_ul[0], pt_ul[1])
 
+    def _get_full_cells(self, dc, grid, key, text_pos, text_extent):
+        """Generator of full cells from key in direction
+        
+        Parameters
+        ----------
+        key: 3-tuple of Integer
+        \tCurrent cell
+        text_pos: 3-tuple
+        \tPosition and direction of text
+
+        """
+        
+        row, col, tab = key
+        
+        blocking_distance = None
+        
+        textbox = self.get_text_rotorect(text_pos, text_extent)
+        
+        for distance, __row, __col in grid.colliding_cells(row, col, textbox):
+            # Draw blocking arrows if locking cell is not empty
+            
+            if not( \
+               (blocking_distance is None or distance == blocking_distance) \
+               and not grid.pysgrid[__row, __col, tab]):
+               
+                yield __row, __col, tab
+
     def _get_empty_cells(self, dc, grid, key, text_pos, text_extent):
         """Generator of empty cells from key in direction
         
@@ -326,38 +353,17 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
                
                 yield __row, __col, tab
     
-    def _get_available_space_rect(self, dc, grid, key, rect, text_pos, text_extent,
-                                  res_text):
-        """Returns rect of available space"""
-
-        space_x = rect.x
-        space_y = rect.y
-        space_width = rect.width
-        space_height = rect.height
+    def _get_available_space_rects(self, dc, grid, key, rect, text_pos, 
+                      text_extent, res_text):
+        """Returns rects needed by key cell that are in available space"""
+        
+        yield rect
         
         for cell in self._get_empty_cells(dc, grid, key, text_pos, text_extent):
             __row, __col, _ = cell
             cell_rect = grid.CellToRect(__row, __col)
             
-            if cell_rect.x > space_x:
-                # Cell is right of current cell
-                space_width = cell_rect.x - space_x + cell_rect.width
-                
-            if cell_rect.x + cell_rect.width < space_x:
-                # Cell is right of current cell
-                space_width += space_x - cell_rect.x
-                space_x = cell_rect.x
-
-            if cell_rect.y > space_y + space_height:
-                # Cell is below current cell
-                space_height = cell_rect.y - space_y + cell_rect.height
-
-            if cell_rect.y + cell_rect.height < space_y:
-                # Cell is above of current cell
-                space_height += space_y - cell_rect.y
-                space_y = cell_rect.y
-
-        return wx.Rect(space_x, space_y, space_width, space_height)
+            yield cell_rect
 
     def draw_text_label(self, dc, res, rect, grid, pysgrid, key):
         """Draws text label of cell"""
@@ -390,18 +396,22 @@ class TextRenderer(wx.grid.PyGridCellRenderer):
             clipping = False
         else:
             clipping = True
-            clip_rect = self._get_available_space_rect(dc, grid, key, rect, 
+            clip_rects = self._get_available_space_rects(dc, grid, key, rect, 
                                 text_pos, text_extent, res_text)
         
         if clipping:
-            dc.SetClippingRect(clip_rect)
-        
-        dc.DrawRotatedText(res_text, *text_pos)
-        text_extent = dc.GetTextExtent(res_text)
-        self._draw_strikethrough_line(grid, dc, rect, text_pos, text_extent,
-                                      textattributes)
-        if clipping:
-            dc.DestroyClippingRegion()
+            for clip_rect in clip_rects:
+                dc.SetClippingRect(clip_rect)
+                dc.DrawRotatedText(res_text, *text_pos)
+                text_extent = dc.GetTextExtent(res_text)
+                self._draw_strikethrough_line(grid, dc, rect, text_pos, 
+                        text_extent, textattributes)
+                dc.DestroyClippingRegion()
+        else:
+            dc.DrawRotatedText(res_text, *text_pos)
+            text_extent = dc.GetTextExtent(res_text)
+            self._draw_strikethrough_line(grid, dc, rect, text_pos, 
+                        text_extent, textattributes)
         
         
     def _draw_strikethrough_line(self, grid, dc, rect, 
