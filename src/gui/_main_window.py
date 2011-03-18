@@ -38,10 +38,8 @@ from config import MAIN_WINDOW_ICON
 from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _widgets import EntryLine, StatusBar, TableChoiceIntCtrl
-from _events import post_status_text
-from _events import EVT_COMMAND_TITLE, EVT_COMMAND_MANUAL, EVT_COMMAND_TUTORIAL
-from _events import EVT_COMMAND_FAQ, EVT_COMMAND_ABOUT, EVT_COMMAND_MACROLIST
-from _events import EVT_COMMAND_MACROLOAD, EVT_COMMAND_MACROSAVE
+from _grid import Grid
+from _events import *
 
 
 class MainWindow(wx.Frame):
@@ -82,9 +80,13 @@ class MainWindow(wx.Frame):
         
         # IntCtrl for table choice
         self.table_choice = TableChoiceIntCtrl(self, 1) ## Link to grid dim here!
-    
+        
+        # Main grid
+        
+        self._grid = Grid(self, -1)
+        
         self._set_properties()
-        #self._do_layout()
+        self._do_layout()
         self._bind()
     
     def _set_properties(self):
@@ -96,22 +98,22 @@ class MainWindow(wx.Frame):
         """Adds widgets to the wx.aui manager and controls the layout"""
         
         # Add the toolbars to the manager
-        self._mgr.AddPane(self.main_toolbar, wx.aui.AuiPaneInfo().
-                          Name("main_window_toolbar").Caption("Main Toolbar").
-                          ToolbarPane().Top().Row(0).CloseButton(False).
-                          LeftDockable(False).RightDockable(False))
-                                  
-        self._mgr.AddPane(self.find_toolbar, wx.aui.AuiPaneInfo().
-                          Name("find_toolbar").Caption("Find").
-                          ToolbarPane().Top().Row(1).MaximizeButton(False).
-                          LeftDockable(False).RightDockable(False))
-        
-        self._mgr.AddPane(self.attributes_toolbar, wx.aui.AuiPaneInfo().
-                          Name("attributes_toolbar").Caption("Cell Attributes").
-                          ToolbarPane().Top().Row(1).MaximizeButton(False).
-                          LeftDockable(False).RightDockable(False))
-                          
-                          
+#        self._mgr.AddPane(self.main_toolbar, wx.aui.AuiPaneInfo().
+#                          Name("main_window_toolbar").Caption("Main Toolbar").
+#                          ToolbarPane().Top().Row(0).CloseButton(False).
+#                          LeftDockable(False).RightDockable(False))
+#                                  
+#        self._mgr.AddPane(self.find_toolbar, wx.aui.AuiPaneInfo().
+#                          Name("find_toolbar").Caption("Find").
+#                          ToolbarPane().Top().Row(1).MaximizeButton(False).
+#                          LeftDockable(False).RightDockable(False))
+#        
+#        self._mgr.AddPane(self.attributes_toolbar, wx.aui.AuiPaneInfo().
+#                          Name("attributes_toolbar").Caption("Cell Attributes").
+#                          ToolbarPane().Top().Row(1).MaximizeButton(False).
+#                          LeftDockable(False).RightDockable(False))
+#                          
+#                          
         self._mgr.AddPane(self.table_choice, wx.aui.AuiPaneInfo().
                           Name("table_choice").Caption("Table choice").
                           ToolbarPane().MaxSize((50, 50)).Row(2).
@@ -125,7 +127,7 @@ class MainWindow(wx.Frame):
                           LeftDockable(True).RightDockable(True))
         
         # Add the main grid
-        #self._mgr.AddPane(self.MainGrid._main_grid, wx.CENTER)
+        self._mgr.AddPane(self._grid, wx.CENTER)
         
         # Tell the manager to 'commit' all the changes just made
         self._mgr.Update()
@@ -134,9 +136,16 @@ class MainWindow(wx.Frame):
         """Bind events to handlers"""
         
         self.Bind(wx.EVT_CLOSE, self.handlers.OnClose)
+        self.Bind(EVT_COMMAND_CLOSE, self.handlers.OnClose)
         
         self.Bind(EVT_COMMAND_MANUAL, self.handlers.OnManual)
+        self.Bind(EVT_COMMAND_TUTORIAL, self.handlers.OnTutorial)
+        self.Bind(EVT_COMMAND_FAQ, self.handlers.OnFaq)
+        self.Bind(EVT_COMMAND_ABOUT, self.handlers.OnAbout)
         
+        self.Bind(EVT_COMMAND_MACROLIST, self.handlers.OnMacroList)
+        self.Bind(EVT_COMMAND_MACROLOAD, self.handlers.OnMacroListLoad)
+        self.Bind(EVT_COMMAND_MACROSAVE, self.handlers.OnMacroListSave)
     
     def set_icon(self, bmp):
         """Sets main window icon to given wx.Bitmap"""
@@ -186,7 +195,7 @@ class MainWindowEventHandlers(object):
         
         event.Skip()
         
-    def OnFAQ(self, event):
+    def OnFaq(self, event):
         """FAQ launch event handler"""
         
         raise NotImplementedError

@@ -11,6 +11,109 @@ from _pyspread._interfaces import Clipboard
 from _pyspread._events import post_shape_change
 
 
+
+# Controller
+# ----------
+
+class MainGridController(object):
+    """Controller for MainGrid"""
+    
+    def __init__(self, parent, grid, model):
+        self.parent = parent
+        self.grid = grid
+        self.model = model
+        
+        self.unredo_mark = grid.pysgrid.unredo.mark
+        self.undo = grid.undo
+        self.redo = grid.redo
+        
+        self.selection = GridSelectionMask(self, grid)
+        
+        self.clipboard = GridClipboard(grid, model)
+        
+        self.make_cell_visible = grid.MakeCellVisible
+        
+        self.parent.Bind(EVT_TABLE_CHANGE, self.OnTableChange)
+    
+    def get_cursor(self):
+        """Returns current grid cursor cell"""
+        
+        return self.grid.key
+
+    def _switch_to_table(self, newtable):
+        """Switches grid to table"""
+        
+        if newtable in xrange(self.model.shape[2]):
+            # Update the whole grid including the empty cells
+            
+            self.grid.current_table = newtable
+            
+            self.grid.ClearGrid()
+            self.grid.Update()
+            
+            self.grid.zoom_rows()
+            self.grid.zoom_cols()
+            self.grid.zoom_labels()
+            
+            post_entryline_text(self.grid, "")
+
+    def set_cursor(self, value):
+        """Changes the grid cursor cell."""
+        
+        if len(value) == 3:
+            row, col, tab = value
+            self._switch_to_table(tab)
+        else:
+            row, col = value
+        
+        if not (row is None and col is None):
+            self.grid.MakeCellVisible(row, col)
+            self.grid.SetGridCursor(row, col)
+        
+    cursor = property(get_cursor, set_cursor)
+
+    def select_cell(self, row, col, add_to_selected=False):
+        self.grid.SelectBlock(row, col, row, col, addToSelected=add_to_selected)
+    
+    def select_slice(self, row_slc, col_slc, add_to_selected=False):
+        """Selects a slice of cells
+        
+        Parameters
+        ----------
+         * row_slc: Integer or Slice
+        \tRows to be selected
+         * col_slc: Integer or Slice
+        \tColumns to be selected
+         * add_to_selected: Bool, defaults to False
+        \tOld selections are cleared if False
+        
+        """
+        
+        if not add_to_selected:
+            self.grid.ClearSelection()
+        
+        if row_slc == row_slc == slice(None, None, None):
+            # The whole grid is selected
+            self.grid.SelectAll()
+            
+        elif row_slc.stop is None and col_slc.stop is None:
+            # A block is selcted:
+            self.grid.SelectBlock(row_slc.start, col_slc.start, 
+                                  row_slc.stop-1, col_slc.stop-1)
+        else:
+            for row in irange(row_slc.start, row_slc.stop, row_slc.step):
+                for col in irange(col_slc.start, col_slc.stop, col_slc.step):
+                    self.select_cell(row, col, add_to_selected=True)
+
+    def OnTableChange(self, event):
+        """Event handler for TableChangeMsg event"""
+        
+        if event.new_table != self.cursor[2]:
+            self.cursor = self.cursor[0], self.cursor[1], event.new_table
+
+
+
+
 # Grid level input
 # ----------------
 
@@ -677,4 +780,32 @@ class TextCellEditor(wx.grid.PyGridCellEditor):
         return TextCellEditor(parent=self)
 
 # end of class TextCellEditor
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

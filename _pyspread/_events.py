@@ -14,11 +14,11 @@
 #
 # pyspread is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with pyspread.  If not, see <http://www.gnu.org/licenses/>.
+# along with pyspread. If not, see <http://www.gnu.org/licenses/>.
 # --------------------------------------------------------------------
 
 """
@@ -30,9 +30,8 @@ Event handler module
 Provides
 --------
 
- * StatusBarMsg: Event handler for messages in the statusbar of the main window
- * post_statusbar_msg: Posts a StatusBarMsg event
- 
+* StatusBarMsg: Event handler for messages in the statusbar of the main window
+* post_statusbar_msg: Posts a StatusBarMsg event
 
 """
 

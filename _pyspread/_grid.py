@@ -36,14 +36,14 @@ import types
 
 import wx
 
-from _pyspread._datastructures import PyspreadGrid
 
-from _pyspread._grid_controller import GridSelectionMixin, \
+
+from _pyspread._grid_controller import GridSelectionMixin, MainGridController, \
     GridClipboard, GridManipulationMixin, GridSelectionMask, TextCellEditor
 
-from _pyspread._grid_model import MainGridTable
+from _pyspread._grid_model import MainGridModel, MainGridTable
 
-from _pyspread._grid_view import GridCollisionMixin, TextRenderer
+from _pyspread._grid_view import MainGridView, GridCollisionMixin, TextRenderer
 
 from _pyspread._events import post_status_text, post_entryline_text
 from _pyspread._events import post_entryline_selection
@@ -77,9 +77,9 @@ class MainGrid(object):
         
         self.parent = parent
         
-        self._main_grid = MGrid(parent, -1, size=(1, 1), dim=(rows, cols, tabs))
+        self.model = MainGridModel(self)
         
-        self.model = MainGridModel(parent, self._main_grid)
+        self._main_grid = MGrid(parent, self.model, -1, size=(1, 1), dim=(rows, cols, tabs))
         
         self.controller = MainGridController(parent, self._main_grid, 
                                              self.model)
@@ -89,190 +89,8 @@ class MainGrid(object):
 
 # end of class MainGrid
 
-class MainGridModel(object):
-    """Model for MainGrid"""
-    
-    def __init__(self, parent, grid):
-        self.parent = parent
-        self.grid = grid
-        self.pysgrid = grid.pysgrid
-        self.macros = grid.pysgrid.sgrid.macros
-        self.shape = grid.pysgrid.shape
-        
-        self.frozen_cells = self.pysgrid.sgrid.frozen_cells
-        
-        self.load = grid.loadfile
-        self.save = grid.savefile
-        
-        self.parent.Bind(EVT_GRID_SHAPE, self.OnShapeChange)
-    
-    def OnShapeChange(self, event):
-        """Grid shape change event handler"""
-        
-        self.pysgrid.shape = event.shape
-        self.grid.create_rowcol()
-        
-        event.Skip()
 
-class MainGridController(object):
-    """Controller for MainGrid"""
-    
-    def __init__(self, parent, grid, model):
-        self.parent = parent
-        self.grid = grid
-        self.model = model
-        
-        self.unredo_mark = grid.pysgrid.unredo.mark
-        self.undo = grid.undo
-        self.redo = grid.redo
-        
-        self.selection = GridSelectionMask(self, grid)
-        
-        self.clipboard = GridClipboard(grid, model)
-        
-        self.make_cell_visible = grid.MakeCellVisible
-        
-        self.parent.Bind(EVT_TABLE_CHANGE, self.OnTableChange)
-    
-    def get_cursor(self):
-        """Returns current grid cursor cell"""
-        
-        return self.grid.key
 
-    def _switch_to_table(self, newtable):
-        """Switches grid to table"""
-        
-        if newtable in xrange(self.model.shape[2]):
-            # Update the whole grid including the empty cells
-            
-            self.grid.current_table = newtable
-            
-            self.grid.ClearGrid()
-            self.grid.Update()
-            
-            self.grid.zoom_rows()
-            self.grid.zoom_cols()
-            self.grid.zoom_labels()
-            
-            post_entryline_text(self.grid, "")
-
-    def set_cursor(self, value):
-        """Changes the grid cursor cell."""
-        
-        if len(value) == 3:
-            row, col, tab = value
-            self._switch_to_table(tab)
-        else:
-            row, col = value
-        
-        if not (row is None and col is None):
-            self.grid.MakeCellVisible(row, col)
-            self.grid.SetGridCursor(row, col)
-        
-    cursor = property(get_cursor, set_cursor)
-
-    def select_cell(self, row, col, add_to_selected=False):
-        self.grid.SelectBlock(row, col, row, col, addToSelected=add_to_selected)
-    
-    def select_slice(self, row_slc, col_slc, add_to_selected=False):
-        """Selects a slice of cells
-        
-        Parameters
-        ----------
-         * row_slc: Integer or Slice
-        \tRows to be selected
-         * col_slc: Integer or Slice
-        \tColumns to be selected
-         * add_to_selected: Bool, defaults to False
-        \tOld selections are cleared if False
-        
-        """
-        
-        if not add_to_selected:
-            self.grid.ClearSelection()
-        
-        if row_slc == row_slc == slice(None, None, None):
-            # The whole grid is selected
-            self.grid.SelectAll()
-            
-        elif row_slc.stop is None and col_slc.stop is None:
-            # A block is selcted:
-            self.grid.SelectBlock(row_slc.start, col_slc.start, 
-                                  row_slc.stop-1, col_slc.stop-1)
-        else:
-            for row in irange(row_slc.start, row_slc.stop, row_slc.step):
-                for col in irange(col_slc.start, col_slc.stop, col_slc.step):
-                    self.select_cell(row, col, add_to_selected=True)
-
-    def OnTableChange(self, event):
-        """Event handler for TableChangeMsg event"""
-        
-        if event.new_table != self.cursor[2]:
-            self.cursor = self.cursor[0], self.cursor[1], event.new_table
-
-class MainGridView(object):
-    """View for MainGrid"""
-
-    def __init__(self, parent, grid, model):
-        self.parent = parent
-        self.grid = grid
-        self.model = model
-        
-        self.update = grid.Update
-        self.force_refresh = self.resize
-        
-        self.freeze = grid.Freeze
-        self.thaw = grid.Thaw
-        
-        self.get_size = grid.GetSize
-        #self.memory_map = MemoryMap(self.get_size())
-        
-        self.get_visiblecell_slice = grid.get_visiblecell_slice
-        self.cell_to_rect = grid.CellToRect
-        self.get_scroll_pos = grid.GetScrollPos
-        self.get_scroll_line_x = grid.GetScrollLineX
-        self.get_scroll_line_y = grid.GetScrollLineY
-        
-        self.memory_map_cache = {}
-    
-    def resize(self):
-        """Refeshes the grid on resize"""
-        
-        #self.memory_map_cache = {}
-        #self.memory_map.resize(self.get_size())
-        self.grid.ForceRefresh()
-    
-    def clear(self):
-        """Clears the grid but leaves size intact"""
-        
-        #self.memory_map.clear()
-        pass
-    
-    def get_zoom(self):
-        return self.grid.zoom
-    
-    def set_zoom(self, zoom):
-        old_zoom = self.grid.zoom
-        
-        self.grid.Freeze()
-        
-        if self.grid.zoom < 1.0 and old_zoom > self.grid.zoom + 0.1:
-            old_zoom, self.grid.zoom = self.grid.zoom, self.grid.zoom + 0.1
-            self.grid.zoom_rows()
-            self.grid.zoom_cols()
-            self.grid.zoom_labels()
-            
-            self.grid.zoom = old_zoom
-        
-        self.grid.zoom_rows()
-        self.grid.zoom_cols()
-        self.grid.zoom_labels()
-        
-        self.resize()
-        
-        self.grid.Thaw()
-    
-    zoom = property(get_zoom, set_zoom)
 
 
 class MGrid(wx.grid.Grid, 
@@ -313,9 +131,11 @@ class MGrid(wx.grid.Grid,
         self.parent = args[0]
         self.current_table = 0
         
+        self.model = args.pop(1)
+        
         dim = kwds.pop("dim")
         
-        self.pysgrid = PyspreadGrid(dim)
+        self.pysgrid = self.model.pysgrid
         self.contextmenu = ContextMenu(parent=self.parent)
         
         self.copy_selection = [] # Cells from last copy operation 
@@ -334,7 +154,7 @@ class MGrid(wx.grid.Grid,
         self.text_renderer = TextRenderer(self)
         self.SetDefaultRenderer(self.text_renderer)
         
-        self.table = MainGridTable(self)
+        self.table = MainGridTable(self, self.model)
         self.SetTable(self.table, True)
         
         self.EnableGridLines(False)
@@ -381,6 +201,7 @@ class MGrid(wx.grid.Grid,
         
         self.GetGridWindow().Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
         self.GetGridWindow().Bind(wx.EVT_KEY_UP, self.OnKeyUp)
+        
         
         ##self.scrollpos = 0, 0 # Remember scroll position
         
@@ -650,11 +471,12 @@ class MGrid(wx.grid.Grid,
         pos_x, pos_y = self.CalcUnscrolledPosition(event.GetPosition())
         row = self.YToRow(pos_y)
         col = self.XToCol(pos_x)
+        tab = self.current_table
         
         if (row, col) != self.prev_rowcol and row >= 0 and col >= 0:
             self.prev_rowcol[:] = [row, col]
             
-            hinttext = self.table.GetSource(row, col)
+            hinttext = self.table.GetSource(row, col, tab)
             
             if hinttext is None:
                 hinttext = ''

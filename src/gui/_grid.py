@@ -31,23 +31,63 @@ Provides
 
 """
 
+import wx.grid
 
-import wx.Grid
+from _events import *
 
 
-class Grid(wx.Grid):
+class Grid(wx.grid.Grid):
     """Pyspread's main grid"""
 
     def __init__(self, parent, *args, **kwargs):
         self.parent = parent
         
-        wx.grid.Grid.__init__(self, *args, **kwargs)
+        wx.grid.Grid.__init__(self, parent, *args, **kwargs)
         
         self.handlers = GridEventHandlers(self)
+        
+        self._bind()
+    
+    def _bind(self):
+        """Bind events to handlers"""
+        
+        # Grid cell events
+        
+        # File events
+        
+        self.Bind(EVT_COMMAND_NEW, self.handlers.OnNew)
+        self.Bind(EVT_COMMAND_OPEN, self.handlers.OnOpen)
+        self.Bind(EVT_COMMAND_SAVE, self.handlers.OnSave)
+        self.Bind(EVT_COMMAND_SAVEAS, self.handlers.OnSaveAs)
+        self.Bind(EVT_COMMAND_IMPORT, self.handlers.OnImport)
+        self.Bind(EVT_COMMAND_EXPORT, self.handlers.OnExport)
+        self.Bind(EVT_COMMAND_APPROVE, self.handlers.OnApprove)
+        
+        # Print events
+        
+        # Clipboard events
+        
+        self.Bind(EVT_COMMAND_CUT, self.handlers.OnCut)
+        self.Bind(EVT_COMMAND_COPY, self.handlers.OnCopy)
+        self.Bind(EVT_COMMAND_COPY_RESULT, self.handlers.OnCopyResult)
+        self.Bind(EVT_COMMAND_PASTE, self.handlers.OnPaste)
+        
+        # Grid view events
+        
+        # Find events
+        
+        # Grid change events
+        
+        # Grid attribute events
+        
+        # Undo/Redo events
 
 
 class GridEventHandlers(object):
     """Contains grid event handlers"""
+    
+    def __init__(self, parent):
+        self.main_window = parent
     
     # Grid cell events
     
@@ -307,7 +347,7 @@ class GridEventHandlers(object):
         
         event.Skip()
 
-    # Grid attribute event handlers
+    # Grid attribute events
 
     def OnRowSize(self, event):
         """Row size event handler"""

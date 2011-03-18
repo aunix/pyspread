@@ -1,9 +1,11 @@
 import wx.grid
 
+from _pyspread._datastructures import PyspreadGrid
+
 class MainGridTable(wx.grid.PyGridTableBase):
-    """Table base class that handles interaction between MainGrid and pysgrid"""
+    """Table base class that handles interaction between MainGrid and model"""
     
-    def __init__(self, grid):
+    def __init__(self, grid, model):
         self.grid = grid
         self.pysgrid = grid.pysgrid
         
@@ -118,3 +120,222 @@ class MainGridTable(wx.grid.PyGridTableBase):
 
 # end of class MainGridTable
 
+
+
+
+
+##To be implemented
+
+
+class CellTextModel(object):
+    """Cell text controller prototype"""
+    
+    def __init__(self):
+        pass
+    
+    def set_text_font(self, key, font):
+        """Sets text font for key cell"""
+        
+        raise NotImplementedError
+        
+    def set_text_size(self, key, size):
+        """Sets text font for key cell"""
+        
+        raise NotImplementedError
+        
+    def set_text_align(self, key, align):
+        """Sets text font for key cell"""
+        
+        raise NotImplementedError    
+    
+    def set_text_color(self, key, color):
+        """Sets text font for key cell"""
+        
+        raise NotImplementedError
+    
+    def set_text_style(self,  key, style):
+        """Sets text font for key cell"""
+        
+        raise NotImplementedError
+    
+    def set_text_frozenstate(self, key, frozenstate):
+        """Sets text font for key cell"""
+        
+        raise NotImplementedError
+    
+class CellBackgroundModel(object):
+    """Cell background controller prototype"""
+
+    def __init__(self):
+        pass
+
+    def set_background_color(self, key, color):
+        """Sets text font for key cell"""
+        
+        raise NotImplementedError
+    
+    
+class CellBorderModel(object):
+    """Cell border controller prototype"""
+
+    def __init__(self):
+        pass
+
+    def set_cell_border_color(self, key, color):
+        """Sets text font for key cell"""
+        
+        raise NotImplementedError
+        
+    def set_cell_right_border_width(self, key, width):
+        """Sets text font for key cell"""
+        
+        raise NotImplementedError
+
+    def set_cell_lower_border_width(self, key, width):
+        """Sets text font for key cell"""
+        
+        raise NotImplementedError
+
+
+class CellAttributeModel(CellTextModel, CellBackgroundModel, 
+                              CellBorderModel):
+    """Cell attribute controller prototype"""
+
+    def __init__(self):
+        pass
+
+class CellModel(CellAttributeModel):
+    """Cell controller prototype"""
+
+    def __init__(self):
+        pass
+
+    def set_cell_code(self,  key,  code):
+        """Sets code for key cell"""
+        
+        raise NotImplementedError
+        
+    def delete_cell(self,  key):
+        """Deletes key cell"""
+        
+        raise NotImplementedError
+
+
+class TableRowModel(object):
+    """Table row controller prototype"""
+
+    def __init__(self):
+        pass
+
+    def set_row_height(self, row, height):
+        """Sets row height"""
+        
+        raise NotImplementedError
+
+    def add_rows(self, row, no_rows=1):
+        """Adds no_rows rows before row, appends if row > maxrows"""
+        
+        raise NotImplementedError
+
+    def delete_rows(self, row, no_rows=1):
+        """Deletes no_rows rows"""
+        
+        raise NotImplementedError
+
+
+class TableColumnModel(object):
+    """Table column controller prototype"""
+
+    def __init__(self):
+        pass
+
+    def set_col_width(self, row, width):
+        """Sets column width"""
+        
+        raise NotImplementedError
+
+    def add_cols(self, col, no_cols=1):
+        """Adds no_cols columns before col, appends if col > maxcols"""
+        
+        raise NotImplementedError
+
+    def delete_cols(self, col, no_cols=1):
+        """Deletes no_cols column"""
+        
+        raise NotImplementedError
+
+
+class TableTabModel(object):
+    """Table tab controller prototype"""
+
+    def __init__(self):
+        pass
+
+    def add_tabs(self, tab, no_tabs=1):
+        """Adds no_tabs tabs before table, appends if tab > maxtabs"""
+        
+        raise NotImplementedError
+
+    def delete_tabs(self, tab, no_tabs=1):
+        """Deletes no_tabs tabs"""
+        
+        raise NotImplementedError
+
+class TableModel(TableRowModel, TableColumnModel, 
+                      TableTabModel):
+    """Table controller prototype"""
+
+    def __init__(self, model):
+        pass
+        
+    def OnShapeChange(self, event):
+        """Grid shape change event handler"""
+        
+        new_rows, new_cols, new_tabs = event.shape
+        old_rows, old_cols, old_tabs = self.pysgrid.shape
+        
+        if new_rows > old_rows:
+            self.add_rows(old_rows, new_rows - old_rows)
+        elif new_rows < old_rows:
+            self.delete_rows(old_rows, old_rows - new_rows)
+        
+        if new_cols > old_cols:
+            self.add_cols(old_cols, new_cols - old_cols)
+        elif new_cols < old_cols:
+            self.delete_cols(old_cols, old_cols - new_cols)
+            
+        if new_tabs > old_tabs:
+            self.add_tabs(old_tabs, new_tabs - old_tabs)
+        elif new_tabs < old_tabs:
+            self.delete_tabs(old_tabs, old_tabs - new_tabs)
+        
+        self.pysgrid.shape = new_rows, new_cols, new_tabs
+        
+        event.Skip()
+
+    
+class MacroModel(object):
+    """Macro controller prototype"""
+
+    def __init__(self):
+        pass
+        
+
+    def set_macros(selfself, macro_string):
+        """Sets macro string"""
+    
+        raise NotImplementedError
+
+
+class MainGridModel(CellModel, TableModel, MacroModel):
+    """Main grid controller prototype"""
+    
+    def __init__(self, parent):
+        self.parent = parent
+        self.pysgrid = PyspreadGrid()
+        self.macros = self.pysgrid.sgrid.macros
+        self.shape = self.pysgrid.shape
+        
+        self.frozen_cells = self.pysgrid.sgrid.frozen_cells
+        
+        #self.parent.Bind(EVT_GRID_SHAPE, self.OnShapeChange)

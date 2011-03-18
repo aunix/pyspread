@@ -23,6 +23,7 @@ import wx
 
 app = wx.App()
 
+import _pyspread._datastructures as _datastructures
 import _pyspread._grid_model as _grid_model
 
     
@@ -32,12 +33,15 @@ class TestCellTextModel(object):
     def setup_method(self, method):
         """Instantiates the class"""
         
-        self.text_model = _pyspread._grid_model.CellTextModel()
+        dim = 100, 10, 3
+        grid = _datastructures.PyspreadGrid(dimensions=dim)
+        self.model = _pyspread._grid_model.MainGridModelProto(None, grid)
     
     def test_set_text_font(self, key, font):
         """Sets text font for key cell"""
         
-        raise NotImplementedError
+        self.model.set_text_font((0,0,0), "Arial")
+        assert self.model.grid == {}
         
     def test_set_text_size(self, key, size):
         """Sets text font for key cell"""

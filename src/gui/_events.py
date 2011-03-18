@@ -60,6 +60,8 @@ def post_command_event(target, msg_cls, **kwargs):
 
 TitleMsg, EVT_COMMAND_TITLE = wx.lib.newevent.NewCommandEvent()
 
+CloseMsg, EVT_COMMAND_CLOSE = wx.lib.newevent.NewCommandEvent()
+
 ManualMsg, EVT_COMMAND_MANUAL = wx.lib.newevent.NewCommandEvent()
 TutorialMsg, EVT_COMMAND_TUTORIAL = wx.lib.newevent.NewCommandEvent()
 FaqMsg, EVT_COMMAND_FAQ = wx.lib.newevent.NewCommandEvent()
@@ -69,25 +71,59 @@ MacroListMsg, EVT_COMMAND_MACROLIST = wx.lib.newevent.NewCommandEvent()
 MacroLoadMsg, EVT_COMMAND_MACROLOAD = wx.lib.newevent.NewCommandEvent()
 MacroSaveMsg, EVT_COMMAND_MACROSAVE = wx.lib.newevent.NewCommandEvent()
 
+# EntryLine
+# =========
+
+##EntryLineMsg, EVT_ENTRYLINE_MSG = wx.lib.newevent.NewEvent()
+##EntryLineSelectionMsg, EVT_ENTRYLINE_SELECTION_MSG = wx.lib.newevent.NewEvent()
 
 # Grid
 # ====
+
+# Grid cell events
+
+# File events
+
+NewMsg, EVT_COMMAND_NEW = wx.lib.newevent.NewCommandEvent()
+OpenMsg, EVT_COMMAND_OPEN = wx.lib.newevent.NewCommandEvent()
+SaveMsg, EVT_COMMAND_SAVE = wx.lib.newevent.NewCommandEvent()
+SaveAsMsg, EVT_COMMAND_SAVEAS = wx.lib.newevent.NewCommandEvent()
+ImportMsg, EVT_COMMAND_IMPORT = wx.lib.newevent.NewCommandEvent()
+ExportMsg, EVT_COMMAND_EXPORT = wx.lib.newevent.NewCommandEvent()
+ApproveMsg, EVT_COMMAND_APPROVE = wx.lib.newevent.NewCommandEvent()
+
+# Print events
+
+# Clipboard events
+
+CutMsg, EVT_COMMAND_CUT = wx.lib.newevent.NewCommandEvent()
+CopyMsg, EVT_COMMAND_COPY = wx.lib.newevent.NewCommandEvent()
+CopyResultMsg, EVT_COMMAND_COPY_RESULT = wx.lib.newevent.NewCommandEvent()
+PasteMsg, EVT_COMMAND_PASTE = wx.lib.newevent.NewCommandEvent()
+
+# Grid view events
+
+# Find events
+
+# Grid change events
+
+# Grid attribute events
+
+# Undo/Redo events
 
 
 # Statusbar
 # =========
 
-
-
+StatusBarMsg, EVT_STATUSBAR_MSG = wx.lib.newevent.NewEvent()
 
 
 ###############################
 
 
-StatusBarMsg, EVT_STATUSBAR_MSG = wx.lib.newevent.NewEvent()
 
-EntryLineMsg, EVT_ENTRYLINE_MSG = wx.lib.newevent.NewEvent()
-EntryLineSelectionMsg, EVT_ENTRYLINE_SELECTION_MSG = wx.lib.newevent.NewEvent()
+
+
 
 GridMsg, EVT_GRID_MSG = wx.lib.newevent.NewEvent()
 

@@ -36,8 +36,7 @@ Provides:
 
 import wx
 
-from _events import TitleMsg, ManualMsg, TutorialMsg, FaqMsg, AboutMsg
-from _events import MacroListMsg, MacroLoadMsg, MacroSaveMsg
+from _events import *
 
 class _filledMenu(wx.Menu):
     """Menu that fills from the attribute menudata.
@@ -142,9 +141,9 @@ class ContextMenu(_filledMenu):
 
     item = wx.MenuItem
     menudata = [ \
-    [item, ["OnCut", "Cu&t\tCtrl+x", "Cut cell to clipboard"]], \
-    [item, ["OnCopy", "&Copy\tCtrl+c", "Copy input strings to clipboard"]], \
-    [item, ["OnPaste", "&Paste\tCtrl+v", "Paste cell from clipboard"]], \
+    [item, [CutMsg, "Cu&t\tCtrl+x", "Cut cell to clipboard"]], \
+    [item, [CopyMsg, "&Copy\tCtrl+c", "Copy input strings to clipboard"]], \
+    [item, [PasteMsg, "&Paste\tCtrl+v", "Paste cell from clipboard"]], \
     [item, ["OnInsertRows", "Insert &rows\tShift+Ctrl+i", 
         "Insert rows at cursor"]], \
     [item, ["OnInsertColumns", "&Insert columns\tCtrl+i", 
@@ -161,39 +160,39 @@ class MainMenu(_filledMenu):
     item = wx.MenuItem
     menudata = [ \
         [wx.Menu, "&File", [\
-            [item, ["OnFileNew", "&New\tCtrl+n", 
+            [item, [NewMsg, "&New\tCtrl+n", 
                 "Create a new, empty spreadsheet", wx.ID_NEW]], \
-            [item, ["OnFileOpen", "&Open", 
+            [item, [OpenMsg, "&Open", 
                 "Open spreadsheet from file", wx.ID_OPEN]], \
-            [item, ["OnFileSave", "&Save\tCtrl+s", 
+            [item, [SaveMsg, "&Save\tCtrl+s", 
                     "Save spreadsheet", wx.ID_SAVE]], \
-            [item, ["OnFileSaveAs", "Save &As\tShift+Ctrl+s", 
+            [item, [SaveAsMsg, "Save &As\tShift+Ctrl+s", 
                 "Save spreadsheet to a new file"], wx.ID_SAVEAS], \
             ["Separator"], \
-            [item, ["OnFileImport", "&Import", "Import a file " + \
+            [item, [ImportMsg, "&Import", "Import a file " + \
                 "(Supported formats: CSV, Tab separated text)"]], \
-            [item, ["OnFileExport", "&Export", 
+            [item, [ExportMsg, "&Export", 
                 "Export a file (Supported formats: CSV)"]], \
             ["Separator"], \
-            [item, ["OnFileApprove", "&Approve file", 
+            [item, [ApproveMsg, "&Approve file", 
                 "Approve, unfreeze and sign the current file"]], \
             ["Separator"], \
             [item, ["OnFilePrint", "&Print...\tCtrl+p", 
                 "Print current spreadsheet", wx.ID_PRINT]], \
             ["Separator"], \
-            [item, ["OnExit", "E&xit\tCtrl+q", "Exit Program", wx.ID_EXIT]]] \
+            [item, [CloseMsg, "E&xit\tCtrl+q", "Exit Program", wx.ID_EXIT]]] \
         ], \
         [wx.Menu, "&Edit", [\
             [item, ["OnUndo", "&Undo\tCtrl+z", "Undo last step", wx.ID_UNDO]], \
             [item, ["OnRedo", "&Redo\tShift+Ctrl+z", 
                 "Redo last undone step", wx.ID_REDO]], \
             ["Separator"], \
-            [item, ["OnCut", "Cu&t\tCtrl+x", "Cut cell to clipboard"]], \
-            [item, ["OnCopy", "&Copy\tCtrl+c", 
+            [item, [CutMsg, "Cu&t\tCtrl+x", "Cut cell to clipboard"]], \
+            [item, [CopyMsg, "&Copy\tCtrl+c", 
                 "Copy the input strings of the cells to clipboard"]], \
-            [item, ["OnCopyResult", "Copy &Results\tShift+Ctrl+c", 
+            [item, [CopyResultMsg, "Copy &Results\tShift+Ctrl+c", 
                 "Copy the result strings of the cells to the clipboard"]], \
-            [item, ["OnPaste", "&Paste\tCtrl+v", 
+            [item, [PasteMsg, "&Paste\tCtrl+v", 
                 "Paste cells from clipboard", wx.ID_PASTE]], \
             ["Separator"], \
             [item, ["OnShowFind", "&Find\tCtrl+f", "Find cell by content"]], \
@@ -230,11 +229,11 @@ class MainMenu(_filledMenu):
             ], \
         ], \
         [wx.Menu, "&Macro", [\
-            [item, ["OnMacroList", "&Macro list\tCtrl+m", 
+            [item, [MacroListMsg, "&Macro list\tCtrl+m", 
                         "Choose, fill in, manage, and create macros"]], \
-            [item, ["OnMacroListLoad", "&Load macro list", 
+            [item, [MacroLoadMsg, "&Load macro list", 
                         "Load macro list"]], \
-            [item, ["OnMacroListSave", "&Save macro list", 
+            [item, [MacroSaveMsg, "&Save macro list", 
                         "Save macro list"]]]], \
         [wx.Menu, "&Help", [\
             [item, [ManualMsg, "&Manual", "Launch manual"]],
