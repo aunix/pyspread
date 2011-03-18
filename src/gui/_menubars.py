@@ -131,7 +131,7 @@ class _filledMenu(wx.Menu):
         """Menu event handler"""
         
         msgtype = self.ids_msgs[event.GetId()]
-        post_command_event(self.parent, msgtype)
+        post_command_event(self.parent._grid, msgtype)
 
 # end of class _filledMenu
 
@@ -144,12 +144,12 @@ class ContextMenu(_filledMenu):
     [item, [CutMsg, "Cu&t\tCtrl+x", "Cut cell to clipboard"]], \
     [item, [CopyMsg, "&Copy\tCtrl+c", "Copy input strings to clipboard"]], \
     [item, [PasteMsg, "&Paste\tCtrl+v", "Paste cell from clipboard"]], \
-    [item, ["OnInsertRows", "Insert &rows\tShift+Ctrl+i", 
+    [item, [InsertRowsMsg, "Insert &rows\tShift+Ctrl+i", 
         "Insert rows at cursor"]], \
-    [item, ["OnInsertColumns", "&Insert columns\tCtrl+i", 
+    [item, [InsertColsMsg, "&Insert columns\tCtrl+i", 
         "Insert columns at cursor"]], \
-    [item, ["OnDeleteRows", "Delete rows\tShift+Ctrl+d", "Delete rows" ]], \
-    [item, ["OnDeleteColumns", "Delete columns\tCtrl+Alt+d", "Delete columns"]]]
+    [item, [DeleteRowsMsg, "Delete rows\tShift+Ctrl+d", "Delete rows" ]], \
+    [item, [DeleteColsMsg, "Delete columns\tCtrl+Alt+d", "Delete columns"]]]
 
 
 # end of class ContextMenu
@@ -177,14 +177,14 @@ class MainMenu(_filledMenu):
             [item, [ApproveMsg, "&Approve file", 
                 "Approve, unfreeze and sign the current file"]], \
             ["Separator"], \
-            [item, ["OnFilePrint", "&Print...\tCtrl+p", 
+            [item, [PrintMsg, "&Print...\tCtrl+p", 
                 "Print current spreadsheet", wx.ID_PRINT]], \
             ["Separator"], \
             [item, [CloseMsg, "E&xit\tCtrl+q", "Exit Program", wx.ID_EXIT]]] \
         ], \
         [wx.Menu, "&Edit", [\
-            [item, ["OnUndo", "&Undo\tCtrl+z", "Undo last step", wx.ID_UNDO]], \
-            [item, ["OnRedo", "&Redo\tShift+Ctrl+z", 
+            [item, [UndoMsg, "&Undo\tCtrl+z", "Undo last step", wx.ID_UNDO]], \
+            [item, [RedoMsg, "&Redo\tShift+Ctrl+z", 
                 "Redo last undone step", wx.ID_REDO]], \
             ["Separator"], \
             [item, [CutMsg, "Cu&t\tCtrl+x", "Cut cell to clipboard"]], \
@@ -195,34 +195,34 @@ class MainMenu(_filledMenu):
             [item, [PasteMsg, "&Paste\tCtrl+v", 
                 "Paste cells from clipboard", wx.ID_PASTE]], \
             ["Separator"], \
-            [item, ["OnShowFind", "&Find\tCtrl+f", "Find cell by content"]], \
-            [item, ["OnShowFindReplace", "Replace\tCtrl+Shift+f", 
+            [item, [FindMsg, "&Find\tCtrl+f", "Find cell by content"]], \
+            [item, [ReplaceMsg, "Replace\tCtrl+Shift+f", 
                 "Replace strings in cells"]], \
             ["Separator"], \
-            [item, ["OnInsertRows", "Insert &rows", 
+            [item, [InsertRowsMsg, "Insert &rows", 
                 "Insert rows at cursor"]], \
-            [item, ["OnInsertColumns", "&Insert columns", 
+            [item, [InsertColsMsg, "&Insert columns", 
                 "Insert columns at cursor"]], \
-            [item, ["OnInsertTable", "Insert &table", 
+            [item, [InsertTabsMsg, "Insert &table", 
                 "Insert table before current table"]], \
             ["Separator"], \
-            [item, ["OnDeleteRows", "Delete rows", 
+            [item, [DeleteRowsMsg, "Delete rows", 
                 "Delete rows"]], \
-            [item, ["OnDeleteColumns", "Delete columns", 
+            [item, [DeleteColsMsg, "Delete columns", 
                 "Delete columns"]], \
-            [item, ["OnDeleteTable", "Delete table", 
+            [item, [DeleteTabsMsg, "Delete table", 
                 "Delete current table"]], \
             ["Separator"], \
-            [item, ["OnResizeGrid", "Resize grid", "Resize the grid. " + \
+            [item, [ResizeGridMsg, "Resize grid", "Resize the grid. " + \
                     "The buttom right lowermost cells are deleted first."]]] \
         ], \
         [wx.Menu, "&View", [ \
-            [item, ["OnRefreshSelectedCells", "Refresh selected cells\tF5", 
+            [item, [RefreshSelectionMsg, "Refresh selected cells\tF5", 
                         "Refresh selected cells even when frozen"]],
-            [item, ["OnGoToCell", "Go to cell ...", 
+            [item, [GotoCellMsg, "Go to cell ...", 
                         "Moves the grid to a cell."]],
             [wx.Menu, "Zoom", [ \
-                [item, ["OnZoom", str(int(zoom)) + "%", 
+                [item, [ZoomMsg, str(int(zoom)) + "%", 
                         "Zoom " + str(int(zoom)) + "%"] \
                 ] for zoom in xrange(50, 350, 10)]
                 ] \

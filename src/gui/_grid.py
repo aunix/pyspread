@@ -65,6 +65,8 @@ class Grid(wx.grid.Grid):
         
         # Print events
         
+        self.Bind(EVT_COMMAND_PRINT, self.handlers.OnPrint)
+        
         # Clipboard events
         
         self.Bind(EVT_COMMAND_CUT, self.handlers.OnCut)
@@ -74,14 +76,33 @@ class Grid(wx.grid.Grid):
         
         # Grid view events
         
+        self.Bind(EVT_COMMAND_REFRESH_SELECTION, self.handlers.OnRefreshSelectedCells)
+        self.Bind(EVT_COMMAND_GOTO_CELL, self.handlers.OnGoToCell)
+        self.Bind(EVT_COMMAND_ZOOM, self.handlers.OnZoom)
+        
         # Find events
         
+        self.Bind(EVT_COMMAND_FIND, self.handlers.OnFind)
+        self.Bind(EVT_COMMAND_REPLACE, self.handlers.OnShowFindReplace)
+        
         # Grid change events
+        
+        self.Bind(EVT_COMMAND_INSERT_ROWS, self.handlers.OnInsertRows)
+        self.Bind(EVT_COMMAND_INSERT_COLS, self.handlers.OnInsertCols)
+        self.Bind(EVT_COMMAND_INSERT_TABS, self.handlers.OnInsertTabs)
+        
+        self.Bind(EVT_COMMAND_DELETE_ROWS, self.handlers.OnDeleteRows)
+        self.Bind(EVT_COMMAND_DELETE_COLS, self.handlers.OnDeleteCols)
+        self.Bind(EVT_COMMAND_DELETE_TABS, self.handlers.OnDeleteTabs)
+        
+        self.Bind(EVT_COMMAND_RESIZE_GRID, self.handlers.OnResizeGrid)
         
         # Grid attribute events
         
         # Undo/Redo events
 
+        self.Bind(EVT_COMMAND_UNDO, self.handlers.OnUndo)
+        self.Bind(EVT_COMMAND_REDO, self.handlers.OnRedo)
 
 class GridEventHandlers(object):
     """Contains grid event handlers"""
@@ -305,14 +326,14 @@ class GridEventHandlers(object):
         
         event.Skip()
     
-    def OnInsertColumns(self, event):
+    def OnInsertCols(self, event):
         """Inserts the maximum of 1 and the number of selected columns"""
         
         raise NotImplementedError
         
         event.Skip()
     
-    def OnInsertTable(self, event):
+    def OnInsertTabs(self, event):
         """Insert one table into MainGrid and pysgrid"""
         
         raise NotImplementedError
@@ -326,14 +347,14 @@ class GridEventHandlers(object):
         
         event.Skip()
     
-    def OnDeleteColumns(self, event):
+    def OnDeleteCols(self, event):
         """Deletes columnss from all tables of the grid"""
         
         raise NotImplementedError
         
         event.Skip()
     
-    def OnDeleteTable(self, event):
+    def OnDeleteTabs(self, event):
         """Deletes tables"""
         
         raise NotImplementedError

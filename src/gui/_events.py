@@ -45,7 +45,7 @@ def post_command_event(target, msg_cls, **kwargs):
     Parameters
     ----------
      * msg_cls: class
-    \tMessage class from wx.lib.newevent.NewCommandEvent()
+    \tMessage class from new_command_event()
      * kwargs: dict
     \tMessage arguments
     
@@ -53,29 +53,25 @@ def post_command_event(target, msg_cls, **kwargs):
     
     msg = msg_cls(-1, **kwargs)
     wx.PostEvent(target, msg)
-    
+
+
+new_command_event = wx.lib.newevent.NewCommandEvent
     
 # Main window
 # ===========
 
-TitleMsg, EVT_COMMAND_TITLE = wx.lib.newevent.NewCommandEvent()
+TitleMsg, EVT_COMMAND_TITLE = new_command_event()
 
-CloseMsg, EVT_COMMAND_CLOSE = wx.lib.newevent.NewCommandEvent()
+CloseMsg, EVT_COMMAND_CLOSE = new_command_event()
 
-ManualMsg, EVT_COMMAND_MANUAL = wx.lib.newevent.NewCommandEvent()
-TutorialMsg, EVT_COMMAND_TUTORIAL = wx.lib.newevent.NewCommandEvent()
-FaqMsg, EVT_COMMAND_FAQ = wx.lib.newevent.NewCommandEvent()
-AboutMsg, EVT_COMMAND_ABOUT = wx.lib.newevent.NewCommandEvent()
+ManualMsg, EVT_COMMAND_MANUAL = new_command_event()
+TutorialMsg, EVT_COMMAND_TUTORIAL = new_command_event()
+FaqMsg, EVT_COMMAND_FAQ = new_command_event()
+AboutMsg, EVT_COMMAND_ABOUT = new_command_event()
 
-MacroListMsg, EVT_COMMAND_MACROLIST = wx.lib.newevent.NewCommandEvent()
-MacroLoadMsg, EVT_COMMAND_MACROLOAD = wx.lib.newevent.NewCommandEvent()
-MacroSaveMsg, EVT_COMMAND_MACROSAVE = wx.lib.newevent.NewCommandEvent()
-
-# EntryLine
-# =========
-
-##EntryLineMsg, EVT_ENTRYLINE_MSG = wx.lib.newevent.NewEvent()
-##EntryLineSelectionMsg, EVT_ENTRYLINE_SELECTION_MSG = wx.lib.newevent.NewEvent()
+MacroListMsg, EVT_COMMAND_MACROLIST = new_command_event()
+MacroLoadMsg, EVT_COMMAND_MACROLOAD = new_command_event()
+MacroSaveMsg, EVT_COMMAND_MACROSAVE = new_command_event()
 
 # Grid
 # ====
@@ -84,33 +80,59 @@ MacroSaveMsg, EVT_COMMAND_MACROSAVE = wx.lib.newevent.NewCommandEvent()
 
 # File events
 
-NewMsg, EVT_COMMAND_NEW = wx.lib.newevent.NewCommandEvent()
-OpenMsg, EVT_COMMAND_OPEN = wx.lib.newevent.NewCommandEvent()
-SaveMsg, EVT_COMMAND_SAVE = wx.lib.newevent.NewCommandEvent()
-SaveAsMsg, EVT_COMMAND_SAVEAS = wx.lib.newevent.NewCommandEvent()
-ImportMsg, EVT_COMMAND_IMPORT = wx.lib.newevent.NewCommandEvent()
-ExportMsg, EVT_COMMAND_EXPORT = wx.lib.newevent.NewCommandEvent()
-ApproveMsg, EVT_COMMAND_APPROVE = wx.lib.newevent.NewCommandEvent()
+NewMsg, EVT_COMMAND_NEW = new_command_event()
+OpenMsg, EVT_COMMAND_OPEN = new_command_event()
+SaveMsg, EVT_COMMAND_SAVE = new_command_event()
+SaveAsMsg, EVT_COMMAND_SAVEAS = new_command_event()
+ImportMsg, EVT_COMMAND_IMPORT = new_command_event()
+ExportMsg, EVT_COMMAND_EXPORT = new_command_event()
+ApproveMsg, EVT_COMMAND_APPROVE = new_command_event()
 
 # Print events
 
+PrintMsg, EVT_COMMAND_PRINT = new_command_event()
+
 # Clipboard events
 
-CutMsg, EVT_COMMAND_CUT = wx.lib.newevent.NewCommandEvent()
-CopyMsg, EVT_COMMAND_COPY = wx.lib.newevent.NewCommandEvent()
-CopyResultMsg, EVT_COMMAND_COPY_RESULT = wx.lib.newevent.NewCommandEvent()
-PasteMsg, EVT_COMMAND_PASTE = wx.lib.newevent.NewCommandEvent()
+CutMsg, EVT_COMMAND_CUT = new_command_event()
+CopyMsg, EVT_COMMAND_COPY = new_command_event()
+CopyResultMsg, EVT_COMMAND_COPY_RESULT = new_command_event()
+PasteMsg, EVT_COMMAND_PASTE = new_command_event()
 
 # Grid view events
 
+RefreshSelectionMsg , EVT_COMMAND_REFRESH_SELECTION = new_command_event()
+GotoCellMsg , EVT_COMMAND_GOTO_CELL = new_command_event()
+ZoomMsg , EVT_COMMAND_ZOOM = new_command_event()
+
 # Find events
 
+FindMsg, EVT_COMMAND_FIND = new_command_event()
+ReplaceMsg, EVT_COMMAND_REPLACE = new_command_event()
+
 # Grid change events
+
+InsertRowsMsg, EVT_COMMAND_INSERT_ROWS = new_command_event()
+InsertColsMsg, EVT_COMMAND_INSERT_COLS = new_command_event()
+InsertTabsMsg, EVT_COMMAND_INSERT_TABS = new_command_event()
+DeleteRowsMsg, EVT_COMMAND_DELETE_ROWS = new_command_event()
+DeleteColsMsg, EVT_COMMAND_DELETE_COLS = new_command_event()
+DeleteTabsMsg, EVT_COMMAND_DELETE_TABS = new_command_event()
+
+ResizeGridMsg, EVT_COMMAND_RESIZE_GRID = new_command_event()
 
 # Grid attribute events
 
 # Undo/Redo events
 
+UndoMsg, EVT_COMMAND_UNDO = new_command_event()
+RedoMsg, EVT_COMMAND_REDO = new_command_event()
+
+# EntryLine
+# =========
+
+##EntryLineMsg, EVT_ENTRYLINE_MSG = new_command_event()
+##EntryLineSelectionMsg, EVT_ENTRYLINE_SELECTION_MSG = new_command_event()
 
 # Statusbar
 # =========
