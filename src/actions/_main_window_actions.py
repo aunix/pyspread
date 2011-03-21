@@ -97,6 +97,9 @@ class ClipboardActions(object):
 
 
 class FindActions(object):
+    def find(self):
+        raise NotImplementedError
+        
     def replace(self):
         raise NotImplementedError
 

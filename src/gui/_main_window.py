@@ -33,7 +33,7 @@ Provides:
 import wx
 import wx.aui
 
-from config import MAIN_WINDOW_ICON
+from config import MAIN_WINDOW_ICON, displaysize
 
 from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
@@ -66,14 +66,13 @@ class MainWindow(wx.Frame):
         statusbar = StatusBar(self)
         self.SetStatusBar(statusbar)
         
-        post_status_text(self, "Welcome to pyspread.")
+        welcome_text = "Welcome to pyspread."
+        post_command_event(self, StatusBarMsg, text=welcome_text)
         
         # Tool bars
-        #self.main_toolbar = MainToolbar(self, -1)
-        #self.main_toolbar.Realize()
-        
-        #self.find_toolbar = FindToolbar(self, -1)
-        #self.attributes_toolbar = AttributesToolbar(self, -1)
+        self.main_toolbar = MainToolbar(self, -1)
+        self.find_toolbar = FindToolbar(self, -1)
+        self.attributes_toolbar = AttributesToolbar(self, -1)
         
         # Entry line
         self.entry_line = EntryLine(self)
@@ -93,27 +92,30 @@ class MainWindow(wx.Frame):
         """Setup title, icon, size, scale, statusbar, main grid"""
         
         self.set_icon(MAIN_WINDOW_ICON)
+        
+        self.SetInitialSize((int(displaysize[0] * 0.9), 
+                             int(displaysize[1] * 0.9)))
 
     def _do_layout(self):
         """Adds widgets to the wx.aui manager and controls the layout"""
         
         # Add the toolbars to the manager
-#        self._mgr.AddPane(self.main_toolbar, wx.aui.AuiPaneInfo().
-#                          Name("main_window_toolbar").Caption("Main Toolbar").
-#                          ToolbarPane().Top().Row(0).CloseButton(False).
-#                          LeftDockable(False).RightDockable(False))
-#                                  
-#        self._mgr.AddPane(self.find_toolbar, wx.aui.AuiPaneInfo().
-#                          Name("find_toolbar").Caption("Find").
-#                          ToolbarPane().Top().Row(1).MaximizeButton(False).
-#                          LeftDockable(False).RightDockable(False))
-#        
-#        self._mgr.AddPane(self.attributes_toolbar, wx.aui.AuiPaneInfo().
-#                          Name("attributes_toolbar").Caption("Cell Attributes").
-#                          ToolbarPane().Top().Row(1).MaximizeButton(False).
-#                          LeftDockable(False).RightDockable(False))
-#                          
-#                          
+        self._mgr.AddPane(self.main_toolbar, wx.aui.AuiPaneInfo().
+                          Name("main_window_toolbar").Caption("Main Toolbar").
+                          ToolbarPane().Top().Row(0).CloseButton(False).
+                          LeftDockable(False).RightDockable(False))
+                                  
+        self._mgr.AddPane(self.find_toolbar, wx.aui.AuiPaneInfo().
+                          Name("find_toolbar").Caption("Find").
+                          ToolbarPane().Top().Row(1).MaximizeButton(False).
+                          LeftDockable(False).RightDockable(False))
+        
+        self._mgr.AddPane(self.attributes_toolbar, wx.aui.AuiPaneInfo().
+                          Name("attributes_toolbar").Caption("Cell Attributes").
+                          ToolbarPane().Top().Row(1).MaximizeButton(False).
+                          LeftDockable(False).RightDockable(False))
+                          
+                          
         self._mgr.AddPane(self.table_choice, wx.aui.AuiPaneInfo().
                           Name("table_choice").Caption("Table choice").
                           ToolbarPane().MaxSize((50, 50)).Row(2).

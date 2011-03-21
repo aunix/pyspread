@@ -76,7 +76,8 @@ class Grid(wx.grid.Grid):
         
         # Grid view events
         
-        self.Bind(EVT_COMMAND_REFRESH_SELECTION, self.handlers.OnRefreshSelectedCells)
+        self.Bind(EVT_COMMAND_REFRESH_SELECTION, 
+                  self.handlers.OnRefreshSelectedCells)
         self.Bind(EVT_COMMAND_GOTO_CELL, self.handlers.OnGoToCell)
         self.Bind(EVT_COMMAND_ZOOM, self.handlers.OnZoom)
         

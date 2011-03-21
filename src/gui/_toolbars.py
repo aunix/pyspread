@@ -37,6 +37,8 @@ Provides:
 import wx
 import wx.lib.colourselect as csel
 
+from _events import *
+
 from _pyspread.config import odftags, border_toggles, default_cell_attributes
 from _pyspread.config import FONT_SIZES, faces
 from _pyspread.config import icons, icon_size, small_icon_size
@@ -61,29 +63,29 @@ class MainToolbar(wx.ToolBar):
     tool = wx.ITEM_NORMAL
 
     toolbardata = [
-    [tool, "OnFileNew", "New", "FileNew", "New spreadsheet", 
+    [tool, NewMsg, "New", "FileNew", "New spreadsheet", 
         "Create a new, empty spreadsheet"], \
-    [tool, "OnFileOpen", "Open", "FileOpen", "Open spreadsheet", 
+    [tool, OpenMsg, "Open", "FileOpen", "Open spreadsheet", 
         "Open spreadsheet from file"], \
-    [tool, "OnFileSave", "Save", "FileSave", "Save spreadsheet", 
+    [tool, SaveAsMsg, "Save", "FileSave", "Save spreadsheet", 
         "Save spreadsheet to file"], \
     ["Separator"] , \
-    [tool, "OnUndo", "Undo", "Undo", "Undo", "Undo last operation"], \
-    [tool, "OnRedo", "Redo", "Redo", "Redo", "Redo next operation"], \
+    [tool, UndoMsg, "Undo", "Undo", "Undo", "Undo last operation"], \
+    [tool, RedoMsg, "Redo", "Redo", "Redo", "Redo next operation"], \
     ["Separator"] , \
-    [tool, "OnShowFind", "Find", "Find", "Find", "Find cell by content"], \
-    [tool, "OnShowFindReplace", "Replace", "FindReplace", "Replace", 
+    [tool, FindMsg, "Find", "Find", "Find", "Find cell by content"], \
+    [tool, ReplaceMsg, "Replace", "FindReplace", "Replace", 
         "Replace strings in cells"], \
     ["Separator"] , \
-    [tool, "OnCut", "Cut", "EditCut", "Cut", "Cut cells to clipboard"], \
-    [tool, "OnCopy", "Copy", "EditCopy", "Copy", 
+    [tool, CutMsg, "Cut", "EditCut", "Cut", "Cut cells to clipboard"], \
+    [tool, CopyMsg, "Copy", "EditCopy", "Copy", 
         "Copy the input strings of the cells to clipboard"], \
-    [tool, "OnCopyResult", "Copy Results", "EditCopyRes", "Copy Results", 
+    [tool, CopyResultMsg, "Copy Results", "EditCopyRes", "Copy Results", 
         "Copy the result strings of the cells to the clipboard"], \
-    [tool, "OnPaste", "Paste", "EditPaste", "Paste", 
+    [tool, PasteMsg, "Paste", "EditPaste", "Paste", 
         "Paste cell from clipboard"], \
     ["Separator"] , \
-    [tool, "OnFilePrint", "Print", "FilePrint", "Print current spreadsheet", 
+    [tool, PrintMsg, "Print", "FilePrint", "Print current spreadsheet", 
         "Print current spreadsheet"], \
     ]
 
@@ -91,8 +93,10 @@ class MainToolbar(wx.ToolBar):
         wx.ToolBar.__init__(self, *args, **kwargs)
         self.SetToolBitmapSize(icon_size)
         
+        self.ids_msgs = {}
+        
         self.parent = args[0]
-        #self._add_tools()
+        self._add_tools()
 
     def _add_tools(self):
         """Adds tools from self.toolbardata to self"""
@@ -102,8 +106,7 @@ class MainToolbar(wx.ToolBar):
             if obj == "Separator":
                 self.AddSeparator()
             elif obj == self.tool:
-                methodname = tool[1]
-                method = self.parent.handlers.__getattribute__(methodname)
+                msgtype = tool[1]
                 label = tool[2]
                 icon = wx.Bitmap(icons[tool[3]], wx.BITMAP_TYPE_ANY)
                 icon2 = wx.NullBitmap
@@ -111,11 +114,19 @@ class MainToolbar(wx.ToolBar):
                 helpstring = tool[5]
                 toolid = wx.NewId()
                 self.AddLabelTool(toolid, label, icon, icon2, obj, 
-                                  tooltip, helpstring)
-                self.parent.Bind(wx.EVT_TOOL, method, id=toolid)
+                                  tooltip, helpstring)\
+                                  
+                self.ids_msgs[toolid] = msgtype
+                                  
+                self.parent.Bind(wx.EVT_TOOL, self.OnTool, id=toolid)
             else:
                 raise TypeError, "Toolbar item unknown"
 
+    def OnTool(self, event):
+        """Toolbar event handler"""
+        
+        msgtype = self.ids_msgs[event.GetId()]
+        post_command_event(self.parent._grid, msgtype)
 
 # end of class MainToolbar
 
@@ -148,14 +159,12 @@ class FindToolbar(wx.ToolBar):
       },
     }
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         kwargs["style"] = wx.TB_FLAT | wx.TB_NODIVIDER
-        wx.ToolBar.__init__(self, *args, **kwargs)
+        wx.ToolBar.__init__(self, parent, *args, **kwargs)
         self.SetToolBitmapSize(small_icon_size)
-        #if '__WXMAC__' in wx.PlatformInfo:
-        #    # Extra margin because search control is too high
-        #    self.SetMargins((0, 7)) 
-        self.parent = args[0]
+        
+        self.parent = parent
         
         # Search entry control
         self.search_history = []

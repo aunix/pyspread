@@ -49,12 +49,10 @@ import wx.combo
 import wx.stc  as  stc
 from wx.lib.intctrl import IntCtrl, EVT_INT
 
-from _pyspread._events import EVT_STATUSBAR_MSG, EVT_ENTRYLINE_MSG
-from _pyspread._events import EVT_ENTRYLINE_SELECTION_MSG, EVT_GRID_SHAPE
-from _pyspread._events import post_grid_text, post_table_change
+from _events import EVT_STATUSBAR_MSG
 
-from _pyspread.config import faces, text_styles, fold_symbol_style
-from _pyspread.config import icons, icon_size, pen_styles
+from config import faces, text_styles, fold_symbol_style
+from config import icons, icon_size, pen_styles
 
 class CollapsiblePane(wx.CollapsiblePane):
     """Collapsible pane with basic toggle mechanism
@@ -509,8 +507,8 @@ class EntryLine(wx.TextCtrl):
         self.parent = parent
         self.ignore_changes = False
         
-        parent.Bind(EVT_ENTRYLINE_MSG, self.OnMessage)
-        parent.Bind(EVT_ENTRYLINE_SELECTION_MSG, self.OnSelectionMsg)
+        ##parent.Bind(EVT_ENTRYLINE_MSG, self.OnMessage)
+        ##parent.Bind(EVT_ENTRYLINE_SELECTION_MSG, self.OnSelectionMsg)
         
         self.SetToolTip(wx.ToolTip("Enter Python expression here."))
         
@@ -597,7 +595,7 @@ class TableChoiceIntCtrl(IntCtrl):
         self.Bind(EVT_INT, self.OnInt)
         self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
         
-        self.parent.Bind(EVT_GRID_SHAPE, self.OnShapeChange)
+        ##self.parent.Bind(EVT_GRID_SHAPE, self.OnShapeChange)
 
     def change_max(self, no_tabs):
         """Updates to a new number of tables

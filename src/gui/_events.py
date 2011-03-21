@@ -30,8 +30,7 @@ Event handler module
 Provides
 --------
 
-* StatusBarMsg: Event handler for messages in the statusbar of the main window
-* post_statusbar_msg: Posts a StatusBarMsg event
+* post_command_event: Posts a command event
 
 """
 
@@ -51,7 +50,7 @@ def post_command_event(target, msg_cls, **kwargs):
     
     """
     
-    msg = msg_cls(-1, **kwargs)
+    msg = msg_cls(**kwargs)
     wx.PostEvent(target, msg)
 
 
@@ -147,43 +146,43 @@ StatusBarMsg, EVT_STATUSBAR_MSG = wx.lib.newevent.NewEvent()
 
 
 
-GridMsg, EVT_GRID_MSG = wx.lib.newevent.NewEvent()
-
-TableChangeMsg, EVT_TABLE_CHANGE = wx.lib.newevent.NewEvent()
-GridShapeMsg, EVT_GRID_SHAPE = wx.lib.newevent.NewEvent()
-
-def post_status_text(evt_handler, text):
-    """Posts a StatusBarMsg event for the main statusbar widget"""
-
-    msg = StatusBarMsg(text=text)
-    wx.PostEvent(evt_handler, msg)
-
-def post_entryline_text(evt_handler, text):
-    """Posts a StatusBarMsg event for the main statusbar widget"""
-
-    msg = EntryLineMsg(text=text)
-    wx.PostEvent(evt_handler, msg)
-
-def post_entryline_selection(evt_handler, start, stop):
-    """Posts a StatusBarMsg event for the main statusbar widget"""
-
-    msg = EntryLineSelectionMsg(start=start, stop=stop)
-    wx.PostEvent(evt_handler, msg)
-
-def post_grid_text(evt_handler, text):
-    """Posts a text for pysgrid[<current_cell>]"""
-    
-    msg = GridMsg(text=text)
-    wx.PostEvent(evt_handler, msg)
-
-def post_table_change(evt_handler, new_table):
-    """Posts a StatusBarMsg event for the main statusbar widget"""
-    
-    msg = TableChangeMsg(new_table=new_table)
-    wx.PostEvent(evt_handler, msg)
-
-def post_shape_change(evt_handler, shape):
-    """Posts a grid shape event for the main statusbar widget"""
-    
-    msg = GridShapeMsg(shape=shape)
-    wx.PostEvent(evt_handler, msg)
+#GridMsg, EVT_GRID_MSG = wx.lib.newevent.NewEvent()
+#
+#TableChangeMsg, EVT_TABLE_CHANGE = wx.lib.newevent.NewEvent()
+#GridShapeMsg, EVT_GRID_SHAPE = wx.lib.newevent.NewEvent()
+#
+#def post_status_text(evt_handler, text):
+#    """Posts a StatusBarMsg event for the main statusbar widget"""
+#
+#    msg = StatusBarMsg(text=text)
+#    wx.PostEvent(evt_handler, msg)
+#
+#def post_entryline_text(evt_handler, text):
+#    """Posts a StatusBarMsg event for the main statusbar widget"""
+#
+#    msg = EntryLineMsg(text=text)
+#    wx.PostEvent(evt_handler, msg)
+#
+#def post_entryline_selection(evt_handler, start, stop):
+#    """Posts a StatusBarMsg event for the main statusbar widget"""
+#
+#    msg = EntryLineSelectionMsg(start=start, stop=stop)
+#    wx.PostEvent(evt_handler, msg)
+#
+#def post_grid_text(evt_handler, text):
+#    """Posts a text for pysgrid[<current_cell>]"""
+#    
+#    msg = GridMsg(text=text)
+#    wx.PostEvent(evt_handler, msg)
+#
+#def post_table_change(evt_handler, new_table):
+#    """Posts a StatusBarMsg event for the main statusbar widget"""
+#    
+#    msg = TableChangeMsg(new_table=new_table)
+#    wx.PostEvent(evt_handler, msg)
+#
+#def post_shape_change(evt_handler, shape):
+#    """Posts a grid shape event for the main statusbar widget"""
+#    
+#    msg = GridShapeMsg(shape=shape)
+#    wx.PostEvent(evt_handler, msg)
