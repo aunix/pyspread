@@ -251,8 +251,9 @@ class FindToolbar(wx.ToolBar):
         self.search.SetMenu(self.menu)
         
         search_flags = self.search_options + ["FIND_NEXT"]
-        findpos = self.parent.find_position(search_string, search_flags)
-        self.parent.find_gui_feedback(event, search_string, findpos)
+        
+        post_command_event(self, FindMsg, flags=search_flags)
+        
         self.search.SetFocus()
     
     def OnSearchDirectionButton(self, event):

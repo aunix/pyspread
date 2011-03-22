@@ -50,7 +50,7 @@ def post_command_event(target, msg_cls, **kwargs):
     
     """
     
-    msg = msg_cls(**kwargs)
+    msg = msg_cls(id=-1, **kwargs)
     wx.PostEvent(target, msg)
 
 

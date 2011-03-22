@@ -55,55 +55,55 @@ class Grid(wx.grid.Grid):
         
         # File events
         
-        self.Bind(EVT_COMMAND_NEW, self.handlers.OnNew)
-        self.Bind(EVT_COMMAND_OPEN, self.handlers.OnOpen)
-        self.Bind(EVT_COMMAND_SAVE, self.handlers.OnSave)
-        self.Bind(EVT_COMMAND_SAVEAS, self.handlers.OnSaveAs)
-        self.Bind(EVT_COMMAND_IMPORT, self.handlers.OnImport)
-        self.Bind(EVT_COMMAND_EXPORT, self.handlers.OnExport)
-        self.Bind(EVT_COMMAND_APPROVE, self.handlers.OnApprove)
+        self.parent.Bind(EVT_COMMAND_NEW, self.handlers.OnNew)
+        self.parent.Bind(EVT_COMMAND_OPEN, self.handlers.OnOpen)
+        self.parent.Bind(EVT_COMMAND_SAVE, self.handlers.OnSave)
+        self.parent.Bind(EVT_COMMAND_SAVEAS, self.handlers.OnSaveAs)
+        self.parent.Bind(EVT_COMMAND_IMPORT, self.handlers.OnImport)
+        self.parent.Bind(EVT_COMMAND_EXPORT, self.handlers.OnExport)
+        self.parent.Bind(EVT_COMMAND_APPROVE, self.handlers.OnApprove)
         
         # Print events
         
-        self.Bind(EVT_COMMAND_PRINT, self.handlers.OnPrint)
+        self.parent.Bind(EVT_COMMAND_PRINT, self.handlers.OnPrint)
         
         # Clipboard events
         
-        self.Bind(EVT_COMMAND_CUT, self.handlers.OnCut)
-        self.Bind(EVT_COMMAND_COPY, self.handlers.OnCopy)
-        self.Bind(EVT_COMMAND_COPY_RESULT, self.handlers.OnCopyResult)
-        self.Bind(EVT_COMMAND_PASTE, self.handlers.OnPaste)
+        self.parent.Bind(EVT_COMMAND_CUT, self.handlers.OnCut)
+        self.parent.Bind(EVT_COMMAND_COPY, self.handlers.OnCopy)
+        self.parent.Bind(EVT_COMMAND_COPY_RESULT, self.handlers.OnCopyResult)
+        self.parent.Bind(EVT_COMMAND_PASTE, self.handlers.OnPaste)
         
         # Grid view events
         
-        self.Bind(EVT_COMMAND_REFRESH_SELECTION, 
+        self.parent.Bind(EVT_COMMAND_REFRESH_SELECTION, 
                   self.handlers.OnRefreshSelectedCells)
-        self.Bind(EVT_COMMAND_GOTO_CELL, self.handlers.OnGoToCell)
-        self.Bind(EVT_COMMAND_ZOOM, self.handlers.OnZoom)
+        self.parent.Bind(EVT_COMMAND_GOTO_CELL, self.handlers.OnGoToCell)
+        self.parent.Bind(EVT_COMMAND_ZOOM, self.handlers.OnZoom)
         
         # Find events
         
-        self.Bind(EVT_COMMAND_FIND, self.handlers.OnFind)
-        self.Bind(EVT_COMMAND_REPLACE, self.handlers.OnShowFindReplace)
+        self.parent.Bind(EVT_COMMAND_FIND, self.handlers.OnFind)
+        self.parent.Bind(EVT_COMMAND_REPLACE, self.handlers.OnShowFindReplace)
         
         # Grid change events
         
-        self.Bind(EVT_COMMAND_INSERT_ROWS, self.handlers.OnInsertRows)
-        self.Bind(EVT_COMMAND_INSERT_COLS, self.handlers.OnInsertCols)
-        self.Bind(EVT_COMMAND_INSERT_TABS, self.handlers.OnInsertTabs)
+        self.parent.Bind(EVT_COMMAND_INSERT_ROWS, self.handlers.OnInsertRows)
+        self.parent.Bind(EVT_COMMAND_INSERT_COLS, self.handlers.OnInsertCols)
+        self.parent.Bind(EVT_COMMAND_INSERT_TABS, self.handlers.OnInsertTabs)
         
-        self.Bind(EVT_COMMAND_DELETE_ROWS, self.handlers.OnDeleteRows)
-        self.Bind(EVT_COMMAND_DELETE_COLS, self.handlers.OnDeleteCols)
-        self.Bind(EVT_COMMAND_DELETE_TABS, self.handlers.OnDeleteTabs)
+        self.parent.Bind(EVT_COMMAND_DELETE_ROWS, self.handlers.OnDeleteRows)
+        self.parent.Bind(EVT_COMMAND_DELETE_COLS, self.handlers.OnDeleteCols)
+        self.parent.Bind(EVT_COMMAND_DELETE_TABS, self.handlers.OnDeleteTabs)
         
-        self.Bind(EVT_COMMAND_RESIZE_GRID, self.handlers.OnResizeGrid)
+        self.parent.Bind(EVT_COMMAND_RESIZE_GRID, self.handlers.OnResizeGrid)
         
         # Grid attribute events
         
         # Undo/Redo events
 
-        self.Bind(EVT_COMMAND_UNDO, self.handlers.OnUndo)
-        self.Bind(EVT_COMMAND_REDO, self.handlers.OnRedo)
+        self.parent.Bind(EVT_COMMAND_UNDO, self.handlers.OnUndo)
+        self.parent.Bind(EVT_COMMAND_REDO, self.handlers.OnRedo)
 
 class GridEventHandlers(object):
     """Contains grid event handlers"""
