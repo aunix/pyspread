@@ -126,7 +126,7 @@ class MainToolbar(wx.ToolBar):
         """Toolbar event handler"""
         
         msgtype = self.ids_msgs[event.GetId()]
-        post_command_event(self.parent._grid, msgtype)
+        post_command_event(self, msgtype)
 
 # end of class MainToolbar
 
@@ -288,14 +288,12 @@ class FindToolbar(wx.ToolBar):
 class AttributesToolbar(wx.ToolBar):
     """Toolbar for editing cell attributes"""
         
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         kwargs["style"] = wx.TB_FLAT | wx.TB_NODIVIDER
-        self.parent = args[0]
-        ## Change to Events
-        ##self.grid = self.parent.MainGrid
-        ##self.pysgrid = self.grid.model.pysgrid
+        wx.ToolBar.__init__(self, parent, *args, **kwargs)
         
-        wx.ToolBar.__init__(self, *args, **kwargs)
+        self.parent = parent
+        
         self.SetToolBitmapSize(small_icon_size)
         
         self._create_font_choice_combo()
@@ -376,17 +374,17 @@ class AttributesToolbar(wx.ToolBar):
     def _create_borderchoice_combo(self):
         """Create border choice combo box"""
         
-        self.pen_width_combo = _widgets.BorderEditChoice(self, 
+        self.borderchoice_combo = _widgets.BorderEditChoice(self, 
                                 choices=[c[0] for c in border_toggles], \
                                 style=wx.CB_READONLY, size=(50, -1))
         
         self.borderstate = border_toggles[0][0]
         
-        self.AddControl(self.pen_width_combo)
+        self.AddControl(self.borderchoice_combo)
         
-        self.Bind(wx.EVT_COMBOBOX, self.OnBorderChoice, self.pen_width_combo)
+        self.Bind(wx.EVT_COMBOBOX, self.OnBorderChoice, self.borderchoice_combo)
         
-        self.pen_width_combo.SetValue("AllBorders")
+        self.borderchoice_combo.SetValue("AllBorders")
     
     def _create_penwidth_combo(self):
         """Create pen width combo box"""
@@ -746,43 +744,9 @@ class AttributesToolbar(wx.ToolBar):
     def OnLineColor(self, event):
         """Line color choice event handler"""
         
-        linecolor = event.GetValue()
-        self.change_linecolor(linecolor)
-        event.Skip()
+        color = event.GetValue()
         
-    def change_linecolor(self, linecolor):
-        """Change the line color of current cell/selection border"""
-        
-        pysgrid = self.pysgrid
-        sgrid = pysgrid.sgrid
-        
-        self.grid.backgrounds = {}
-        
-        keys = self._get_key_list()
-        bottom_keys, right_keys = self.get_chosen_borders(keys)
-        
-        for key in right_keys:
-            borderpen_right = pysgrid.get_sgrid_attr(key, "borderpen_right")
-            try:
-                borderpen_right[0] = linecolor.GetRGB()
-            except KeyError:
-                borderpen_right = default_cell_attributes["borderpen_right"]
-                borderpen_right[0] = linecolor.GetRGB()
-            pysgrid.set_sgrid_attr(key, "borderpen_right", borderpen_right)
-        
-        for key in bottom_keys:
-            borderpen_bottom = pysgrid.get_sgrid_attr(key, "borderpen_bottom")
-            try:
-                borderpen_bottom[0] = linecolor.GetRGB()
-            except KeyError:
-                borderpen_bottom = default_cell_attributes["borderpen_bottom"]
-                borderpen_bottom[0] = linecolor.GetRGB()
-            pysgrid.set_sgrid_attr(key, "borderpen_bottom", borderpen_bottom)
-                                   
-        pysgrid.unredo.mark()
-        
-        self.grid.view.force_refresh()
-        
+        post_command_event(self, BorderColorMsg, color=color)
     
     def OnLineWidth(self, event):
         """Line width choice event handler"""
@@ -791,100 +755,21 @@ class AttributesToolbar(wx.ToolBar):
         idx = event.GetInt()
         linewidth  = int(linewidth_combobox.GetString(idx))
         
-        self.change_linewidth(linewidth)
-        
-        
-    def change_linewidth(self, linewidth):
-        """Change the line width of current cell/selection border"""
-        
-        pysgrid = self.pysgrid
-        sgrid = pysgrid.sgrid
-        
-        self.grid.backgrounds = {}
-        
-        keys = self._get_key_list()
-        bottom_keys, right_keys = self.get_chosen_borders(keys)
-        
-        if linewidth == 0:
-            penstyle = int(wx.TRANSPARENT)
-        else:
-            penstyle = int(wx.SOLID)
-        
-        for key in right_keys:
-            borderpen_right = pysgrid.get_sgrid_attr(key, "borderpen_right")
-            try:
-                borderpen_right[1] = linewidth
-                borderpen_right[2] = penstyle
-            except KeyError:
-                borderpen_right = default_cell_attributes["borderpen_right"]
-                borderpen_right[1] = linewidth
-                borderpen_right[2] = penstyle
-            pysgrid.set_sgrid_attr(key, "borderpen_right", borderpen_right)
-        
-        for key in bottom_keys:
-            borderpen_bottom = pysgrid.get_sgrid_attr(key, "borderpen_bottom")
-            try:
-                borderpen_bottom[1] = linewidth
-                borderpen_bottom[2] = penstyle
-            except KeyError:
-                borderpen_bottom = default_cell_attributes["borderpen_bottom"]
-                borderpen_bottom[1] = linewidth
-                borderpen_bottom[2] = penstyle
-            pysgrid.set_sgrid_attr(key, "borderpen_bottom", borderpen_bottom)
-        
-        pysgrid.unredo.mark()
-        
-        self.grid.view.force_refresh()
+        post_command_event(self, BorderWidthMsg, width=linewidth)
         
     def OnBGColor(self, event):
         """Background color choice event handler"""
 
-        bgcolor = event.GetValue()
-        self.change_bgcolor(bgcolor)
-        event.Skip()
-    
-    def change_bgcolor(self, bgcolor):
-        """Change the color of current cell/selection background"""
+        color = event.GetValue()
         
-        pysgrid = self.pysgrid
-        
-        keys = self._get_key_list()
-        
-        for key in keys:
-            bgbrush = pysgrid.get_sgrid_attr(key, "bgbrush")
-            try:
-                bgbrush[0] = int(bgcolor.GetRGB())
-            except KeyError:
-                bgbrush = default_cell_attributes["bgbrush"]
-                bgbrush[0] = int(bgcolor.GetRGB())
-            pysgrid.set_sgrid_attr(key, "bgbrush", bgbrush)
-        
-        pysgrid.unredo.mark()
-        
-        self.grid.view.force_refresh()
+        post_command_event(self, BackgroundColorMsg, color=color)
         
     def OnTextColor(self, event):
         """Text color choice event handler"""
         
-        textcolor = event.GetValue()
-        self.change_textcolor(textcolor)
-        event.Skip()
-    
-    def change_textcolor(self, textcolor):
-        """Change the color of current cell/selection text"""
+        color = event.GetValue()
         
-        pysgrid = self.pysgrid
-        
-        keys = self._get_key_list()
-        
-        for key in keys:
-            textattr = pysgrid.get_sgrid_attr(key, "textattributes")
-            textattr[odftags["fontcolor"]] = textcolor
-            pysgrid.set_sgrid_attr(key, "textattributes", textattr)
-        
-        pysgrid.unredo.mark()
-        
-        self.grid.view.force_refresh()
+        post_command_event(self, TextColorMsg, color=color)
     
     def OnTextFont(self, event):
         """Text font choice event handler"""
@@ -897,28 +782,7 @@ class AttributesToolbar(wx.ToolBar):
         except AttributeError:
             font_string  = event.GetString()
         
-        self.change_text_font(font_string)
-        
-        event.Skip()
-    
-    def change_text_font(self, font_string):
-        """Change the font of current cell/selection text"""
-        
-        pysgrid = self.pysgrid
-        
-        keys = self._get_key_list()
-        
-        for key in keys:
-            old_font_string = pysgrid.get_sgrid_attr(key, "textfont")
-            textfont = textfont_from_string(old_font_string)
-            textfont.SetFaceName(font_string)
-            
-            font_string = str(textfont.GetNativeFontInfo())
-            pysgrid.set_sgrid_attr(key, "textfont", font_string)
-        
-        pysgrid.unredo.mark()
-        
-        self.grid.view.force_refresh()
+        post_command_event(self, FontMsg, font=font_string)
     
     def OnTextSize(self, event):
         """Text size combo text event handler"""
@@ -928,29 +792,7 @@ class AttributesToolbar(wx.ToolBar):
         except Exception:
             size = faces['size']
         
-        self.change_text_size(size)
-        
-        event.Skip()
-    
-    def change_text_size(self, size):
-        """Change the size of current cell/selection text"""
-        
-        pysgrid = self.pysgrid
-        
-        keys = self._get_key_list()
-        
-        for key in keys:
-            old_font_string = pysgrid.get_sgrid_attr(key, "textfont")
-            
-            textfont = textfont_from_string(old_font_string)
-            textfont.SetPointSize(size)
-                
-            font_string = str(textfont.GetNativeFontInfo())
-            pysgrid.set_sgrid_attr(key, "textfont", font_string)
-        
-        pysgrid.unredo.mark()
-        
-        self.grid.view.force_refresh()
+        post_command_event(self, FontSizeMsg, size=size)
     
     def OnToolClick(self, event):
         """Toggle the tool attribute of the current cell/selection text

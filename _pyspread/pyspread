@@ -32,6 +32,8 @@ See __init__.py for extensive docstring.
 
 from sys import path, modules
 
+DEBUG = False
+
 try:
   modules['wx']
 except KeyError:
@@ -47,8 +49,6 @@ except KeyError:
 
 from wx import App
 from wx import InitAllImageHandlers
-
-DEBUG = False
 
 # If pyspread is installed but run from a local dir
 # the local libs are preferred.
@@ -142,10 +142,4 @@ if __name__ == "__main__":
         import cProfile
         cProfile.run('main()')
     else:
-## psyco seems to show segfaults!
-#        try:
-#            import psyco
-#            psyco.full()
-#        except ImportError:
-#            pass
         main()

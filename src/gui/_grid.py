@@ -45,75 +45,105 @@ class Grid(wx.grid.Grid):
         wx.grid.Grid.__init__(self, parent, *args, **kwargs)
         
         self.handlers = GridEventHandlers(self)
+        self.cell_handlers = GridCellEventHandlers(self)
         
         self._bind()
     
     def _bind(self):
         """Bind events to handlers"""
         
-        # Grid cell events
+        parent = self.parent
+        
+        handlers = self.handlers
+        c_handlers = self.cell_handlers
+        
+        # Cell code events
+        
+        # Cell attribute events
+        
+        
+        
+        parent.Bind(EVT_COMMAND_FONT, c_handlers.OnCellFont)
+        parent.Bind(EVT_COMMAND_FONTSIZE, c_handlers.OnCellFontSize)
+        parent.Bind(EVT_COMMAND_FONTBOLD, c_handlers.OnCellFontBold)
+        parent.Bind(EVT_COMMAND_FONTITALICS, c_handlers.OnCellFontItalics)
+        parent.Bind(EVT_COMMAND_FONTUNDERLINE, c_handlers.OnCellFontUnderline)
+        parent.Bind(EVT_COMMAND_FONTSTRIKETHROUGH, 
+                    c_handlers.OnCellFontStrikethrough)
+        parent.Bind(EVT_COMMAND_FROZEN, c_handlers.OnCellFrozen)
+        parent.Bind(EVT_COMMAND_JUSTIFICATION, c_handlers.OnCellJustification)
+        parent.Bind(EVT_COMMAND_ALIGNMENT, c_handlers.OnCellAlignment)
+        parent.Bind(EVT_COMMAND_BORDERCHOICE, c_handlers.OnCellBorderChoice)
+        parent.Bind(EVT_COMMAND_BORDERWIDTH, c_handlers.OnCellBorderWidth)
+        parent.Bind(EVT_COMMAND_BORDERCOLOR, c_handlers.OnCellBorderColor)
+        parent.Bind(EVT_COMMAND_BACKGROUNDCOLOR, 
+                    c_handlers.OnCellBackgroundColor)
+        parent.Bind(EVT_COMMAND_TEXTCOLOR, c_handlers.OnCellTextColor)
+        parent.Bind(EVT_COMMAND_TEXTROTATATION, c_handlers.OnCellTextRotation)
+        
+        # Cell selection events
         
         # File events
         
-        self.parent.Bind(EVT_COMMAND_NEW, self.handlers.OnNew)
-        self.parent.Bind(EVT_COMMAND_OPEN, self.handlers.OnOpen)
-        self.parent.Bind(EVT_COMMAND_SAVE, self.handlers.OnSave)
-        self.parent.Bind(EVT_COMMAND_SAVEAS, self.handlers.OnSaveAs)
-        self.parent.Bind(EVT_COMMAND_IMPORT, self.handlers.OnImport)
-        self.parent.Bind(EVT_COMMAND_EXPORT, self.handlers.OnExport)
-        self.parent.Bind(EVT_COMMAND_APPROVE, self.handlers.OnApprove)
+        parent.Bind(EVT_COMMAND_NEW, handlers.OnNew)
+        parent.Bind(EVT_COMMAND_OPEN, handlers.OnOpen)
+        parent.Bind(EVT_COMMAND_SAVE, handlers.OnSave)
+        parent.Bind(EVT_COMMAND_SAVEAS, handlers.OnSaveAs)
+        parent.Bind(EVT_COMMAND_IMPORT, handlers.OnImport)
+        parent.Bind(EVT_COMMAND_EXPORT, handlers.OnExport)
+        parent.Bind(EVT_COMMAND_APPROVE, handlers.OnApprove)
         
         # Print events
         
-        self.parent.Bind(EVT_COMMAND_PRINT, self.handlers.OnPrint)
+        parent.Bind(EVT_COMMAND_PRINT, handlers.OnPrint)
         
         # Clipboard events
         
-        self.parent.Bind(EVT_COMMAND_CUT, self.handlers.OnCut)
-        self.parent.Bind(EVT_COMMAND_COPY, self.handlers.OnCopy)
-        self.parent.Bind(EVT_COMMAND_COPY_RESULT, self.handlers.OnCopyResult)
-        self.parent.Bind(EVT_COMMAND_PASTE, self.handlers.OnPaste)
+        parent.Bind(EVT_COMMAND_CUT, handlers.OnCut)
+        parent.Bind(EVT_COMMAND_COPY, handlers.OnCopy)
+        parent.Bind(EVT_COMMAND_COPY_RESULT, handlers.OnCopyResult)
+        parent.Bind(EVT_COMMAND_PASTE, handlers.OnPaste)
         
         # Grid view events
         
-        self.parent.Bind(EVT_COMMAND_REFRESH_SELECTION, 
-                  self.handlers.OnRefreshSelectedCells)
-        self.parent.Bind(EVT_COMMAND_GOTO_CELL, self.handlers.OnGoToCell)
-        self.parent.Bind(EVT_COMMAND_ZOOM, self.handlers.OnZoom)
+        parent.Bind(EVT_COMMAND_REFRESH_SELECTION, 
+                    handlers.OnRefreshSelectedCells)
+        parent.Bind(EVT_COMMAND_GOTO_CELL, handlers.OnGoToCell)
+        parent.Bind(EVT_COMMAND_ZOOM, handlers.OnZoom)
         
         # Find events
         
-        self.parent.Bind(EVT_COMMAND_FIND, self.handlers.OnFind)
-        self.parent.Bind(EVT_COMMAND_REPLACE, self.handlers.OnShowFindReplace)
+        parent.Bind(EVT_COMMAND_FIND, handlers.OnFind)
+        parent.Bind(EVT_COMMAND_REPLACE, handlers.OnShowFindReplace)
         
         # Grid change events
         
-        self.parent.Bind(EVT_COMMAND_INSERT_ROWS, self.handlers.OnInsertRows)
-        self.parent.Bind(EVT_COMMAND_INSERT_COLS, self.handlers.OnInsertCols)
-        self.parent.Bind(EVT_COMMAND_INSERT_TABS, self.handlers.OnInsertTabs)
+        parent.Bind(EVT_COMMAND_INSERT_ROWS, handlers.OnInsertRows)
+        parent.Bind(EVT_COMMAND_INSERT_COLS, handlers.OnInsertCols)
+        parent.Bind(EVT_COMMAND_INSERT_TABS, handlers.OnInsertTabs)
         
-        self.parent.Bind(EVT_COMMAND_DELETE_ROWS, self.handlers.OnDeleteRows)
-        self.parent.Bind(EVT_COMMAND_DELETE_COLS, self.handlers.OnDeleteCols)
-        self.parent.Bind(EVT_COMMAND_DELETE_TABS, self.handlers.OnDeleteTabs)
+        parent.Bind(EVT_COMMAND_DELETE_ROWS, handlers.OnDeleteRows)
+        parent.Bind(EVT_COMMAND_DELETE_COLS, handlers.OnDeleteCols)
+        parent.Bind(EVT_COMMAND_DELETE_TABS, handlers.OnDeleteTabs)
         
-        self.parent.Bind(EVT_COMMAND_RESIZE_GRID, self.handlers.OnResizeGrid)
+        parent.Bind(EVT_COMMAND_RESIZE_GRID, handlers.OnResizeGrid)
         
         # Grid attribute events
         
         # Undo/Redo events
 
-        self.parent.Bind(EVT_COMMAND_UNDO, self.handlers.OnUndo)
-        self.parent.Bind(EVT_COMMAND_REDO, self.handlers.OnRedo)
+        parent.Bind(EVT_COMMAND_UNDO, handlers.OnUndo)
+        parent.Bind(EVT_COMMAND_REDO, handlers.OnRedo)
 
-class GridEventHandlers(object):
-    """Contains grid event handlers"""
+class GridCellEventHandlers(object):
+    """Contains grid cell event handlers incl. attribute events"""
     
     def __init__(self, parent):
         self.main_window = parent
     
-    # Grid cell events
+    # Cell code entry events
     
-    def OnText(self, event):
+    def OnCellText(self, event):
         """Text entry event handler"""
         
         code = event.GetString()
@@ -125,6 +155,115 @@ class GridEventHandlers(object):
                 post_entryline_text(self, "")
         
         event.Skip()
+
+    # Cell attribute events
+
+    def OnCellFont(self, event):
+        """Cell font event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    def OnCellFontSize(self, event):
+        """Cell font size event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    def OnCellFontBold(self, event):
+        """Cell font bold event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    def OnCellFontItalics(self, event):
+        """Cell font italics event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    def OnCellFontUnderline(self, event):
+        """Cell font underline event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    def OnCellFontStrikethrough(self, event):
+        """Cell font strike through event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnCellFrozen(self, event):
+        """Cell frozen event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnCellJustification(self, event):
+        """Horizontal cell justification event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnCellAlignment(self, event):
+        """Vertical cell alignment event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnCellBorderChoice(self, event):
+        """Cell border choice event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnCellBorderWidth(self, event):
+        """Cell border width event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    def OnCellBorderColor(self, event):
+        """Cell border color event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    def OnCellBackgroundColor(self, event):
+        """Cell background color event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+
+    def OnCellTextColor(self, event):
+        """Cell text color event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+
+    def OnCellTextRotation(self, event):
+        """Cell text rotation event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    # Cell edit event handlers
     
     def OnCellEditorShown(self, event):
         """Cell editor shown event handler"""
@@ -132,13 +271,15 @@ class GridEventHandlers(object):
         raise NotImplementedError
         
         event.Skip()
-    
+        
     def OnCellEditorHidden(self, event):
         """Cell editor hidden event handler"""
         
         raise NotImplementedError
         
         event.Skip()
+    
+    # Cell selection event handlers
     
     def OnCellSelected(self, event):
         """Cell selection event handler"""
@@ -147,6 +288,13 @@ class GridEventHandlers(object):
         
         event.Skip()
 
+
+class GridEventHandlers(object):
+    """Contains grid event handlers"""
+    
+    def __init__(self, parent):
+        self.main_window = parent
+    
     def OnMouseMotion(self, event):
         """Mouse motion event handler"""
         

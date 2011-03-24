@@ -93,9 +93,14 @@ class MainWindow(wx.Frame):
         
         self.set_icon(MAIN_WINDOW_ICON)
         
+        # Set initial size to 90% of screen
+        
         self.SetInitialSize((int(displaysize[0] * 0.9), 
                              int(displaysize[1] * 0.9)))
-
+        
+        # Without minimum size, initial size is minimum size in wxGTK
+        self.SetMinSize((2, 2))
+        
     def _do_layout(self):
         """Adds widgets to the wx.aui manager and controls the layout"""
         

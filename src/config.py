@@ -39,7 +39,7 @@ import os.path
 import wx
 import wx.stc  as  stc
 
-PROG_DIR = os.path.dirname(os.path.realpath(__file__)) + '/'
+PROG_DIR = os.path.dirname(os.path.realpath(__file__)) + '/../'
 
 
 """
@@ -49,7 +49,7 @@ Main window styling
 
 """
 
-MAIN_WINDOW_ICON = wx.Bitmap(PROG_DIR+'../share/icons/pyspread.png', \
+MAIN_WINDOW_ICON = wx.Bitmap(PROG_DIR + 'share/icons/pyspread.png', \
                              wx.BITMAP_TYPE_ANY)
 
 """
@@ -335,18 +335,18 @@ small_icon_size = (24, 24)
 
 theme = "Tango"
 
-_action_path = PROG_DIR + "icons/" + theme + "/" + \
+_action_path = PROG_DIR + "share/icons/" + theme + "/" + \
                str(icon_size[0]) + "x" + str(icon_size[1]) + \
                "/actions/"
                
-_action_path_small = PROG_DIR + "icons/" + theme + "/" + \
+_action_path_small = PROG_DIR + "share/icons/" + theme + "/" + \
                      str(small_icon_size[0]) + "x" + str(small_icon_size[1]) + \
                      "/actions/"
                
-_toggle_path = PROG_DIR + "icons/" + theme + "/" + \
+_toggle_path = PROG_DIR + "share/icons/" + theme + "/" + \
                str(small_icon_size[0]) + "x" + str(small_icon_size[1]) + \
                "/toggles/"
-               
+
 icons = {"FileNew": _action_path + "filenew.png", 
          "FileOpen": _action_path + "fileopen.png", 
          "FileSave": _action_path + "filesave.png", 

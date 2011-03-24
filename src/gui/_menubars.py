@@ -36,6 +36,9 @@ Provides:
 
 import wx
 
+from config import FONT_SIZES
+from lib._interfaces import get_font_list
+
 from _events import *
 
 class _filledMenu(wx.Menu):
@@ -215,6 +218,45 @@ class MainMenu(_filledMenu):
             ["Separator"], \
             [item, [ResizeGridMsg, "Resize grid", "Resize the grid. " + \
                     "The buttom right lowermost cells are deleted first."]]] \
+        ], \
+        [wx.Menu, "F&ormat", [ \
+            [wx.Menu, "Font", [ \
+                [item, [FontMsg, str(font), 
+                        "Zoom " + str(font)] \
+                ] for font in get_font_list()]
+                ], \
+            [wx.Menu, "Font size", [ \
+                [item, [FontSizeMsg, str(size), 
+                        "Zoom " + str(size)] \
+                ] for size in FONT_SIZES]
+                ], \
+            [item, [FontBoldMsg, "Bold", 
+                        "Toggles bold font."]],
+            [item, [FontItalicsMsg, "Italics", 
+                        "Toggles italics font."]],
+            [item, [FontUnderlineMsg, "Underline", 
+                        "Toggles underline."]],
+            [item, [FontStrikethroughMsg, "Strikethrough", 
+                        "Toggles strikethrough."]],
+            ["Separator"], \
+            [item, [FrozenMsg, "Frozen", 
+                        "Toggles frozen state of cell. " + \
+                        "Frozen cells are updated only when F5 is pressed."]],
+            ["Separator"], \
+            [wx.Menu, "Justification", [ \
+                [item, [JustificationMsg, justification, justification] \
+                ] for justification in ["Left", "Center", "Right"]]
+                ], \
+            [wx.Menu, "Alignment", [ \
+                [item, [AlignmentMsg, alignment, alignment] \
+                ] for alignment in ["Top", "Center", "Bottom"]]
+                ], \
+            [wx.Menu, "Rotation", [ \
+                [item, [TextRotationMsg, rotation, rotation] \
+                ] for rotation in [u"0\u00B0", u"90\u00B0", 
+                                   u"180\u00B0", u"270\u00B0"]]
+                ], \
+            ], \
         ], \
         [wx.Menu, "&View", [ \
             [item, [RefreshSelectionMsg, "Refresh selected cells\tF5", 

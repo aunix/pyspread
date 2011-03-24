@@ -72,10 +72,42 @@ MacroListMsg, EVT_COMMAND_MACROLIST = new_command_event()
 MacroLoadMsg, EVT_COMMAND_MACROLOAD = new_command_event()
 MacroSaveMsg, EVT_COMMAND_MACROSAVE = new_command_event()
 
+
+# Grid cell
+# =========
+
+# Cell code entry events
+
+# Cell attribute events
+
+FontMsg, EVT_COMMAND_FONT = new_command_event()
+FontSizeMsg, EVT_COMMAND_FONTSIZE = new_command_event()
+FontBoldMsg, EVT_COMMAND_FONTBOLD = new_command_event()
+FontItalicsMsg, EVT_COMMAND_FONTITALICS = new_command_event()
+FontUnderlineMsg, EVT_COMMAND_FONTUNDERLINE = new_command_event()
+FontStrikethroughMsg, EVT_COMMAND_FONTSTRIKETHROUGH = new_command_event()
+FrozenMsg, EVT_COMMAND_FROZEN = new_command_event()
+JustificationMsg, EVT_COMMAND_JUSTIFICATION = new_command_event()
+AlignmentMsg, EVT_COMMAND_ALIGNMENT = new_command_event()
+BorderChoiceMsg, EVT_COMMAND_BORDERCHOICE = new_command_event()
+BorderWidthMsg, EVT_COMMAND_BORDERWIDTH = new_command_event()
+BorderColorMsg, EVT_COMMAND_BORDERCOLOR = new_command_event()
+BackgroundColorMsg, EVT_COMMAND_BACKGROUNDCOLOR = new_command_event()
+TextColorMsg, EVT_COMMAND_TEXTCOLOR = new_command_event()
+TextRotationMsg, EVT_COMMAND_TEXTROTATATION = new_command_event()
+
+# Cell edit events
+
+EditorShownMsg, EVT_COMMAND_EDITORSHOWN = new_command_event()
+EditorHiddenMsg, EVT_COMMAND_EDITORHIDDEN = new_command_event()
+
+# Cell selection events
+
+CellSelectedMsg, EVT_COMMAND_CELLSELECTED = new_command_event()
+
+
 # Grid
 # ====
-
-# Grid cell events
 
 # File events
 
@@ -137,52 +169,3 @@ RedoMsg, EVT_COMMAND_REDO = new_command_event()
 # =========
 
 StatusBarMsg, EVT_STATUSBAR_MSG = wx.lib.newevent.NewEvent()
-
-
-###############################
-
-
-
-
-
-
-#GridMsg, EVT_GRID_MSG = wx.lib.newevent.NewEvent()
-#
-#TableChangeMsg, EVT_TABLE_CHANGE = wx.lib.newevent.NewEvent()
-#GridShapeMsg, EVT_GRID_SHAPE = wx.lib.newevent.NewEvent()
-#
-#def post_status_text(evt_handler, text):
-#    """Posts a StatusBarMsg event for the main statusbar widget"""
-#
-#    msg = StatusBarMsg(text=text)
-#    wx.PostEvent(evt_handler, msg)
-#
-#def post_entryline_text(evt_handler, text):
-#    """Posts a StatusBarMsg event for the main statusbar widget"""
-#
-#    msg = EntryLineMsg(text=text)
-#    wx.PostEvent(evt_handler, msg)
-#
-#def post_entryline_selection(evt_handler, start, stop):
-#    """Posts a StatusBarMsg event for the main statusbar widget"""
-#
-#    msg = EntryLineSelectionMsg(start=start, stop=stop)
-#    wx.PostEvent(evt_handler, msg)
-#
-#def post_grid_text(evt_handler, text):
-#    """Posts a text for pysgrid[<current_cell>]"""
-#    
-#    msg = GridMsg(text=text)
-#    wx.PostEvent(evt_handler, msg)
-#
-#def post_table_change(evt_handler, new_table):
-#    """Posts a StatusBarMsg event for the main statusbar widget"""
-#    
-#    msg = TableChangeMsg(new_table=new_table)
-#    wx.PostEvent(evt_handler, msg)
-#
-#def post_shape_change(evt_handler, shape):
-#    """Posts a grid shape event for the main statusbar widget"""
-#    
-#    msg = GridShapeMsg(shape=shape)
-#    wx.PostEvent(evt_handler, msg)
