@@ -20,11 +20,11 @@
 # --------------------------------------------------------------------
 
 """
-_datastructures
+_data_array
 ===============
 
 Provides
-  1. Grid object class Grid
+  1. DataArray that holds all information of the current grid
   2. Undo/Redo framework class UnRedo
   3. Sliceable dict based grid class DictGrid
 
@@ -43,7 +43,7 @@ import numpy
 
 from _pyspread.irange import irange, slice_range
 from _pyspread._interfaces import sorted_keys, string_match, Digest, UserString
-from _pyspread.config import default_cell_attributes, MAX_UNREDO
+from _pyspread.config import default_cell_attributes, MAX_UNREDO, DEFAULT_DIM
 
 S = None
 
@@ -52,7 +52,7 @@ OPERATORS = ["+", "-", "*", "**", "/", "//",
              "<", ">", "<=", ">=", "==", "!=", "<>",
             ]
 
-class PyspreadGrid(object):
+class DataArray(object):
     """Central data object that provides two numpy based 3D object arrays.
 
     An array (sgrid) stores strings that contain python expressions.
@@ -64,7 +64,7 @@ class PyspreadGrid(object):
 
     """
         
-    def __init__(self, dimensions=(10, 10, 10)):
+    def __init__(self, dimensions=DEFAULT_DIM):
         """ Init
         
         Parameters

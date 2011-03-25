@@ -35,6 +35,8 @@ import wx.grid
 
 from _events import *
 
+from _grid_table import GridTable
+from model._data_array import DataArray
 
 class Grid(wx.grid.Grid):
     """Pyspread's main grid"""
@@ -44,10 +46,26 @@ class Grid(wx.grid.Grid):
         
         wx.grid.Grid.__init__(self, parent, *args, **kwargs)
         
+        # Grid table handles interaction to data_array
+        _data_array = DataArray()
+        self.grid_table = GridTable(self, _data_array)
+        self.SetTable(self.grid_table, True)
+
+        # Grid renderer draws the grid
+        self.grid_renderer = GridRenderer(grid_table)
+        self.SetDefaultRenderer(self.grid_renderer)
+        
+        # Handler classes contain event handler methods
         self.handlers = GridEventHandlers(self)
         self.cell_handlers = GridCellEventHandlers(self)
         
         self._bind()
+        
+    def _layout(self):
+        """Initial layout of grid"""
+        
+        self.EnableGridLines(False)
+        
     
     def _bind(self):
         """Bind events to handlers"""
@@ -60,8 +78,6 @@ class Grid(wx.grid.Grid):
         # Cell code events
         
         # Cell attribute events
-        
-        
         
         parent.Bind(EVT_COMMAND_FONT, c_handlers.OnCellFont)
         parent.Bind(EVT_COMMAND_FONTSIZE, c_handlers.OnCellFontSize)

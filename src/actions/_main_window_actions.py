@@ -44,13 +44,19 @@ Provides:
 
 """
 
+from config import DEFAULT_FILENAME
+
 class FileActions(object):
     """Actions which affect the pys file"""
     
     def __init__(self, filename):
         self.filename = filename
         
-    def new(self):
+    def new(self, dim):
+        """Creates a new spreadsheet file"""
+        
+        self.filename = DEFAULT_FILENAME
+        
         raise NotImplementedError
         
     def open(self):

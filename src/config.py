@@ -22,8 +22,9 @@ Command line defaults
 
 """
 
-default_dimensions = (1000, 100, 3) # Used for empty sheet at start-up
+DEFAULT_DIM = (1000, 100, 3) # Used for empty sheet at start-up
 
+DEFAULT_FILENAME = "unnamed.pys"
 
 """
 Paths
