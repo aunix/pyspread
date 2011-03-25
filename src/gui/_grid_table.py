@@ -49,6 +49,9 @@ class GridTable(wx.grid.PyGridTableBase):
         self._rows = self.GetNumberRows()
         self._cols = self.GetNumberCols()
     
+    def __getitem__(self, key):
+        return self.data_array[key]
+    
     def GetNumberRows(self):
         """Return the number of rows in the grid"""
         

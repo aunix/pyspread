@@ -36,6 +36,7 @@ import wx.grid
 from _events import *
 
 from _grid_table import GridTable
+from _grid_renderer import GridRenderer
 from model._data_array import DataArray
 
 class Grid(wx.grid.Grid):
@@ -43,6 +44,9 @@ class Grid(wx.grid.Grid):
 
     def __init__(self, parent, *args, **kwargs):
         self.parent = parent
+        
+        # The currently visible table
+        self.current_table = 0
         
         wx.grid.Grid.__init__(self, parent, *args, **kwargs)
         
@@ -52,7 +56,7 @@ class Grid(wx.grid.Grid):
         self.SetTable(self.grid_table, True)
 
         # Grid renderer draws the grid
-        self.grid_renderer = GridRenderer(grid_table)
+        self.grid_renderer = GridRenderer(self.grid_table)
         self.SetDefaultRenderer(self.grid_renderer)
         
         # Handler classes contain event handler methods

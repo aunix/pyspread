@@ -41,9 +41,9 @@ from itertools import imap, tee, izip
 
 import numpy
 
-from _pyspread.irange import irange, slice_range
-from _pyspread._interfaces import sorted_keys, string_match, Digest, UserString
-from _pyspread.config import default_cell_attributes, MAX_UNREDO, DEFAULT_DIM
+from lib.irange import irange, slice_range
+from lib._interfaces import sorted_keys, string_match, Digest, UserString
+from config import default_cell_attributes, MAX_UNREDO, DEFAULT_DIM
 
 S = None
 
