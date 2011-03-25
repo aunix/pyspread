@@ -503,7 +503,7 @@ class GridEventHandlers(object):
         event.Skip()
     
     def OnInsertTabs(self, event):
-        """Insert one table into MainGrid and pysgrid"""
+        """Insert one table into grid"""
         
         raise NotImplementedError
         

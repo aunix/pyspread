@@ -203,7 +203,7 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
             
             yield cell_rect
 
-    def draw_text_label(self, dc, res, rect, grid, pysgrid, key):
+    def draw_text_label(self, dc, res, rect, grid, key):
         """Draws text label of cell"""
         
         res_text = unicode(res)
@@ -213,10 +213,10 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         
         row, col, tab = key
         
-        textattributes = pysgrid.get_sgrid_attr(key, "textattributes")
+        textattributes = self.table.get_sgrid_attr(key, "textattributes")
         
         textfont = get_font_from_data( \
-            pysgrid.get_sgrid_attr(key, "textfont"))
+            self.table.get_sgrid_attr(key, "textfont"))
         
         self.set_font(dc, textfont, textattributes, self.zoom)
         
@@ -390,13 +390,12 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
     def Draw(self, grid, attr, dc, rect, row, col, isSelected, printing=False):
         """Draws the cell border and content"""
         
-        pysgrid = self.table.data_array
         key = (row, col, grid.current_table)
         
         if isSelected:
             grid.selection_present = True
             
-            bg = Background(grid, row, col, self.table.current_table,
+            bg = Background(grid, row, col, grid.current_table,
                             isSelected)
         else:
             _, _, width, height = grid.CellToRect(row, col)
@@ -440,7 +439,7 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
                 pass
         
         elif res is not None:
-            self.draw_text_label(dc, res, rect, grid, pysgrid, key)
+            self.draw_text_label(dc, res, rect, grid, key)
         
 # end of class TextRenderer
 
