@@ -39,12 +39,12 @@ import wx.lib.colourselect as csel
 
 from _events import *
 
-from _pyspread.config import odftags, border_toggles, default_cell_attributes
-from _pyspread.config import FONT_SIZES, faces
-from _pyspread.config import icons, icon_size, small_icon_size
+from config import odftags, border_toggles, default_cell_attributes
+from config import FONT_SIZES, faces
+from config import icons, icon_size, small_icon_size
 
-from _pyspread._interfaces import get_font_list, textfont_from_string
-from _pyspread._interfaces import get_default_font
+from lib._interfaces import get_font_list, textfont_from_string
+from lib._interfaces import get_default_font
 import _widgets
 
 class MainToolbar(wx.ToolBar):
@@ -337,20 +337,19 @@ class AttributesToolbar(wx.ToolBar):
         """Creates font face buttons"""
         
         font_face_buttons = [
-            ("bold_button", wx.FONTWEIGHT_BOLD, "FormatTextBold", "Bold"),
-            ("italic_button", wx.FONTSTYLE_ITALIC, "FormatTextItalic", 
-                "Italic"),
-            ("underline_button", wx.FONTFLAG_UNDERLINED, "FormatTextUnderline", 
+            (wx.FONTFLAG_BOLD, "OnBold", "FormatTextBold", "Bold"),
+            (wx.FONTFLAG_ITALIC, "OnItalics", "FormatTextItalic", "Italics"),
+            (wx.FONTFLAG_UNDERLINED, "OnUnderline", "FormatTextUnderline", 
                 "Underline"),
-            ("strikethrough_button", wx.FONTFLAG_STRIKETHROUGH, 
+            (wx.FONTFLAG_STRIKETHROUGH, "OnStrikethrough", 
                 "FormatTextStrikethrough", "Strikethrough"),
-            ("freeze_button", wx.FONTFLAG_MASK, "Freeze", "Freeze"),
+            (wx.FONTFLAG_MASK, "OnFreeze", "Freeze", "Freeze"),
             ]
             
-        for name, __id, iconname, buttonname in font_face_buttons:
+        for __id, method, iconname, helpstring in font_face_buttons:
             bmp = wx.Bitmap(icons[iconname])
-            self.AddCheckLabelTool(__id, name, bmp, shortHelp=buttonname)
-            self.Bind(wx.EVT_TOOL, self.OnToolClick, id=__id)
+            self.AddCheckLabelTool(__id, "", bmp, shortHelp=helpstring)
+            self.Bind(wx.EVT_TOOL, getattr(self, method), id=__id)
     
     def _create_justification_button(self):
         """Creates horizontal justification button"""
@@ -358,7 +357,7 @@ class AttributesToolbar(wx.ToolBar):
         iconnames = ["JustifyLeft", "JustifyCenter", "JustifyRight"]
         bmplist = [wx.Bitmap(icons[iconname]) for iconname in iconnames]
         self.justify_tb = _widgets.BitmapToggleButton(self, bmplist)
-        self.Bind(wx.EVT_BUTTON, self.OnToolClick, self.justify_tb)
+        self.Bind(wx.EVT_BUTTON, self.OnJustification, self.justify_tb)
         self.AddControl(self.justify_tb)
     
     def _create_alignment_button(self):
@@ -368,7 +367,7 @@ class AttributesToolbar(wx.ToolBar):
         bmplist = [wx.Bitmap(icons[iconname]) for iconname in iconnames]
         
         self.alignment_tb = _widgets.BitmapToggleButton(self, bmplist)
-        self.Bind(wx.EVT_BUTTON, self.OnToolClick, self.alignment_tb)
+        self.Bind(wx.EVT_BUTTON, self.OnAlignment, self.alignment_tb)
         self.AddControl(self.alignment_tb)
     
     def _create_borderchoice_combo(self):
@@ -439,12 +438,12 @@ class AttributesToolbar(wx.ToolBar):
         
         self.AddControl(self.rotation_spinctrl)
         
-        self.Bind(wx.EVT_SPINCTRL, self.OnToolClick, self.rotation_spinctrl)
+        self.Bind(wx.EVT_SPINCTRL, self.OnRotate, self.rotation_spinctrl)
     
     # Update widget state methods
     # ---------------------------
     
-    def _update_textfont(self, textfont):
+    def _update_textfont(self, textfont=None):
         """Updates text font widgets"""
         
         if textfont is None:
@@ -508,84 +507,64 @@ class AttributesToolbar(wx.ToolBar):
         self.linecolor_choice.SetColour(borderpen_color)
         self.pen_width_combo.SetSelection(borderpen_width)
     
-    def _update_frozencell(self):
-        """Updates frozen cell button"""
+    def _update_frozencell(self, frozen):
+        """Updates frozen cell button
         
-        # Frozen cell information is not in the sgrid because the
-        # stored results may not be pickleable.
+        Parameters
+        ----------
         
-        # Get selected cell's key
+        frozen: Bool
+        \tSwitches button to untoggled if False and toggled if True
         
-        key = self.grid.cursor
+        """
         
-        # Compatibility: Create frozen_cells if missing
-        
-        if not hasattr(self.pysgrid.sgrid, "frozen_cells"):
-            self.pysgrid.sgrid.frozen_cells = {}
-        
-        # Check if cell is frozen and adjust frozen cell button
-            
-        if key in self.pysgrid.sgrid.frozen_cells:
-            # Toggle down
-            self.ToggleTool(wx.FONTFLAG_MASK, 1)
-        else:
-            # Toggle up
-            self.ToggleTool(wx.FONTFLAG_MASK, 0)
+        self.ToggleTool(wx.FONTFLAG_MASK, frozen)
     
-    def _update_underline(self, textattributes):
-        """Updates underline cell button"""
+    def _update_underline(self, underlined):
+        """Updates underline cell button
+                
+        Parameters
+        ----------
         
-        try:
-            underline_tag = odftags["underline"]
-            underline_mode = textattributes[underline_tag]
-        except KeyError:
-            underline_mode = "none"
+        underlined: Bool
+        \tSwitches button to untoggled if False and toggled if True
         
-        if underline_mode == "continuous":
-            # Toggle down
-            self.ToggleTool(wx.FONTFLAG_UNDERLINED, 1)
-        else:
-            # Toggle up
-            self.ToggleTool(wx.FONTFLAG_UNDERLINED, 0)
+        """
+        
+        self.ToggleTool(wx.FONTFLAG_MASK, underlined)
     
-    def _update_justification(self, textattributes):
-        """Updates horizontal text justification button"""
+    def _update_justification(self, justification):
+        """Updates horizontal text justification button
         
-        justification_tag = odftags["justification"]
-        try:
-            justification = textattributes[justification_tag]
-        except:
-            justification = "left"
+        Parameters
+        ----------
         
-        if justification == "left":
-            self.justify_tb.state = 2
-        elif justification == "center":
-            self.justify_tb.state = 0
-        elif justification == "right":
-            self.justify_tb.state = 1
-        else:
-            self.justify_tb.state = 2
+        justification: String in ["left", "center", "right"]
+        \tSwitches button to untoggled if False and toggled if True
+        
+        """
+        
+        states = {"left": 2, "center": 0, "right": 1}
+        
+        self.justify_tb.state = states[justification]
         
         self.justify_tb.toggle(None)
         self.justify_tb.Refresh()
     
-    def _update_alignment(self, textattributes):
-        """Updates vertical text alignment button"""
+    def _update_alignment(self, alignment):
+        """Updates vertical text alignment button
         
-        vert_align_tag = odftags["verticalalign"]
-        try:
-            vertical_align = textattributes[vert_align_tag]
-        except:
-            vertical_align = "top"
+        Parameters
+        ----------
         
-        if vertical_align == "top":
-            self.alignment_tb.state = 2
-        elif vertical_align == "middle":
-            self.alignment_tb.state = 0
-        elif vertical_align == "bottom":
-            self.alignment_tb.state = 1
-        else:
-            self.alignment_tb.state = 2
+        alignment: String in ["top", "middle", "right"]
+        \tSwitches button to untoggled if False and toggled if True
+        
+        """
+        
+        states = {"left": 2, "center": 0, "bottom": 1}
+        
+        self.alignment_tb.state = states[alignment]
             
         self.alignment_tb.toggle(None)
         self.alignment_tb.Refresh()
@@ -626,7 +605,7 @@ class AttributesToolbar(wx.ToolBar):
         self.rotation_spinctrl.SetValue(angle)
     
     def update(self, borderpen_data=None, bgbrush_data=None, 
-                     textattributes=None, textfont=None):
+                     textattributes=None, textfont=None, frozen=None):
         """Updates all widgets
         
         Parameters
@@ -649,8 +628,7 @@ class AttributesToolbar(wx.ToolBar):
         self._update_textfont(textfont)
         self._update_bgbrush(bgbrush_data)
         self._update_borderpen(borderpen_data)
-        
-        self._update_frozencell()
+        self._update_frozencell(frozen)
         
         # Text attributes
         
@@ -663,20 +641,6 @@ class AttributesToolbar(wx.ToolBar):
 
     # Attributes toolbar event handlers
     # ---------------------------------
-    
-    def _get_key_list(self):
-        """Returns a key list of selected cells
-        
-        Returns the current cell if no selection.
-        
-        """
-        
-        selected_cells = self.grid.controller.selection()
-        if selected_cells:
-            tab = self.grid.controller.cursor[2]
-            return [(row, col, tab) for row, col in selected_cells]
-        else:
-            return [self.grid.controller.cursor]
     
     def OnBorderChoice(self, event):
         """Change the borders that are affected by color and width changes"""
@@ -794,93 +758,46 @@ class AttributesToolbar(wx.ToolBar):
         
         post_command_event(self, FontSizeMsg, size=size)
     
-    def OnToolClick(self, event):
-        """Toggle the tool attribute of the current cell/selection text
+    def OnBold(self, event):
+        """Bold toggle button event handler"""
         
-        This event handler method covers both fornt related buttons and
-        text attribute buttons.
+        post_command_event(self, FontBoldMsg)
         
-        """
+    def OnItalics(self, event):
+        """Bold toggle button event handler"""
         
-        pysgrid = self.pysgrid
-        sgrid = pysgrid.sgrid
+        post_command_event(self, FontItalicsMsg)
         
-        keys = self._get_key_list()
+    def OnUnderline(self, event):
+        """Bold toggle button event handler"""
         
-        # Font buttons
+        post_command_event(self, FontUnderlineMsg)
         
-        for key in keys:
-            old_font_string = pysgrid.get_sgrid_attr(key, "textfont")
-            if old_font_string:
-                textfont = textfont_from_string(old_font_string)
-            else:
-                textfont = get_default_font()
-            
-            istoggled = event.GetEventObject().GetToolState(event.GetId())
-
-            if event.GetId() == wx.FONTWEIGHT_BOLD and istoggled:
-                textfont.SetWeight(wx.FONTWEIGHT_BOLD)
-            elif event.GetId() == wx.FONTWEIGHT_BOLD and not istoggled:
-                textfont.SetWeight(wx.FONTWEIGHT_NORMAL)
-
-            if event.GetId() == wx.FONTSTYLE_ITALIC and istoggled:
-                textfont.SetStyle(wx.FONTSTYLE_ITALIC)
-            elif event.GetId() == wx.FONTSTYLE_ITALIC and not istoggled:
-                textfont.SetStyle(wx.FONTSTYLE_NORMAL)
-            
-            font_string = str(textfont.GetNativeFontInfo())
-            
-            pysgrid.set_sgrid_attr(key, "textfont", font_string)
-            
-            # Text attribute buttons
-
-            textattr = pysgrid.get_sgrid_attr(key, "textattributes")
-
-            if event.GetId() == wx.FONTFLAG_STRIKETHROUGH and istoggled:
-                textattr[odftags["strikethrough"]] = "solid"
-            elif event.GetId() == wx.FONTFLAG_STRIKETHROUGH and not istoggled:
-                textattr[odftags["strikethrough"]] = "transparent"
-
-            if event.GetId() == wx.FONTFLAG_UNDERLINED and istoggled:
-                textattr[odftags["underline"]] = "continuous"
-            elif event.GetId() == wx.FONTFLAG_UNDERLINED and not istoggled:
-                textattr[odftags["underline"]] = "none"
-            
-            tb_state_map = {0: "left",
-                            1: "center",
-                            2: "right",
-                            }
-            if event.GetEventObject() == self.justify_tb:
-                justification = tb_state_map[self.justify_tb.state]
-                textattr[odftags["justification"]] = justification
-            
-            tb_state_map = {0: "top",
-                            1: "middle",
-                            2: "bottom",
-                            }
-            if event.GetEventObject() == self.alignment_tb:
-                vert_align = tb_state_map[self.alignment_tb.state]
-                textattr[odftags["verticalalign"]] = vert_align
-
-            if event.GetEventObject() == self.rotation_spinctrl:
-                angle = self.rotation_spinctrl.GetValue()
-                textattr[odftags["rotationangle"]] = int(angle)
-            
-            pysgrid.set_sgrid_attr(key, "textattributes", textattr)
-            
-            # Freeze requires specific methods
-            # eval is done at this time!
-            
-            if event.GetId() == wx.wx.FONTFLAG_MASK and istoggled:
-                res = self.pysgrid[key]
-                self.pysgrid.freeze_cell(key, res)
-            elif event.GetId() == wx.wx.FONTFLAG_MASK and not istoggled:
-                self.pysgrid.unfreeze_cell(key)
+    def OnStrikethrough(self, event):
+        """Bold toggle button event handler"""
         
-        pysgrid.unredo.mark()
+        post_command_event(self, FontStrikethroughMsg)
         
-        self.grid.view.force_refresh()
+    def OnFreeze(self, event):
+        """Bold toggle button event handler"""
         
-        event.Skip()
-
+        post_command_event(self, FrozenMsg)
+    
+    def OnJustification(self, event):
+        """Justification toggle button event handler"""
+        
+        post_command_event(self, JustificationMsg)
+        
+    def OnAlignment(self, event):
+        """Alignment toggle button event handler"""
+        
+        post_command_event(self, AlignmentMsg)
+    
+    def OnRotate(self, event):
+        """Rotation spin control event handler"""
+        
+        angle = self.rotation_spinctrl.GetValue()
+        
+        post_command_event(self, TextRotationMsg, angle=angle)
+        
 # end of class AttributesToolbar
