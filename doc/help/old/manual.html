@@ -1,0 +1,119 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="Generator" content="KWord HTML Export Filter Version 466447 ">
+<title>Empty Page</title>
+</head>
+<body>
+<p><b>Pyspread Manual</b></p>
+<p><i>© Martin Manns 2008</i></p>
+<h1>What is pyspread about?</h1>
+<p>Not too long ago, I wrote a small decision support system for engineers in a spreadsheet application that we all know too well. Because the calculations should be transparent, everything was realized with the in-cell functions. It works now. However, the length and complexity of the cell commands keep the application pretty opaque.</p>
+<p>Therefore, I looked for a spreadsheet with more powerful functions and data structures that are accessible inside each cell. Something like Python that empowers you to do things quickly. And yes, it should be free and it should run on Linux as well as on Windows. I looked around and found nothing that suited me. Therefore, I started pyspread.</p>
+<p>Concept:</p>
+<ul>
+<li>Each cell accepts any input that works in the Python command line</li>
+<li>The inputs are parsed into function objects</li>
+<li>Results are displayed in the cell.</li>
+<li>The function objects are accessible in a 3D numpy object array.</li>
+</ul>
+<p>Benefits:</p>
+<ul>
+<li>Each function object returns a Python object when called. This can be anything including arrays and third party library objects.</li>
+<li>Generator expressions can be used efficiently for data manipulation.</li>
+<li>Efficient numpy slicing is used.</li>
+<li>numpy methods are accessible for the data.</li>
+</ul>
+<h1>Installation</h1>
+<ol>
+<li>Download the pyspread tarball or zip and unzip at a convenient place</li>
+<li>In case you do not have it already get and install Python, wxpython and numpy<br>If you want the examples to work, install gmpy, R and rpy<br>Really do check the version requirements that are mentioned on http://pyspread.sf.net </li>
+<li>Get install privileges (e.g. become root)</li>
+<li>Change into the directory and type </li>
+</ol>
+<p><tt>python setup.py install</tt></p>
+<p>Windows: Replace “python” with your Python interpreter (absolute path)</p>
+<ol>
+<li>Become normal user again</li>
+<li>Start pyspread by typing</li>
+</ol>
+<p><tt>pyspread</tt></p>
+<ol>
+<li>Enjoy</li>
+</ol>
+<h1>Tutorial</h1>
+<h2>Running pyspread</h2>
+<p>Run pyspread with</p>
+<p><tt>$ pyspread.py</tt></p>
+<p>Select the Menu File → New</p>
+<p>Enter 200 rows, 10 columns and 5 tables in the pop-up menu.</p>
+<p><img src="manual.html.dir/picture1.png" alt="Pictures/10000000000003F1000002D71DA10F72.png"></p>
+<p>After clicking OK, you get a new table with the typed-in dimensions.</p>
+<h2>Standard cell commands</h2>
+<p>Select the top-left cell and type:</p>
+<p><tt>1 + 5 * 2</tt></p>
+<p>The spreadsheet evaluates this Python statement and displays the result:</p>
+<p><tt>11</tt></p>
+<p>In the cell that is one row below (cell (1, 0, 0)), type</p>
+<p><tt>S</tt></p>
+<p>As we see from the result, S is a known object. In fact, it is the grid object that we are currently working in.</p>
+<h2>Absolute addressing of cells</h2>
+<p>To access a cell, we can index the grid. Replace S with</p>
+<p><tt>S[0, 0, 0]</tt></p>
+<p>and the same result as in the top-left cell that has the index (0, 0, 0) is displayed. The first parameter is the row, the second parameter is the column and the third parameter is the table.</p>
+<p>Note that the calculations in cell (0, 0, 0) are done <b>twice</b> in this example, because the function that results from parsing the top-left cell is called by cell (1, 0, 0). So be careful e. g. when using one generator in multiple cells.</p>
+<p>Now replace the expression in the top-left cell by</p>
+<p><tt>1</tt></p>
+<p>Both cells change immediately because all visible cells are updated.</p>
+<p><img src="manual.html.dir/picture2.png" alt="Pictures/10000201000003F0000002D5F9DA4440.png"></p>
+<p>The main grid S can be sliced, too. </p>
+<p>Write into cell (3, 0, 0):</p>
+<p><tt>S[:2, 0, 0]</tt></p>
+<p>It now displays [2 2], which is a list of the results of the cells in [:2, 0, 0].</p>
+<h2>Relative addressing of cells</h2>
+<p>Each cell can access its own position in the grid through the magic variables X (row), Y (column) and Z (table).</p>
+<p>Change to table 2 by selecting 2 in the iconbar combobox. Type into cell (1, 2, 2):</p>
+<p><tt>[X, Y, Z]</tt></p>
+<p>The result is [1 2 2] as expected. Now copy the cell (Crtl-C) and paste it into the next lower cell (Ctrl-V). [2 2 2] is displayed. These cell-dependent attributes achieve the relative addressing.</p>
+<h2>Filling cells</h2>
+<p>The spread method of the grid S provides an easy way to fill cells with conjectures. </p>
+<p>(Note: The syntax has changed in 0.0.10)</p>
+<p>Write into cell (0, 1, 2) and (1, 1, 2):</p>
+<p><tt>range(100)</tt></p>
+<p><tt>S.spread(S[X – 1, Y, Z], (0, 0, 2))</tt></p>
+<p>When changing the focus to a new cell, the new values appear. You may delete the cell (1, 1, 2) again in order to prevent pyspread from overwriting the cells again and again.</p>
+<h2>Named cells</h2>
+<p>Cells can be named by preceding the Python expression with “&lt;name&gt; =“. Type into cell (2, 4, 2):</p>
+<p><tt>a = 3 * 5</tt></p>
+<p>and in cell (3, 4, 2):</p>
+<p><tt>a ** 2</tt></p>
+<p>The results 15 and 225 appear. a is globally available in all cells.</p>
+<h2>External modules</h2>
+<p>External modules can be imported into pyspread. Therefore, powerful types and manipulation methods are available. </p>
+<p>Note: The package gmpy that is not part of the Python stock installation is required for the following example (use the current version at code.google.com).</p>
+<p>Type into cell (5, 2, 2):</p>
+<p><tt>gmpy = __import__(“gmpy”)</tt></p>
+<p>&lt;module ‘gmpy’ etc. is displayed. Now we redefine the rational number object in cell (6, 2, 2) in order to reduce typing and type in two rationals in the next two cells:</p>
+<p><tt>q = gmpy.mpq</tt></p>
+<p><tt>q(1, 37)</tt></p>
+<p><tt>q(229, 13)</tt></p>
+<p>In the next cell (9, 2, 2) type:</p>
+<p><tt>S[X - 2, Y, Z] + S[X - 1, Y, Z]</tt></p>
+<p>The result is 8486/481.</p>
+<p><img src="manual.html.dir/picture3.png" alt="Pictures/10000201000003F0000002D525564607.png"></p>
+<h2>Plotting</h2>
+<p>Note: The package rpy that is not part of the Python stock installation is required for the following example.</p>
+<p>Switch to table 3. Import rpy in cell (0, 0, 3):</p>
+<p><tt>rpy = __import__(“rpy”)</tt></p>
+<p>Import the math module in cell (0, 1, 3):</p>
+<p><tt>math = __import__(“math”)</tt></p>
+<p>Create the x-values for a xy plot with the arange function of the package numpy. (numpy is accessible without any import because the grid S consists basically of wrapped numpy arrays.) <br>Type into cell (1, 0, 3):</p>
+<p><tt>numpy.arange(0.0, 10.0, 0.1)</tt></p>
+<p>Create the y value list in cell (2, 0, 3):</p>
+<p><tt>[math.sin(x) for x in S[1, 0, 3]]</tt></p>
+<p>Now plot everything by typing into cell (3, 0, 3):</p>
+<p><tt>rpy.r.plot(S[1, 0, 3], S[2, 0, 3], xlab=’’, ylab=’’, type=’l’)</tt></p>
+<p><img src="manual.html.dir/picture4.png" alt="Pictures/10000000000003E8000002D2A0CDC451.png"></p>
+</body>
+</html>

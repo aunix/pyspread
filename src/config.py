@@ -41,17 +41,7 @@ import wx
 import wx.stc  as  stc
 
 PROG_DIR = os.path.dirname(os.path.realpath(__file__)) + '/../'
-
-
-"""
-
-Main window styling
-===================
-
-"""
-
-MAIN_WINDOW_ICON = wx.Bitmap(PROG_DIR + 'share/icons/pyspread.png', \
-                             wx.BITMAP_TYPE_ANY)
+HELP_DIR = PROG_DIR + "doc/help/"
 
 """
 GPG key parameters
@@ -90,6 +80,20 @@ displaysize = wx.GetDisplaySize()
 
 dpi = map(lambda (pixels, length_mm): pixels * 25.6 / length_mm, 
           zip(displaysize, wx.GetDisplaySizeMM()))
+
+
+"""
+
+Main window styling
+===================
+
+"""
+
+MAIN_WINDOW_ICON = wx.Bitmap(PROG_DIR + 'share/icons/pyspread.png', \
+                             wx.BITMAP_TYPE_ANY)
+
+MAIN_WINDOW_SIZE = (int(displaysize[0] * 0.9), int(displaysize[1] * 0.9))
+HELP_SIZE = (int(displaysize[0] * 0.7), int(displaysize[1] * 0.7))
 
 """
 Grid lines

@@ -35,7 +35,7 @@ import wx.aui
 
 import wx.lib.agw.genericmessagedialog as GMD
 
-from config import MAIN_WINDOW_ICON, displaysize
+from config import MAIN_WINDOW_ICON, MAIN_WINDOW_SIZE
 
 from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
@@ -43,6 +43,8 @@ from _widgets import EntryLine, StatusBar, TableChoiceIntCtrl
 from _dialogs import DimensionsEntryDialog
 from _grid import Grid
 from _events import *
+
+from actions._main_window_actions import AllMainWindowActions
 
 class MainWindow(wx.Frame):
     """Main window of pyspread"""
@@ -96,6 +98,12 @@ class MainWindow(wx.Frame):
         
         self.grid = Grid(self, -1)
         
+        # Main window actions
+        
+        self.actions = AllMainWindowActions(self)
+        
+        # Layout and bindings
+        
         self._set_properties()
         self._do_layout()
         self._bind()
@@ -107,8 +115,7 @@ class MainWindow(wx.Frame):
         
         # Set initial size to 90% of screen
         
-        self.SetInitialSize((int(displaysize[0] * 0.9), 
-                             int(displaysize[1] * 0.9)))
+        self.SetInitialSize(MAIN_WINDOW_SIZE)
         
         # Without minimum size, initial size is minimum size in wxGTK
         self.SetMinSize((2, 2))
@@ -218,7 +225,7 @@ class MainWindowEventHandlers(object):
     def OnClose(self, event):
         """Program exit event handler"""
         
-        if True or self.changed_since_save:
+        if self.main_window.changed_since_save:
             msg = "There are unsaved changes. " + \
                   "Do you want to save before closing?"
             dlg = GMD.GenericMessageDialog(self.main_window, msg, 
@@ -367,21 +374,21 @@ class MainWindowEventHandlers(object):
     def OnManual(self, event):
         """Manual launch event handler"""
         
-        raise NotImplementedError
+        self.main_window.actions.launch_help("Pyspread manual", "manual.html")
         
         event.Skip()
     
     def OnTutorial(self, event):
         """Tutorial launch event handler"""
         
-        raise NotImplementedError
+        self.main_window.actions.launch_help("Pyspread tutorial", "tutorial.html")
         
         event.Skip()
         
     def OnFaq(self, event):
         """FAQ launch event handler"""
         
-        raise NotImplementedError
+        self.main_window.actions.launch_help("Pyspread tutorial", "faq.html")
         
         event.Skip()
     

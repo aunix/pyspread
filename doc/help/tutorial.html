@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
+		<title>pyspread Tutorial</title>
+
+</head><body>
+
+<h1>Pyspread Tutorial</h1>
+
+<p><i>&copy; Martin Manns 2009 - 2010</i>
+</p>
+<h2>Running pyspread</h2>
+<p>Run pyspread with<br>
+</p>
+<pre>$ pyspread</pre><br>
+<p>Select the Menu File &rarr; New<br>
+Enter 200 rows, 10 columns and 5 tables in the pop-up menu.
+</p><p><a href="Tutorial1" class="image" title="Tutorial1"><img alt="image:Tutorial1.png" src="images/Tutorial1.png" border="0"></a>
+</p><p>After clicking OK, you get a new table with the typed-in dimensions.
+</p>
+<h2>Standard cell commands</h2>
+<p>Select the top-left cell and type:<br>
+</p>
+<pre>1 + 5 * 2</pre><br>
+<p>The spreadsheet evaluates this Python statement and displays the result:<br>
+</p>
+<pre>11</pre><br>
+<p>In the cell that is one row below (cell (1, 0, 0)), type<br>
+</p>
+<pre>S</pre><br>
+<p>As we see from the result, S is a known object. In fact, it is the grid object that we are currently working in.
+</p>
+<h2>Absolute addressing of cells</h2>
+<p>To access a cell, we can index the grid. Replace S with<br>
+</p>
+<pre>S[0, 0, 0]</pre><br>
+<p>and the same result as in the top-left cell that has the index (0, 0, 0) is displayed. <br>
+The first index is the row, the second parameter is the column and the third parameter is the table.<br>
+Now replace the expression in the top-left cell by<br>
+</p>
+<pre>1</pre><br>
+<p>Both cells change immediately because all visible cells are updated.
+</p><p><a href="File:Tutorial2.png" class="image" title="image:Tutorial2.png"><img alt="image:Tutorial2.png" src="images/Tutorial2.png" border="0"></a>
+</p><p>The main grid S can be sliced, too.<br>
+Write into cell (3, 0, 0):<br>
+</p>
+<pre>S[:2, 0, 0]</pre><br>
+<p>It now displays [1 1], which is a list of the results of the cells in [:2, 0, 0].
+</p>
+<h2>Relative addressing of cells</h2>
+<p>Since cells are addressed via slicing, the cell content behaves similar to absolute addressing in other spreadsheets.
+In order to achieve relative addressing, three magic variables X (row), Y (column) and Z (table) are used.
+<br>
+These magic variables correspond to the position of the current cell in the grid.
+</p>
+<p>
+Change to table 2 by selecting 2 in the iconbar combobox. Type into cell (1, 2, 2):<br>
+</p><pre>[X, Y, Z]</pre><br>
+<p>The result is [1 2 2] as expected. Now copy the cell (Crtl-C) and
+paste it into the next lower cell (Ctrl-V). [2 2 2] is
+displayed.&lt;p&gt;
+Therefore, relative addressing is achieved.
+&lt;p&gt;
+Note that if cells are called from within other cells, the innermost
+cell is considered the current cell and its position is returned.
+</p>
+<h2>Filling cells</h2>
+<p>The spread method of the grid S provides an easy way to fill cells with sequences.<br>
+(Note: The syntax has changed in 0.0.10)<br>
+Write into cell (0, 1, 2) and (1, 1, 2):<br>
+</p>
+<pre>range(100)</pre><br>
+<pre>S.spread(S[X - 1, Y, Z], (0, 0, 2))</pre><br>
+<p>When changing the focus to a new cell, the new values appear. You
+may delete the cell (1, 1, 2) again in order to prevent pyspread from
+overwriting the cells again and again.
+</p>
+<h2>Named cells</h2>
+<p>Cells can be named by preceding the Python expression with &ldquo;&lt;name&gt; =&rdquo;. Type into cell (2, 4, 2):<br>
+</p>
+<pre>a = 3 * 5</pre><br>
+<p>and in cell (3, 4, 2):<br>
+</p>
+<pre>a ** 2</pre><br>
+<p>The results 15 and 225 appear. a is globally available in all cells.
+</p>
+<h2>External modules</h2>
+<p>External modules can be imported into pyspread. Therefore, powerful types and manipulation methods are available.<br>Note:
+The package gmpy that is not part of the Python stock installation is
+required for the following example (use the current version at
+code.google.com).<br>
+Type into cell (5, 2, 2):<br>
+</p>
+<pre>gmpy = __import__("gmpy")</pre><br>
+<p>&lt;module 'gmpy' etc. is displayed. Now we redefine the rational
+number object in cell (6, 2, 2) in order to reduce typing and type in
+two rationals in the next two cells:<br>
+</p>
+<pre>q = gmpy.mpq</pre><br>
+<pre>q(1, 37)</pre><br>
+<pre>q(229, 13)</pre><br>
+<p>In the next cell (9, 2, 2) type:<br>
+</p>
+<pre>S[X - 2, Y, Z] + S[X - 1, Y, Z]</pre><br>
+<p>The result is 8486/481.
+</p><p><a href="Tutorial3" class="image" title="image:Tutorial3.png"><img alt="image:Tutorial3.png" src="images/Tutorial3.png" border="0"></a>
+</p>
+<h2>Working with cells</h2>
+<p>Summing up cells:<br>
+Assuming that the cells (1,0,0) - (15, 0, 0) contain the values 1 to 15,
+entering into cell (16,0,0):
+</p>
+<pre>sum(S[1:16,0,0])
+</pre>
+<p>yields 120 as expected.
+</p><p>However, if there are more columns (or tables) to sum up, each row is summed up individually.
+Therefore, copying the data to column 2 and changing the cell (16,0,0) to
+</p>
+<pre>sum(S[1:16,0:2,0])
+</pre>
+<p>yields [120 120].
+</p><p>If everything shall be summed, the numpy.sum function has to be used:
+</p>
+<pre>numpy.sum(S[1:16,0:2,0])
+</pre>
+<p>yields 240.
+</p>
+<h2>Plotting</h2>
+<p>Note: The package rpy that is not part of the Python stock installation is required for the following example.<br>
+Switch to table 3. Import rpy in cell (0, 0, 3):<br>
+</p>
+<pre>rpy = __import__("rpy")</pre><br>
+<p>Import the math module in cell (0, 1, 3):<br>
+</p>
+<pre>math = __import__("math")</pre><br>
+<p>Create the x-values for a xy plot with the arange function of the
+package numpy. (numpy is accessible without any import because the grid
+S consists basically of wrapped numpy arrays.)<br>
+Type into cell (1, 0, 3):<br>
+</p>
+<pre>numpy.arange(0.0, 10.0, 0.1)</pre><br>
+<p>Create the y value list in cell (2, 0, 3):<br>
+</p>
+<pre>[math.sin(x) for x in S[1, 0, 3]]</pre><br>
+<p>Now plot everything by typing into cell (3, 0, 3):<br>
+</p>
+<pre>rpy.r.plot(S[1, 0, 3], S[2, 0, 3], xlab=&#39;&#39;, ylab=&#39;&#39;, type=&#39;l&#39;)</pre>
+<a href="Tutorial4.png" class="image" title="image:Tutorial4.png"><img alt="image:Tutorial4.png" src="images/Tutorial4.png" border="0"></a>
+
+</body></html>

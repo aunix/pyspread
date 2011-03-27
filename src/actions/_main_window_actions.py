@@ -40,11 +40,16 @@ Provides:
   5. FindActions: Actions for finding and replacing
   6. MacroActions: Actions which affect macros  
   7. HelpActions: Actions for getting help
-  
+  8. AllMainWindowActions: All main window actions as a bundle
 
 """
 
-from config import DEFAULT_FILENAME
+import os
+
+import wx
+import wx.html
+
+from config import DEFAULT_FILENAME, HELP_SIZE, HELP_DIR
 
 class FileActions(object):
     """Actions which affect the pys file"""
@@ -103,6 +108,8 @@ class ClipboardActions(object):
 
 
 class FindActions(object):
+    """Actions for finding inside the grid"""
+    
     def find(self):
         raise NotImplementedError
         
@@ -125,15 +132,36 @@ class MacroActions(object):
 
 class HelpActions(object):
     """Actions for getting help"""
-    def manual(self):
-        raise NotImplementedError
+    
+    def launch_help(self, helpname, filename):
+        """Generic help launcher"""
         
-    def tutorial(self):
-        raise NotImplementedError
+        # Set up window
+        
+        help_window = wx.Frame(self.main_window, -1, helpname, 
+                            wx.DefaultPosition, wx.Size(*HELP_SIZE))
+        help_htmlwindow = wx.html.HtmlWindow(help_window, -1, 
+                            wx.DefaultPosition, wx.Size(*HELP_SIZE))
+        
+        # Get help data
+        current_path = os.getcwd()
+        os.chdir(HELP_DIR)
+        help_file = open(filename, "r")
+        help_html = help_file.read()
+        help_file.close()
+        
+        # Show tutorial window
+        
+        help_htmlwindow.SetPage(help_html)
+        help_window.Show()
+        
+        os.chdir(current_path)
+        
     
-    def faq(self):
-        raise NotImplementedError
+class AllMainWindowActions(FileActions, ExchangeActions, PrintActions, 
+                           ClipboardActions, FindActions, MacroActions,
+                           HelpActions):
+    """All main window actions as a bundle"""
     
-    def about(self):
-        raise NotImplementedError
-    
+    def __init__(self, main_window):
+        self.main_window = main_window

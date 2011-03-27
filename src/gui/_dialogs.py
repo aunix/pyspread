@@ -837,7 +837,7 @@ class DimensionsEntryDialog(wx.Dialog):
     def _set_properties(self):
         """Wx property setup"""
         
-        self.SetTitle("Create a new grid and discard the old one")
+        self.SetTitle("New grid dimensions")
         self.cancel_button.SetDefault()
     
     def _do_layout(self):

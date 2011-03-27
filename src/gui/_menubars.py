@@ -134,7 +134,7 @@ class _filledMenu(wx.Menu):
         """Menu event handler"""
         
         msgtype = self.ids_msgs[event.GetId()]
-        post_command_event(self.parent._grid, msgtype)
+        post_command_event(self.parent, msgtype)
 
 # end of class _filledMenu
 
