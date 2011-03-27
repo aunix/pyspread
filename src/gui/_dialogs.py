@@ -806,9 +806,10 @@ class MacroDialog(wx.Frame):
 class DimensionsEntryDialog(wx.Dialog):
     """Input dialog for the 3 dimensions of a grid"""
     
-    def __init__(self, *args, **kwds):
+    def __init__(self, parent, *args, **kwds):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE|wx.MINIMIZE_BOX|wx.STAY_ON_TOP
-        wx.Dialog.__init__(self, *args, **kwds)
+        wx.Dialog.__init__(self, parent, *args, **kwds)
+        
         self.Rows_Label = wx.StaticText(self, -1, "Rows", style=wx.ALIGN_CENTRE)
         self.X_DimensionsEntry = wx.TextCtrl(self, -1, "")
         self.Columns_Label = wx.StaticText(self, -1, "Columns", \

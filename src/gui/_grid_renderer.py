@@ -46,11 +46,11 @@ from config import odftags, selected_cell_brush
 class GridRenderer(wx.grid.PyGridCellRenderer):
     """This renderer draws borders and text at specified font, size, color"""
 
-    def __init__(self, table):
+    def __init__(self, data_array):
         
         wx.grid.PyGridCellRenderer.__init__(self)
         
-        self.table = table
+        self.data_array = data_array
         
         # Background key is (width, height, bgbrush, 
         # borderpen_bottom, borderpen_right)
@@ -161,7 +161,7 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
             
             if not( \
                (blocking_distance is None or distance == blocking_distance) \
-               and not self.table[__row, __col, tab]):
+               and not self.data_array[__row, __col, tab]):
                
                 yield __row, __col, tab
 
@@ -186,7 +186,7 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         for distance, __row, __col in grid.colliding_cells(row, col, textbox):
             
             if blocking_distance is None or distance == blocking_distance:
-                if self.table[__row, __col, tab]:
+                if self.data_array[__row, __col, tab]:
                     blocking_distance = distance
                 else:
                     yield __row, __col, tab
@@ -213,10 +213,10 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         
         row, col, tab = key
         
-        textattributes = self.table.get_sgrid_attr(key, "textattributes")
+        textattributes = self.data_array.get_sgrid_attr(key, "textattributes")
         
         textfont = get_font_from_data( \
-            self.table.get_sgrid_attr(key, "textfont"))
+            self.data_array.get_sgrid_attr(key, "textfont"))
         
         self.set_font(dc, textfont, textattributes, self.zoom)
         
@@ -395,7 +395,7 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         if isSelected:
             grid.selection_present = True
             
-            bg = Background(grid, row, col, grid.current_table,
+            bg = Background(grid, self.data_array, row, col, grid.current_table,
                             isSelected)
         else:
             _, _, width, height = grid.CellToRect(row, col)
@@ -403,7 +403,7 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
             bg_components = ["bgbrush", "borderpen_bottom", "borderpen_right"]
             
             bg_key = tuple([width, height] + \
-                [tuple(self.table.data_array.get_sgrid_attr(key, bgc)) \
+                [tuple(self.data_array.get_sgrid_attr(key, bgc)) \
                                 for bgc in bg_components])
             
             try:
@@ -415,7 +415,8 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
                     
                     self.backgrounds = {}
                 
-                bg = self.backgrounds[bg_key] = Background(grid, *key)
+                bg = self.backgrounds[bg_key] = \
+                        Background(grid, self.data_array, *key)
             
         if wx.Platform == "__WXGTK__" and not printing:
             mask_type = wx.AND
@@ -428,7 +429,7 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         
         # Check if the dc is drawn manually be a return func
         
-        res = self.table[row, col, grid.current_table]
+        res = self.data_array[row, col, grid.current_table]
         
         if type(res) is types.FunctionType:
             # Add func_dict attribute 
@@ -447,9 +448,10 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
 class Background(object):
     """Memory DC with background content for given cell"""
     
-    def __init__(self, grid, row, col, tab, selection=False):
+    def __init__(self, grid, data_array, row, col, tab, selection=False):
         self.grid = grid
-        self.table = grid.grid_table
+        self.data_array = data_array
+        
         self.key = row, col, tab
         
         self.dc = wx.MemoryDC() 
@@ -478,7 +480,7 @@ class Background(object):
             bgbrush = wx.Brush(selected_cell_brush)
         else:
             bgbrush = get_brush_from_data( \
-                self.table.data_array.get_sgrid_attr(self.key, "bgbrush"))
+                self.data_array.get_sgrid_attr(self.key, "bgbrush"))
         
         dc.SetBrush(bgbrush)
         dc.SetPen(wx.TRANSPARENT_PEN)
@@ -500,7 +502,7 @@ class Background(object):
         pen_names = ["borderpen_bottom", "borderpen_right"]
         
         borderpens = [get_pen_from_data( \
-                        self.table.data_array.get_sgrid_attr(key, pen)) \
+                        self.data_array.get_sgrid_attr(key, pen)) \
                             for pen in pen_names]
         
         # Topmost line if in top cell
@@ -508,7 +510,7 @@ class Background(object):
         if row == 0:
             lines.append((x, y, x + w, y))
             topkey = "top", col, tab
-            toppen_data = self.table.data_array.get_sgrid_attr(topkey, 
+            toppen_data = self.data_array.get_sgrid_attr(topkey, 
                                                                pen_names[0])
             borderpens.append(get_pen_from_data(toppen_data))
         
@@ -517,8 +519,7 @@ class Background(object):
         if col == 0:
             lines.append((x, y, x, y + h))
             leftkey = row, "left", tab
-            toppen_data  = self.table.data_array.get_sgrid_attr(leftkey, 
-                                                                pen_names[1])
+            toppen_data  = self.data_array.get_sgrid_attr(leftkey, pen_names[1])
             borderpens.append(get_pen_from_data(toppen_data))
         
         zoomed_pens = []
@@ -538,4 +539,3 @@ class Background(object):
         dc.DrawLineList(lines, zoomed_pens)
 
 # end of class Background
-

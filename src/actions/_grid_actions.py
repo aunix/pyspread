@@ -32,16 +32,38 @@ and belongs to the grid only goes here.
 
 Provides:
 ---------
-  1. 
+  1. FileActions: Actions which affect the open grid
+  2. TableRowActionsMixin: Mixin for TableActions
+  3. TableColumnActionsMixin: Mixin for TableActions
+  4. TableTabActionsMixin: Mixin for TableActions
+  5. TableActions: Actions which affect table
+  6. MacroActions: Actions on macros
+  7. UnRedoActions: Actions on the undo redo system
+  8. GridActions: Actions on the grid as a whole
+  9. SelectionActions: Actions on the grid selection
+  10. AllGridActions: All grid actions as a bundle
   
 
 """
 
-class TableRowActions(object):
-    """Table row controller prototype"""
+from model._data_array import DataArray
+from gui._grid_table import GridTable
 
-    def __init__(self):
-        pass
+class FileActions(object):
+    """File actions on the grid"""
+        
+    def open(self):
+        raise NotImplementedError
+        
+    def save(self):
+        raise NotImplementedError
+
+    def approve(self):
+        raise NotImplementedError
+
+
+class TableRowActionsMixin(object):
+    """Table row controller actions"""
 
     def set_row_height(self, row, height):
         """Sets row height"""
@@ -59,11 +81,8 @@ class TableRowActions(object):
         raise NotImplementedError
 
 
-class TableColumnActions(object):
-    """Table column controller prototype"""
-
-    def __init__(self):
-        pass
+class TableColumnActionsMixin(object):
+    """Table column controller actions"""
 
     def set_col_width(self, row, width):
         """Sets column width"""
@@ -81,11 +100,8 @@ class TableColumnActions(object):
         raise NotImplementedError
 
 
-class TableTabActions(object):
-    """Table tab controller prototype"""
-
-    def __init__(self):
-        pass
+class TableTabActionsMixin(object):
+    """Table tab controller actions"""
 
     def add_tabs(self, tab, no_tabs=1):
         """Adds no_tabs tabs before table, appends if tab > maxtabs"""
@@ -97,12 +113,9 @@ class TableTabActions(object):
         
         raise NotImplementedError
 
-class TableActions(TableRowActions, TableColumnActions, 
-                      TableTabActions):
-    """Table controller prototype"""
-
-    def __init__(self, Actions):
-        pass
+class TableActions(TableRowActionsMixin, TableColumnActionsMixin, 
+                   TableTabActionsMixin):
+    """Table controller actions"""
         
     def OnShapeChange(self, event):
         """Grid shape change event handler"""
@@ -131,12 +144,8 @@ class TableActions(TableRowActions, TableColumnActions,
 
     
 class MacroActions(object):
-    """Macro controller prototype"""
-
-    def __init__(self):
-        pass
+    """Macro controller actions"""
         
-
     def set_macros(selfself, macro_string):
         """Sets macro string"""
     
@@ -156,6 +165,13 @@ class UnRedoActions(object):
 
 class GridActions(object):
     """Grid level grid actions"""
+    
+    def new(self, dim):
+        """Creates a new spreadsheet file"""
+        
+        data_array = DataArray(dim)
+        _grid_table = GridTable(self.grid, data_array)
+        self.grid.SetTable(_grid_table, True)
     
     def zoom(self):
         pass
@@ -197,7 +213,7 @@ class GridActions(object):
         
     cursor = property(get_cursor, set_cursor)
     
-class GridSelectionActions(object):
+class SelectionActions(object):
     """Actions that affect the grid selection"""
     
     def select_cell(self, row, col, add_to_selected=False):
@@ -233,3 +249,10 @@ class GridSelectionActions(object):
                 for col in irange(col_slc.start, col_slc.stop, col_slc.step):
                     self.select_cell(row, col, add_to_selected=True)
     
+
+class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions, 
+                     GridActions, SelectionActions):
+    """All grid actions as a bundle"""
+    
+    def __init__(self, grid):
+        self.grid = grid

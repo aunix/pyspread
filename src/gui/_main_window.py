@@ -33,14 +33,16 @@ Provides:
 import wx
 import wx.aui
 
+import wx.lib.agw.genericmessagedialog as GMD
+
 from config import MAIN_WINDOW_ICON, displaysize
 
 from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _widgets import EntryLine, StatusBar, TableChoiceIntCtrl
+from _dialogs import DimensionsEntryDialog
 from _grid import Grid
 from _events import *
-
 
 class MainWindow(wx.Frame):
     """Main window of pyspread"""
@@ -53,6 +55,16 @@ class MainWindow(wx.Frame):
         self.parent = parent
         
         self.handlers = MainWindowEventHandlers(self)
+        
+        # Program states
+        # --------------
+        
+        # Has the current file been changed since the last save?
+        self.changed_since_save = False
+        self.filename = None
+        
+        # GUI elements
+        # ------------
         
         # Menu Bar
         menubar = wx.MenuBar()
@@ -82,7 +94,7 @@ class MainWindow(wx.Frame):
         
         # Main grid
         
-        self._grid = Grid(self, -1)
+        self.grid = Grid(self, -1)
         
         self._set_properties()
         self._do_layout()
@@ -134,7 +146,7 @@ class MainWindow(wx.Frame):
                           LeftDockable(True).RightDockable(True))
         
         # Add the main grid
-        self._mgr.AddPane(self._grid, wx.CENTER)
+        self._mgr.AddPane(self.grid, wx.CENTER)
         
         # Tell the manager to 'commit' all the changes just made
         self._mgr.Update()
@@ -142,17 +154,42 @@ class MainWindow(wx.Frame):
     def _bind(self):
         """Bind events to handlers"""
         
-        self.Bind(wx.EVT_CLOSE, self.handlers.OnClose)
-        self.Bind(EVT_COMMAND_CLOSE, self.handlers.OnClose)
+        handlers = self.handlers
         
-        self.Bind(EVT_COMMAND_MANUAL, self.handlers.OnManual)
-        self.Bind(EVT_COMMAND_TUTORIAL, self.handlers.OnTutorial)
-        self.Bind(EVT_COMMAND_FAQ, self.handlers.OnFaq)
-        self.Bind(EVT_COMMAND_ABOUT, self.handlers.OnAbout)
+        self.Bind(wx.EVT_CLOSE, handlers.OnClose)
+        self.Bind(EVT_COMMAND_CLOSE, handlers.OnClose)
         
-        self.Bind(EVT_COMMAND_MACROLIST, self.handlers.OnMacroList)
-        self.Bind(EVT_COMMAND_MACROLOAD, self.handlers.OnMacroListLoad)
-        self.Bind(EVT_COMMAND_MACROSAVE, self.handlers.OnMacroListSave)
+        # File events
+        
+        self.Bind(EVT_COMMAND_NEW, handlers.OnNew)
+        self.Bind(EVT_COMMAND_OPEN, handlers.OnOpen)
+        self.Bind(EVT_COMMAND_SAVE, handlers.OnSave)
+        self.Bind(EVT_COMMAND_SAVEAS, handlers.OnSaveAs)
+        self.Bind(EVT_COMMAND_IMPORT, handlers.OnImport)
+        self.Bind(EVT_COMMAND_EXPORT, handlers.OnExport)
+        self.Bind(EVT_COMMAND_APPROVE, handlers.OnApprove)
+        
+        # Print events
+        
+        self.Bind(EVT_COMMAND_PRINT, handlers.OnPrint)
+        
+        # Clipboard events
+        
+        self.Bind(EVT_COMMAND_CUT, handlers.OnCut)
+        self.Bind(EVT_COMMAND_COPY, handlers.OnCopy)
+        self.Bind(EVT_COMMAND_COPY_RESULT, handlers.OnCopyResult)
+        self.Bind(EVT_COMMAND_PASTE, handlers.OnPaste)
+        
+        # Help events
+        
+        self.Bind(EVT_COMMAND_MANUAL, handlers.OnManual)
+        self.Bind(EVT_COMMAND_TUTORIAL, handlers.OnTutorial)
+        self.Bind(EVT_COMMAND_FAQ, handlers.OnFaq)
+        self.Bind(EVT_COMMAND_ABOUT, handlers.OnAbout)
+        
+        self.Bind(EVT_COMMAND_MACROLIST, handlers.OnMacroList)
+        self.Bind(EVT_COMMAND_MACROLOAD, handlers.OnMacroListLoad)
+        self.Bind(EVT_COMMAND_MACROSAVE, handlers.OnMacroListSave)
     
     def set_icon(self, bmp):
         """Sets main window icon to given wx.Bitmap"""
@@ -181,10 +218,149 @@ class MainWindowEventHandlers(object):
     def OnClose(self, event):
         """Program exit event handler"""
         
+        if True or self.changed_since_save:
+            msg = "There are unsaved changes. " + \
+                  "Do you want to save before closing?"
+            dlg = GMD.GenericMessageDialog(self.main_window, msg, 
+                        "Unsaved changes", wx.YES_NO | wx.ICON_QUESTION)
+            
+            if dlg.ShowModal() == wx.ID_YES:
+                save_before_exit = True
+            else:
+                save_before_exit = False
+            
+            dlg.Destroy()    
+                
+            if save_before_exit:
+                post_command_event(self.main_window, SaveMsg)
+        
         self.main_window._mgr.UnInit()
         
         # Delete the frame
         self.main_window.Destroy()
+    
+   
+    # File events
+    
+    def OnNew(self, event):
+        """New grid event handler"""
+        
+        # If changes have taken place save of old grid
+        
+        if self.main_window.changed_since_save and self.filename is not None:
+            post_command_event(self, SaveMsg)
+            
+            # Display save in status bar
+            statustext = "File " + self.filename + " saved."
+            post_command_event(self.main_window, StatusBarMsg, text=statustext)
+        
+        # Grid dimension dialog
+        
+        dim_dialog = DimensionsEntryDialog(self.main_window)
+        
+        if dim_dialog.ShowModal() != wx.ID_OK:
+            dim_dialog.Destroy()
+            return False
+        
+        dim = tuple(dim_dialog.dimensions)
+        dim_dialog.Destroy()
+        
+        # Set new filename and post it to the titlebar
+        
+        self.main_window.filename = None
+        post_command_event(self.main_window, TitleMsg)
+        
+        # Create new grid
+        
+        self.main_window.grid.actions.new(dim)
+        
+        # Display grid creation in status bar
+        
+        statustext = "New grid with dimensions " + str(dim) + " created."
+        post_command_event(self.main_window, StatusBarMsg, text=statustext)
+        
+        event.Skip()
+
+    def OnOpen(self, event):
+        """File open event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnSave(self, event):
+        """File save event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnSaveAs(self, event):
+        """File save as event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    def OnImport(self, event):
+        """File import event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    def OnExport(self, event):
+        """File export event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnApprove(self, event):
+        """File approve event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    # Print events
+    
+    def OnPrint(self, event):
+        """Print event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    # Clipboard events
+
+    def OnCut(self, event): 
+        """Clipboard cut event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnCopy(self, event):
+        """Clipboard copy event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnCopyResult(self, event):
+        """Clipboard copy results event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnPaste(self, event):
+        """Clipboard paste event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
     
     # Help events
     

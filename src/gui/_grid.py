@@ -37,9 +37,13 @@ from _events import *
 
 from _grid_table import GridTable
 from _grid_renderer import GridRenderer
+from _grid_mixins import GridCollisionMixin
+
 from model._data_array import DataArray
 
-class Grid(wx.grid.Grid):
+from actions._grid_actions import AllGridActions
+
+class Grid(wx.grid.Grid, GridCollisionMixin):
     """Pyspread's main grid"""
 
     def __init__(self, parent, *args, **kwargs):
@@ -51,18 +55,25 @@ class Grid(wx.grid.Grid):
         wx.grid.Grid.__init__(self, parent, *args, **kwargs)
         
         # Grid table handles interaction to data_array
-        _data_array = DataArray()
-        self.grid_table = GridTable(self, _data_array)
-        self.SetTable(self.grid_table, True)
+        data_array = DataArray()
+        _grid_table = GridTable(self, data_array)
+        self.SetTable(_grid_table, True)
 
         # Grid renderer draws the grid
-        self.grid_renderer = GridRenderer(self.grid_table)
+        self.grid_renderer = GridRenderer(data_array)
         self.SetDefaultRenderer(self.grid_renderer)
         
         # Handler classes contain event handler methods
         self.handlers = GridEventHandlers(self)
         self.cell_handlers = GridCellEventHandlers(self)
         
+        # Grid actions
+        
+        self.actions = AllGridActions(self)
+        
+        # Layout and bindings
+        
+        self._layout()
         self._bind()
         
     def _layout(self):
@@ -102,27 +113,7 @@ class Grid(wx.grid.Grid):
         parent.Bind(EVT_COMMAND_TEXTROTATATION, c_handlers.OnCellTextRotation)
         
         # Cell selection events
-        
-        # File events
-        
-        parent.Bind(EVT_COMMAND_NEW, handlers.OnNew)
-        parent.Bind(EVT_COMMAND_OPEN, handlers.OnOpen)
-        parent.Bind(EVT_COMMAND_SAVE, handlers.OnSave)
-        parent.Bind(EVT_COMMAND_SAVEAS, handlers.OnSaveAs)
-        parent.Bind(EVT_COMMAND_IMPORT, handlers.OnImport)
-        parent.Bind(EVT_COMMAND_EXPORT, handlers.OnExport)
-        parent.Bind(EVT_COMMAND_APPROVE, handlers.OnApprove)
-        
-        # Print events
-        
-        parent.Bind(EVT_COMMAND_PRINT, handlers.OnPrint)
-        
-        # Clipboard events
-        
-        parent.Bind(EVT_COMMAND_CUT, handlers.OnCut)
-        parent.Bind(EVT_COMMAND_COPY, handlers.OnCopy)
-        parent.Bind(EVT_COMMAND_COPY_RESULT, handlers.OnCopyResult)
-        parent.Bind(EVT_COMMAND_PASTE, handlers.OnPaste)
+
         
         # Grid view events
         
@@ -307,7 +298,7 @@ class GridCellEventHandlers(object):
         raise NotImplementedError
         
         event.Skip()
-
+    
 
 class GridEventHandlers(object):
     """Contains grid event handlers"""
@@ -321,97 +312,7 @@ class GridEventHandlers(object):
         raise NotImplementedError
         
         event.Skip()
-    
-    # File events
-    
-    def OnNew(self, event):
-        """New grid event handler"""
         
-        raise NotImplementedError
-        
-        event.Skip()
-
-    def OnOpen(self, event):
-        """File open event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-    
-    def OnSave(self, event):
-        """File save event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-    
-    def OnSaveAs(self, event):
-        """File save as event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-        
-    def OnImport(self, event):
-        """File import event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-        
-    def OnExport(self, event):
-        """File export event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-    
-    def OnApprove(self, event):
-        """File approve event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-    
-    # Print events
-    
-    def OnPrint(self, event):
-        """Print event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-
-    # Clipboard events
-
-    def OnCut(self, event): 
-        """Clipboard cut event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-    
-    def OnCopy(self, event):
-        """Clipboard copy event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-    
-    def OnCopyResult(self, event):
-        """Clipboard copy results event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-    
-    def OnPaste(self, event):
-        """Clipboard paste event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-
     # Grid view events
 
     def OnGoToCell(self, event):
@@ -571,3 +472,5 @@ class GridEventHandlers(object):
 
     
 # End of class GridEventHandlers
+
+
