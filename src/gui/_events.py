@@ -159,6 +159,13 @@ ResizeGridMsg, EVT_COMMAND_RESIZE_GRID = new_command_event()
 UndoMsg, EVT_COMMAND_UNDO = new_command_event()
 RedoMsg, EVT_COMMAND_REDO = new_command_event()
 
+
+# Grid actions
+# ============
+
+GridActionNewMsg, EVT_COMMAND_GRID_ACTION_NEW = new_command_event() # tuple dim
+
+
 # EntryLine
 # =========
 

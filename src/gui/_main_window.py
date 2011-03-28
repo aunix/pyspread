@@ -256,10 +256,6 @@ class MainWindowEventHandlers(object):
         
         if self.main_window.changed_since_save and self.filename is not None:
             post_command_event(self, SaveMsg)
-            
-            # Display save in status bar
-            statustext = "File " + self.filename + " saved."
-            post_command_event(self.main_window, StatusBarMsg, text=statustext)
         
         # Grid dimension dialog
         
@@ -275,9 +271,11 @@ class MainWindowEventHandlers(object):
         # Set new filename and post it to the titlebar
         
         self.main_window.filename = None
-        post_command_event(self.main_window, TitleMsg)
+        post_command_event(self.main_window, TitleMsg, text="pyspread")
         
         # Create new grid
+        
+        post_command_event(self.main_window, GridActionNewMsg, dim=dim)
         
         self.main_window.grid.actions.new(dim)
         

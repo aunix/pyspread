@@ -48,6 +48,7 @@ Provides:
 
 from model._data_array import DataArray
 from gui._grid_table import GridTable
+from gui._events import *
 
 class FileActions(object):
     """File actions on the grid"""
@@ -166,6 +167,12 @@ class UnRedoActions(object):
 class GridActions(object):
     """Grid level grid actions"""
     
+    def __init__(self):
+        self._bind()
+        
+    def _bind(self):
+        self.grid.Bind(EVT_COMMAND_GRID_ACTION_NEW, self.new)
+    
     def new(self, dim):
         """Creates a new spreadsheet file"""
         
@@ -256,3 +263,10 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
     
     def __init__(self, grid):
         self.grid = grid
+        
+        FileActions.__init__(self)
+        TableActions.__init__(self)
+        MacroActions.__init__(self)
+        UnRedoActions.__init__(self)
+        GridActions.__init__(self)
+        SelectionActions.__init__(self)
