@@ -174,7 +174,7 @@ class GridActions(object):
         self.grid.Bind(EVT_COMMAND_GRID_ACTION_NEW, self.new)
     
     def new(self, dim):
-        """Creates a new spreadsheet file"""
+        """Creates a new spreadsheet"""
         
         data_array = DataArray(dim)
         _grid_table = GridTable(self.grid, data_array)

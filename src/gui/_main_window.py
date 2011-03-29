@@ -40,7 +40,8 @@ from config import MAIN_WINDOW_ICON, MAIN_WINDOW_SIZE
 from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _widgets import EntryLine, StatusBar, TableChoiceIntCtrl
-from _dialogs import DimensionsEntryDialog
+from _gui_interfaces import GuiInterfaces
+
 from _grid import Grid
 from _events import *
 
@@ -51,6 +52,8 @@ class MainWindow(wx.Frame):
     
     def __init__(self, parent, *args, **kwargs):
         wx.Frame.__init__(self, parent, *args, **kwargs)
+        
+        self.interfaces = GuiInterfaces(self)
         
         self._mgr = wx.aui.AuiManager(self)
     
@@ -212,6 +215,7 @@ class MainWindowEventHandlers(object):
     
     def __init__(self, parent):
         self.main_window = parent
+        self.interfaces = parent.interfaces
     
     # Main window events
     
@@ -254,21 +258,17 @@ class MainWindowEventHandlers(object):
         
         # If changes have taken place save of old grid
         
-        if self.main_window.changed_since_save and self.filename is not None:
-            post_command_event(self, SaveMsg)
+        if self.main_window.changed_since_save:
+            if self.filename is None:
+                post_command_event(self, SaveAsMsg)
+            else:
+                post_command_event(self, SaveMsg)
         
-        # Grid dimension dialog
+        # Get grid dimensions
         
-        dim_dialog = DimensionsEntryDialog(self.main_window)
+        dim = self.interfaces.get_dimensions_from_user(no_dim=3)
         
-        if dim_dialog.ShowModal() != wx.ID_OK:
-            dim_dialog.Destroy()
-            return False
-        
-        dim = tuple(dim_dialog.dimensions)
-        dim_dialog.Destroy()
-        
-        # Set new filename and post it to the titlebar
+        # Set new filename and post it to the title bar
         
         self.main_window.filename = None
         post_command_event(self.main_window, TitleMsg, text="pyspread")

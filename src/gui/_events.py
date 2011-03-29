@@ -35,6 +35,8 @@ Provides
 """
 
 import wx
+import wx.lib
+import wx.lib.newevent
 
 def post_command_event(target, msg_cls, **kwargs):
     """Posts command event to main window

@@ -87,8 +87,8 @@ try:
 except ImportError:
     pass
 
-from _pyspread.config import VERSION, SNIFF_SIZE, default_dimensions, faces
-from _pyspread.config import GPG_KEY_UID, GPG_KEY_PARMS, GPG_KEY_PASSPHRASE
+from config import VERSION, SNIFF_SIZE, DEFAULT_DIM, faces
+from config import GPG_KEY_UID, GPG_KEY_PARMS, GPG_KEY_PASSPHRASE
 
 
 class SafeUnpickler(object):
@@ -898,7 +898,7 @@ class Commandlineparser(object):
         self.parser = optparse.OptionParser(usage=usage, version=version)
 
         self.parser.add_option("-d", "--dimensions", type="int", nargs=3,
-            dest="dimensions", default=default_dimensions, \
+            dest="dimensions", default=DEFAULT_DIM, \
             help="Dimensions of empty grid (works only without filename) "
                  "rows, cols, tables [default: %default]")
 
