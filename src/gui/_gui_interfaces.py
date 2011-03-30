@@ -30,7 +30,10 @@ Provides:
 
 """
 
+import os
+
 import wx
+import wx.lib.agw.genericmessagedialog as GMD
 
 from _dialogs import DimensionsEntryDialog
 
@@ -62,6 +65,47 @@ class ModalDialogInterfaceMixin(object):
         dim_dialog.Destroy()
         
         return dim
+    
+    def get_save_request_from_user(self):
+        """Queries user if grid should be saved"""
+        
+        msg = "There are unsaved changes.\nDo you want to save?"
+        
+        dlg = GMD.GenericMessageDialog(self.main_window, msg,
+            "Unsaved changes", wx.YES_NO | wx.ICON_QUESTION)
+        
+        save_choice = dlg.ShowModal() == wx.ID_YES
+        
+        dlg.Destroy()
+        
+        return save_choice
+    
+    def get_filepath_findex_from_user(self, wildcard, message, style):
+        """Opens a file dialog and returns filepath and filterindex
+        
+        Parameters
+        ----------
+        wildcard: String, defaults to " PYS file|*.pys"
+        \twildcard string for file dialog
+        message: String
+        \tMessage in the file dialog
+        style: String in ["open", "save"]
+        \tDialog style
+                
+        """
+        
+        dlg = wx.FileDialog(self.main_window, wildcard=wildcard, 
+                            message=message, style=style)
+        
+        filepath = None
+        filter_index = None
+        
+        if dlg.ShowModal() == wx.ID_OK:
+            filepath = dlg.GetPath()
+            filter_index = dlg.GetFilterIndex()
+            
+        return filepath, filter_index
+        
 
 class GuiInterfaces(ModalDialogInterfaceMixin):
     """Main window interfaces to GUI elements"""

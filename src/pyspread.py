@@ -146,10 +146,4 @@ if __name__ == "__main__":
         import cProfile
         cProfile.run('main()')
     else:
-## psyco seems to show segfaults!
-#        try:
-#            import psyco
-#            psyco.full()
-#        except ImportError:
-#            pass
         main()

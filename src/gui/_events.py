@@ -165,7 +165,11 @@ RedoMsg, EVT_COMMAND_REDO = new_command_event()
 # Grid actions
 # ============
 
-GridActionNewMsg, EVT_COMMAND_GRID_ACTION_NEW = new_command_event() # tuple dim
+# tuple dim
+GridActionNewMsg, EVT_COMMAND_GRID_ACTION_NEW = new_command_event() 
+
+# string filepath, object interface
+GridActionOpenMsg, EVT_COMMAND_GRID_ACTION_OPEN = new_command_event() 
 
 
 # EntryLine

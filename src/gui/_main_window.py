@@ -40,6 +40,7 @@ from config import MAIN_WINDOW_ICON, MAIN_WINDOW_SIZE
 from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _widgets import EntryLine, StatusBar, TableChoiceIntCtrl
+from lib._interfaces import PysInterface
 from _gui_interfaces import GuiInterfaces
 
 from _grid import Grid
@@ -86,7 +87,7 @@ class MainWindow(wx.Frame):
         welcome_text = "Welcome to pyspread."
         post_command_event(self, StatusBarMsg, text=welcome_text)
         
-        # Tool bars
+        # Toolbars
         self.main_toolbar = MainToolbar(self, -1)
         self.find_toolbar = FindToolbar(self, -1)
         self.attributes_toolbar = AttributesToolbar(self, -1)
@@ -169,6 +170,8 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_CLOSE, handlers.OnClose)
         self.Bind(EVT_COMMAND_CLOSE, handlers.OnClose)
         
+        self.Bind(EVT_COMMAND_TITLE, handlers.OnTitle)
+        
         # File events
         
         self.Bind(EVT_COMMAND_NEW, handlers.OnNew)
@@ -222,32 +225,24 @@ class MainWindowEventHandlers(object):
     def OnTitle(self, event):
         """Title change event handler"""
         
-        raise NotImplementedError
+        self.main_window.SetTitle(event.text)
         
-        event.Skip()
     
     def OnClose(self, event):
         """Program exit event handler"""
         
+        # If changes have taken place save of old grid
+        
         if self.main_window.changed_since_save:
-            msg = "There are unsaved changes. " + \
-                  "Do you want to save before closing?"
-            dlg = GMD.GenericMessageDialog(self.main_window, msg, 
-                        "Unsaved changes", wx.YES_NO | wx.ICON_QUESTION)
-            
-            if dlg.ShowModal() == wx.ID_YES:
-                save_before_exit = True
-            else:
-                save_before_exit = False
-            
-            dlg.Destroy()    
-                
-            if save_before_exit:
+            if self.interfaces.get_save_request_from_user():
                 post_command_event(self.main_window, SaveMsg)
+        
+        # Uninit the AUI stuff
         
         self.main_window._mgr.UnInit()
         
-        # Delete the frame
+        # Close main_window
+        
         self.main_window.Destroy()
     
    
@@ -259,10 +254,8 @@ class MainWindowEventHandlers(object):
         # If changes have taken place save of old grid
         
         if self.main_window.changed_since_save:
-            if self.filename is None:
-                post_command_event(self, SaveAsMsg)
-            else:
-                post_command_event(self, SaveMsg)
+            if self.interfaces.get_save_request_from_user():
+                post_command_event(self.main_window, SaveMsg)
         
         # Get grid dimensions
         
@@ -277,21 +270,46 @@ class MainWindowEventHandlers(object):
         
         post_command_event(self.main_window, GridActionNewMsg, dim=dim)
         
-        self.main_window.grid.actions.new(dim)
-        
         # Display grid creation in status bar
         
         statustext = "New grid with dimensions " + str(dim) + " created."
         post_command_event(self.main_window, StatusBarMsg, text=statustext)
-        
-        event.Skip()
 
     def OnOpen(self, event):
         """File open event handler"""
         
-        raise NotImplementedError
+        # If changes have taken place save of old grid
         
-        event.Skip()
+        if self.main_window.changed_since_save:
+            if self.interfaces.get_save_request_from_user():
+                post_command_event(self.main_window, SaveMsg)
+        
+        # Get filepath from user
+        
+        wildcard = "Pyspread file (*.pys)|*.pys|" \
+                   "All files (*.*)|*.*"
+        message = "Choose pyspread file to open."
+        style = wx.OPEN | wx.CHANGE_DIR
+        filepath, filterindex = self.interfaces.get_filepath_findex_from_user( \
+                                    wildcard, message, style)
+        
+        if filepath is None:
+            return
+        
+        # Load file into grid
+        
+        post_command_event(self.main_window, GridActionOpenMsg, 
+            attr={"filepath": filepath, "interface": PysInterface})
+        
+        # Set Window title to new filename
+        
+        title_text = "pyspread - " + filepath.split("/")[-1]
+        post_command_event(self.main_window, TitleMsg, text=title_text)
+        
+        # Display file load in status bar
+        
+        statustext = "File " + filepath + " loaded."
+        post_command_event(self.main_window, StatusBarMsg, text=statustext)
     
     def OnSave(self, event):
         """File save event handler"""

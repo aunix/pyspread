@@ -52,8 +52,14 @@ from gui._events import *
 
 class FileActions(object):
     """File actions on the grid"""
+    
+    def __init__(self):
+        self._bind()
         
-    def open(self):
+    def _bind(self):
+        self.grid.parent.Bind(EVT_COMMAND_GRID_ACTION_OPEN, self.open) 
+        
+    def open(self, event):
         raise NotImplementedError
         
     def save(self):
@@ -171,11 +177,12 @@ class GridActions(object):
         self._bind()
         
     def _bind(self):
-        self.grid.Bind(EVT_COMMAND_GRID_ACTION_NEW, self.new)
+        self.grid.parent.Bind(EVT_COMMAND_GRID_ACTION_NEW, self.new)
     
-    def new(self, dim):
-        """Creates a new spreadsheet"""
+    def new(self, event):
+        """Creates a new spreadsheet. Expects n-tuple dim in event."""
         
+        dim = event.dim
         data_array = DataArray(dim)
         _grid_table = GridTable(self.grid, data_array)
         self.grid.SetTable(_grid_table, True)

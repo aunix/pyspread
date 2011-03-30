@@ -54,7 +54,7 @@ Provides
  * make_object
  * make_repr
  
- * PysInterfaces: PYS file operations
+ * PysInterface: PYS file operations
  * CsvInterfaces: Connects array datastructure with csv import module
  * Clipboard: Clipboard access
  * Commandline: Gets command line options and parameters
@@ -576,8 +576,8 @@ def repeated(ilist):
     except UnboundLocalError:
         yield (ilist[0], 1)
 
-class PysInterfaces(object):
-    """PYS file handling class (for the pre 0.0.12 file format)
+class PysInterface(object):
+    """PYS file handling class
     
     Methods
     -------
