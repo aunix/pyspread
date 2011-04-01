@@ -63,6 +63,9 @@ new_command_event = wx.lib.newevent.NewCommandEvent
 
 TitleMsg, EVT_COMMAND_TITLE = new_command_event()
 
+SaveModeEntryMsg, EVT_COMMAND_SAFE_MODE_ENTRY = new_command_event()
+SaveModeExitMsg, EVT_COMMAND_SAFE_MODE_EXIT = new_command_event()
+
 CloseMsg, EVT_COMMAND_CLOSE = new_command_event()
 
 ManualMsg, EVT_COMMAND_MANUAL = new_command_event()
@@ -168,8 +171,9 @@ RedoMsg, EVT_COMMAND_REDO = new_command_event()
 # tuple dim
 GridActionNewMsg, EVT_COMMAND_GRID_ACTION_NEW = new_command_event() 
 
-# string filepath, object interface
+# attr dict: keys: filepath: string, interface: object
 GridActionOpenMsg, EVT_COMMAND_GRID_ACTION_OPEN = new_command_event() 
+GridActionSaveMsg, EVT_COMMAND_GRID_ACTION_SAVE = new_command_event() 
 
 
 # EntryLine

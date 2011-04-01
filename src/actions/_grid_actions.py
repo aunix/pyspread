@@ -57,13 +57,82 @@ class FileActions(object):
         self._bind()
         
     def _bind(self):
-        self.grid.parent.Bind(EVT_COMMAND_GRID_ACTION_OPEN, self.open) 
+        self.main_window.Bind(EVT_COMMAND_GRID_ACTION_OPEN, self.open) 
+        self.main_window.Bind(EVT_COMMAND_GRID_ACTION_SAVE, self.save) 
+
+    def validate_signature(self, filename):
+        """Returns True if a valid signature is present for filename"""
         
+        sigfilename = filename + '.sig'
+        
+        try:
+            dummy = open(sigfilename)
+            dummy.close()
+        except IOError:
+            # Signature file does not exist
+            return False
+        
+        # Check if the sig is valid for the sigfile
+        return verify(sigfilename, filename)
+
+    def make_safe(self, filepath):
+        """Sets safe mode if signature missing of invalid"""
+        
+        if self.validate_signature(filepath):
+            post_command_event(self.main_window, SaveModeExitMsg)
+            
+            statustext = "Valid signature found. File is trusted."
+            post_command_event(self.main_window, StatusBarMsg, text=statustext)
+            
+        else:
+            post_command_event(self.main_window, SaveModeEntryMsg)
+            
+            statustext = "File is not properly signed. Safe mode " + \
+                         "activated. Select File -> Approve to leave safe mode."
+            post_command_event(self.main_window, StatusBarMsg, text=statustext)
+
     def open(self, event):
-        raise NotImplementedError
+        """Opens a file that is specified in event.attr
         
-    def save(self):
-        raise NotImplementedError
+        Parameters
+        ----------
+        event.attr: Dict
+        \tkey filepath contains file path of file to be loaded
+        \tkey interface contains interface class for loading file
+        
+        """
+        
+        interface = event.attr["interface"]()
+        filepath = event.attr["filepath"]
+        
+        try:
+            interface.open(filepath)
+        except IOError:
+            return 0
+        
+        # Make loading safe
+        self.make_safe(filepath)
+        
+        # Get cell values
+        self.data_array.sgrid = sgrid = interface.get_values()
+        
+        interface.close()
+    
+    def save(self, event):
+        """Saves a file that is specified in event.attr
+        
+        Parameters
+        ----------
+        event.attr: Dict
+        \tkey filepath contains file path of file to be saved
+        \tkey interface contains interface class for saving file
+        
+        """
+        
+        interface = event.attr["interface"]()
+        filepath = event.attr["filepath"]
+        
+        interface.save(self.data_array.sgrid, filepath)
 
     def approve(self):
         raise NotImplementedError
@@ -268,8 +337,10 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
                      GridActions, SelectionActions):
     """All grid actions as a bundle"""
     
-    def __init__(self, grid):
+    def __init__(self, grid, data_array):
+        self.main_window = grid.parent
         self.grid = grid
+        self.data_array = data_array
         
         FileActions.__init__(self)
         TableActions.__init__(self)

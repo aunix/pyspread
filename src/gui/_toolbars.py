@@ -67,7 +67,7 @@ class MainToolbar(wx.ToolBar):
         "Create a new, empty spreadsheet"], \
     [tool, OpenMsg, "Open", "FileOpen", "Open spreadsheet", 
         "Open spreadsheet from file"], \
-    [tool, SaveAsMsg, "Save", "FileSave", "Save spreadsheet", 
+    [tool, SaveMsg, "Save", "FileSave", "Save spreadsheet", 
         "Save spreadsheet to file"], \
     ["Separator"] , \
     [tool, UndoMsg, "Undo", "Undo", "Undo", "Undo last operation"], \

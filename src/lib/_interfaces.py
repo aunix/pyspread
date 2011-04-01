@@ -99,10 +99,9 @@ class SafeUnpickler(object):
         '__builtin__': set(['object']),
         'numpy': set(['ndarray', 'dtype']),
         'numpy.core.multiarray': set(['_reconstruct']),
-        '_pyspread._interfaces': set(['UserString']),
-        '_pyspread._datastructures': set(['DictGrid']),
+        'lib._interfaces': set(['UserString']),
+        'model._data_array': set(['DictGrid']),
         'wx._gdi': set(['Colour']),
-        'pyspread._interfaces': set(['UserString']), # compat < 0.0.13
     }
  
     @classmethod

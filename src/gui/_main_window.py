@@ -67,7 +67,8 @@ class MainWindow(wx.Frame):
         
         # Has the current file been changed since the last save?
         self.changed_since_save = False
-        self.filename = None
+        self.filepath = None
+        self.safe_mode = False
         
         # GUI elements
         # ------------
@@ -78,7 +79,7 @@ class MainWindow(wx.Frame):
         self.SetMenuBar(menubar)
         
         # Disable menu item for leaving save mode
-        self.main_menu.enable_file_approve(False)
+        post_command_event(self, SaveModeExitMsg)
         
         # Status bar
         statusbar = StatusBar(self)
@@ -226,7 +227,18 @@ class MainWindowEventHandlers(object):
         """Title change event handler"""
         
         self.main_window.SetTitle(event.text)
+    
+    def OnSaveModeEntry(self, event):
+        """Save mode entry event handler"""
         
+        self.main_window.safe_mode = True
+        self.main_window.main_menu.enable_file_approve(True)
+    
+    def OnSaveModeExit(self, event):
+        """Save mode exit event handler"""
+        
+        self.main_window.safe_mode = False
+        self.main_window.main_menu.enable_file_approve(False)
     
     def OnClose(self, event):
         """Program exit event handler"""
@@ -261,9 +273,9 @@ class MainWindowEventHandlers(object):
         
         dim = self.interfaces.get_dimensions_from_user(no_dim=3)
         
-        # Set new filename and post it to the title bar
+        # Set new filepath and post it to the title bar
         
-        self.main_window.filename = None
+        self.main_window.filepath = None
         post_command_event(self.main_window, TitleMsg, text="pyspread")
         
         # Create new grid
@@ -296,12 +308,16 @@ class MainWindowEventHandlers(object):
         if filepath is None:
             return
         
+        # Change the main window filepath state
+        
+        self.filepath = filepath
+            
         # Load file into grid
         
         post_command_event(self.main_window, GridActionOpenMsg, 
             attr={"filepath": filepath, "interface": PysInterface})
         
-        # Set Window title to new filename
+        # Set Window title to new filepath
         
         title_text = "pyspread - " + filepath.split("/")[-1]
         post_command_event(self.main_window, TitleMsg, text=title_text)
@@ -314,17 +330,54 @@ class MainWindowEventHandlers(object):
     def OnSave(self, event):
         """File save event handler"""
         
-        raise NotImplementedError
+        # If there is no filepath then jump to save as
         
-        event.Skip()
+        if self.main_window.filepath is None:
+            post_command_event(self.main_window, SaveAsMsg)
+            return
+        
+        # Save the grid
+        
+        post_command_event(self.main_window, GridActionSaveMsg, attr={ \
+            "filepath": self.main_window.filepath, "interface": PysInterface})
+        
+        # Display file save in status bar
+        
+        statustext = self.main_window.filepath.split("/")[-1] + " saved."
+        post_command_event(self.main_window, StatusBarMsg, text=statustext)
     
     def OnSaveAs(self, event):
         """File save as event handler"""
         
-        raise NotImplementedError
+        # Get filepath from user
         
-        event.Skip()
+        wildcard = "Pyspread file (*.pys)|*.pys|" \
+                   "All files (*.*)|*.*"
+        message = "Choose filename for saving."
+        style = wx.SAVE | wx.CHANGE_DIR
+        filepath, filterindex = self.interfaces.get_filepath_findex_from_user( \
+                                    wildcard, message, style)
         
+        if filepath is not None:
+            
+            # Put pys suffix if wildcard choice is 0
+            
+            if filterindex == 0 and filepath[-4:] != ".pys":
+                filepath += ".pys"
+            
+            # Set the filepath state
+            
+            self.main_window.filepath = filepath
+            
+            # Set Window title to new filepath
+        
+            title_text = "pyspread - " + filepath.split("/")[-1]
+            post_command_event(self.main_window, TitleMsg, text=title_text)
+            
+            # Now jump to save
+            
+            post_command_event(self.main_window, SaveMsg)
+                
     def OnImport(self, event):
         """File import event handler"""
         
