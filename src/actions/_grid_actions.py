@@ -49,14 +49,12 @@ Provides:
 from model._data_array import DataArray
 from gui._grid_table import GridTable
 from gui._events import *
+from lib._interfaces import sign, verify, is_pyme_present
 
 class FileActions(object):
     """File actions on the grid"""
     
     def __init__(self):
-        self._bind()
-        
-    def _bind(self):
         self.main_window.Bind(EVT_COMMAND_GRID_ACTION_OPEN, self.open) 
         self.main_window.Bind(EVT_COMMAND_GRID_ACTION_SAVE, self.save) 
 
@@ -75,7 +73,7 @@ class FileActions(object):
         # Check if the sig is valid for the sigfile
         return verify(sigfilename, filename)
 
-    def make_safe(self, filepath):
+    def approve(self, filepath):
         """Sets safe mode if signature missing of invalid"""
         
         if self.validate_signature(filepath):
@@ -111,12 +109,31 @@ class FileActions(object):
             return 0
         
         # Make loading safe
-        self.make_safe(filepath)
+        self.approve(filepath)
         
         # Get cell values
-        self.data_array.sgrid = sgrid = interface.get_values()
+        data_array = interface.get_values()
         
         interface.close()
+        
+        _grid_table = GridTable(self.grid, data_array)
+        self.grid.SetTable(_grid_table, True)
+        
+        print self.grid.GetTable().data_array.sgrid.shape
+    
+    def sign_file(self, filepath):
+        """Signs file if possible"""
+        
+        if is_pyme_present() and not self.main_window.safe_mode:
+            signature = sign(filepath)
+            signfile = open(filepath + '.sig','wb')
+            signfile.write(signature)
+            signfile.close()
+        else:
+            msg = 'Cannot sign the file. Maybe PyMe is not installed.'
+            short_msg = 'Cannot sign file!'
+            self.main_window.interfaces.display_warning(msg, short_msg)
+
     
     def save(self, event):
         """Saves a file that is specified in event.attr
@@ -133,9 +150,7 @@ class FileActions(object):
         filepath = event.attr["filepath"]
         
         interface.save(self.data_array.sgrid, filepath)
-
-    def approve(self):
-        raise NotImplementedError
+        self.sign_file(filepath)
 
 
 class TableRowActionsMixin(object):
@@ -196,25 +211,25 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
     def OnShapeChange(self, event):
         """Grid shape change event handler"""
         
-        new_rows, new_cols, new_tabs = event.shape
-        old_rows, old_cols, old_tabs = self.pysgrid.shape
-        
-        if new_rows > old_rows:
-            self.add_rows(old_rows, new_rows - old_rows)
-        elif new_rows < old_rows:
-            self.delete_rows(old_rows, old_rows - new_rows)
-        
-        if new_cols > old_cols:
-            self.add_cols(old_cols, new_cols - old_cols)
-        elif new_cols < old_cols:
-            self.delete_cols(old_cols, old_cols - new_cols)
-            
-        if new_tabs > old_tabs:
-            self.add_tabs(old_tabs, new_tabs - old_tabs)
-        elif new_tabs < old_tabs:
-            self.delete_tabs(old_tabs, old_tabs - new_tabs)
-        
-        self.pysgrid.shape = new_rows, new_cols, new_tabs
+#        new_rows, new_cols, new_tabs = event.shape
+#        old_rows, old_cols, old_tabs = self.pysgrid.shape
+#        
+#        if new_rows > old_rows:
+#            self.add_rows(old_rows, new_rows - old_rows)
+#        elif new_rows < old_rows:
+#            self.delete_rows(old_rows, old_rows - new_rows)
+#        
+#        if new_cols > old_cols:
+#            self.add_cols(old_cols, new_cols - old_cols)
+#        elif new_cols < old_cols:
+#            self.delete_cols(old_cols, old_cols - new_cols)
+#            
+#        if new_tabs > old_tabs:
+#            self.add_tabs(old_tabs, new_tabs - old_tabs)
+#        elif new_tabs < old_tabs:
+#            self.delete_tabs(old_tabs, old_tabs - new_tabs)
+#        
+#        self.pysgrid.shape = new_rows, new_cols, new_tabs
         
         event.Skip()
 
@@ -243,18 +258,16 @@ class GridActions(object):
     """Grid level grid actions"""
     
     def __init__(self):
-        self._bind()
-        
-    def _bind(self):
-        self.grid.parent.Bind(EVT_COMMAND_GRID_ACTION_NEW, self.new)
+        self.main_window.Bind(EVT_COMMAND_GRID_ACTION_NEW, self.new)
     
     def new(self, event):
-        """Creates a new spreadsheet. Expects n-tuple dim in event."""
+        """Creates a new spreadsheet. Expects data_array in event."""
         
-        dim = event.dim
-        data_array = DataArray(dim)
+        # Grid table handles interaction to data_array
+        data_array = event.data_array
         _grid_table = GridTable(self.grid, data_array)
         self.grid.SetTable(_grid_table, True)
+
     
     def zoom(self):
         pass

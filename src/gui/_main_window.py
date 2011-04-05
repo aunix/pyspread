@@ -46,6 +46,8 @@ from _gui_interfaces import GuiInterfaces
 from _grid import Grid
 from _events import *
 
+from model._data_array import DataArray
+
 from actions._main_window_actions import AllMainWindowActions
 
 class MainWindow(wx.Frame):
@@ -273,14 +275,18 @@ class MainWindowEventHandlers(object):
         
         dim = self.interfaces.get_dimensions_from_user(no_dim=3)
         
+        if dim is None:
+            return
+        
+        data_array = DataArray(dim)
+        
         # Set new filepath and post it to the title bar
         
         self.main_window.filepath = None
         post_command_event(self.main_window, TitleMsg, text="pyspread")
         
         # Create new grid
-        
-        post_command_event(self.main_window, GridActionNewMsg, dim=dim)
+        post_command_event(self.main_window, GridActionNewMsg, data_array=data_array)
         
         # Display grid creation in status bar
         
@@ -310,7 +316,7 @@ class MainWindowEventHandlers(object):
         
         # Change the main window filepath state
         
-        self.filepath = filepath
+        self.main_window.filepath = filepath
             
         # Load file into grid
         

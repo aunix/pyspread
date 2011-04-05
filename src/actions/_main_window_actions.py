@@ -33,14 +33,13 @@ goes here.
 
 Provides:
 ---------
-  1. FileActions: Actions which affect the pys file
-  2. ExchangeActions: Actions for foreign format import and export
-  3. PrintActions: Actions for printing
-  4. ClipboardActions: Actions which affect the clipboard
-  5. FindActions: Actions for finding and replacing
-  6. MacroActions: Actions which affect macros  
-  7. HelpActions: Actions for getting help
-  8. AllMainWindowActions: All main window actions as a bundle
+  1. ExchangeActions: Actions for foreign format import and export
+  2. PrintActions: Actions for printing
+  3. ClipboardActions: Actions which affect the clipboard
+  4. FindActions: Actions for finding and replacing
+  5. MacroActions: Actions which affect macros  
+  6. HelpActions: Actions for getting help
+  7. AllMainWindowActions: All main window actions as a bundle
 
 """
 
@@ -50,29 +49,6 @@ import wx
 import wx.html
 
 from config import DEFAULT_FILENAME, HELP_SIZE, HELP_DIR
-
-class FileActions(object):
-    """Actions which affect the pys file"""
-    
-    def __init__(self, filename):
-        self.filename = filename
-        
-    def new(self, dim):
-        """Creates a new spreadsheet file"""
-        
-        self.filename = DEFAULT_FILENAME
-        
-        raise NotImplementedError
-        
-    def open(self):
-        raise NotImplementedError
-        
-    def save(self):
-        raise NotImplementedError
-
-    def approve(self):
-        raise NotImplementedError
-
 
 class ExchangeActions(object):
     """Actions for foreign format import and export"""
@@ -158,10 +134,18 @@ class HelpActions(object):
         os.chdir(current_path)
         
     
-class AllMainWindowActions(FileActions, ExchangeActions, PrintActions, 
+class AllMainWindowActions(ExchangeActions, PrintActions, 
                            ClipboardActions, FindActions, MacroActions,
                            HelpActions):
     """All main window actions as a bundle"""
     
     def __init__(self, main_window):
         self.main_window = main_window
+        
+        ExchangeActions.__init__(self)
+        PrintActions.__init__(self)
+        ClipboardActions.__init__(self)
+        FindActions.__init__(self)
+        MacroActions.__init__(self)
+        HelpActions.__init__(self)
+        

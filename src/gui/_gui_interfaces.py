@@ -59,7 +59,7 @@ class ModalDialogInterfaceMixin(object):
         
         if dim_dialog.ShowModal() != wx.ID_OK:
             dim_dialog.Destroy()
-            return False
+            return
         
         dim = tuple(dim_dialog.dimensions)
         dim_dialog.Destroy()
@@ -105,7 +105,14 @@ class ModalDialogInterfaceMixin(object):
             filter_index = dlg.GetFilterIndex()
             
         return filepath, filter_index
+    
+    def display_warning(self, message, short_message):
+        """Displays a warning message"""
         
+        dlg = gmd.GenericMessageDialog(self, message, short_message,
+                                       wx.CANCEL | wx.ICON_WARNING)
+        dlg.ShowModal()
+        dlg.Destroy()
 
 class GuiInterfaces(ModalDialogInterfaceMixin):
     """Main window interfaces to GUI elements"""

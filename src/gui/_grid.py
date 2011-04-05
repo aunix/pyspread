@@ -54,11 +54,9 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         
         wx.grid.Grid.__init__(self, parent, *args, **kwargs)
         
-        # Grid table handles interaction to data_array
-        
+        # Create new grid
         data_array = DataArray()
-        _grid_table = GridTable(self, data_array)
-        self.SetTable(_grid_table, True)
+        post_command_event(self, GridActionNewMsg, data_array=data_array)
 
         # Grid renderer draws the grid
         self.grid_renderer = GridRenderer(data_array)
