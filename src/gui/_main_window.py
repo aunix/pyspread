@@ -70,7 +70,6 @@ class MainWindow(wx.Frame):
         # Has the current file been changed since the last save?
         self.changed_since_save = False
         self.filepath = None
-        self.safe_mode = False
         
         # GUI elements
         # ------------
@@ -127,6 +126,9 @@ class MainWindow(wx.Frame):
         # Without minimum size, initial size is minimum size in wxGTK
         self.SetMinSize((2, 2))
         
+        # Leave save mode
+        post_command_event(self, SaveModeExitMsg)
+        
     def _do_layout(self):
         """Adds widgets to the wx.aui manager and controls the layout"""
         
@@ -170,10 +172,13 @@ class MainWindow(wx.Frame):
         
         handlers = self.handlers
         
-        self.Bind(wx.EVT_CLOSE, handlers.OnClose)
-        self.Bind(EVT_COMMAND_CLOSE, handlers.OnClose)
+        # Program state events
         
         self.Bind(EVT_COMMAND_TITLE, handlers.OnTitle)
+        self.Bind(EVT_COMMAND_SAFE_MODE_ENTRY, handlers.OnSaveModeEntry)
+        self.Bind(EVT_COMMAND_SAFE_MODE_EXIT, handlers.OnSaveModeExit)
+        self.Bind(wx.EVT_CLOSE, handlers.OnClose)
+        self.Bind(EVT_COMMAND_CLOSE, handlers.OnClose)
         
         # File events
         
@@ -214,6 +219,18 @@ class MainWindow(wx.Frame):
         _icon.CopyFromBitmap(bmp)
         self.SetIcon(_icon)
 
+    def get_safe_mode(self):
+        """Returns safe_mode state from data_array"""
+        
+        return self.grid.data_array.safe_mode
+        
+    def set_safe_mode(self, value):
+        """Sets safe_mode state in data_array"""
+        
+        self.grid.data_array.safe_mode = value
+
+    safe_mode = property(get_safe_mode, set_safe_mode)
+
 # End of class MainWindow
 
 class MainWindowEventHandlers(object):
@@ -234,13 +251,27 @@ class MainWindowEventHandlers(object):
         """Save mode entry event handler"""
         
         self.main_window.safe_mode = True
+        
+        # Enable menu item for leaving save mode
+        
         self.main_window.main_menu.enable_file_approve(True)
+        
+        self.main_window.grid.ForceRefresh()
     
     def OnSaveModeExit(self, event):
         """Save mode exit event handler"""
         
         self.main_window.safe_mode = False
+        
+        # Run macros
+        
+        ##self.MainGrid.model.pysgrid.sgrid.execute_macros(safe_mode=False)
+        
+        # Disable menu item for leaving save mode
+        
         self.main_window.main_menu.enable_file_approve(False)
+        
+        self.main_window.grid.ForceRefresh()
     
     def OnClose(self, event):
         """Program exit event handler"""
@@ -286,7 +317,8 @@ class MainWindowEventHandlers(object):
         post_command_event(self.main_window, TitleMsg, text="pyspread")
         
         # Create new grid
-        post_command_event(self.main_window, GridActionNewMsg, data_array=data_array)
+        post_command_event(self.main_window, GridActionNewMsg, 
+                           data_array=data_array)
         
         # Display grid creation in status bar
         
@@ -401,9 +433,12 @@ class MainWindowEventHandlers(object):
     def OnApprove(self, event):
         """File approve event handler"""
         
-        raise NotImplementedError
+        if not self.main_window.safe_mode:
+            return
         
-        event.Skip()
+        if self.main_window.interfaces.get_safe_mode_proceed():
+            # Leave safe mode
+            post_command_event(self.main_window, SaveModeExitMsg)
     
     # Print events
     

@@ -55,11 +55,14 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         wx.grid.Grid.__init__(self, parent, *args, **kwargs)
         
         # Create new grid
-        data_array = DataArray()
-        post_command_event(self, GridActionNewMsg, data_array=data_array)
+        self.data_array = DataArray()
+        post_command_event(self, GridActionNewMsg, data_array=self.data_array)
+
+        _grid_table = GridTable(self, self.data_array)
+        self.SetTable(_grid_table, True)
 
         # Grid renderer draws the grid
-        self.grid_renderer = GridRenderer(data_array)
+        self.grid_renderer = GridRenderer(self.data_array)
         self.SetDefaultRenderer(self.grid_renderer)
         
         # Handler classes contain event handler methods
@@ -68,7 +71,7 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         
         # Grid actions
         
-        self.actions = AllGridActions(self, data_array)
+        self.actions = AllGridActions(self, self.data_array)
         
         # Layout and bindings
         

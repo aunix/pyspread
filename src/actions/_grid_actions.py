@@ -112,14 +112,12 @@ class FileActions(object):
         self.approve(filepath)
         
         # Get cell values
-        data_array = interface.get_values()
+        self.grid.data_array.sgrid = interface.get_values()
         
         interface.close()
         
-        _grid_table = GridTable(self.grid, data_array)
+        _grid_table = GridTable(self.grid, self.grid.data_array)
         self.grid.SetTable(_grid_table, True)
-        
-        print self.grid.GetTable().data_array.sgrid.shape
     
     def sign_file(self, filepath):
         """Signs file if possible"""
@@ -264,10 +262,10 @@ class GridActions(object):
         """Creates a new spreadsheet. Expects data_array in event."""
         
         # Grid table handles interaction to data_array
-        data_array = event.data_array
-        _grid_table = GridTable(self.grid, data_array)
+        self.grid.data_array.sgrid = event.data_array.sgrid
+    
+        _grid_table = GridTable(self.grid, self.grid.data_array)
         self.grid.SetTable(_grid_table, True)
-
     
     def zoom(self):
         pass
