@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Project SYSTEM "Project-4.6.dtd">
+<!-- eric4 project file for project pyspread -->
+<!-- Saved: 2011-03-29, 23:19:26 -->
+<!-- Copyright (C) 2011 Martin Manns, mmanns@gmx.net -->
+<Project version="4.6">
+  <Language>en</Language>
+  <ProgLanguage mixed="0">Python</ProgLanguage>
+  <ProjectType>Other</ProjectType>
+  <Description>Pyspread is a cross-platform Python spreadsheet application. It is based on and written in the programming language Python. </Description>
+  <Version>0.1.3</Version>
+  <Author>Martin Manns</Author>
+  <Email>mmanns@gmx.net</Email>
+  <Sources>
+    <Source>_pyspread/_datastructures.py</Source>
+    <Source>_pyspread/_menubars.py</Source>
+    <Source>_pyspread/_grid_model.py</Source>
+    <Source>_pyspread/doc/__init__.py</Source>
+    <Source>_pyspread/_interfaces.py</Source>
+    <Source>_pyspread/_windows.py</Source>
+    <Source>_pyspread/_events.py</Source>
+    <Source>_pyspread/icons/Tango/24x24/actions/__init__.py</Source>
+    <Source>_pyspread/icons/__init__.py</Source>
+    <Source>_pyspread/_grid_controller.py</Source>
+    <Source>_pyspread/examples/__init__.py</Source>
+    <Source>_pyspread/xrect.py</Source>
+    <Source>_pyspread/_grid.py</Source>
+    <Source>_pyspread/_printout.py</Source>
+    <Source>_pyspread/_toolbars.py</Source>
+    <Source>_pyspread/test/test_widgets.py</Source>
+    <Source>_pyspread/test/test_xrect.py</Source>
+    <Source>_pyspread/test/xrect_pygame.py</Source>
+    <Source>_pyspread/test/vartypes.py</Source>
+    <Source>_pyspread/test/test_interfaces.py</Source>
+    <Source>_pyspread/test/__init__.py</Source>
+    <Source>_pyspread/test/test_datastructures.py</Source>
+    <Source>_pyspread/__init__.py</Source>
+    <Source>_pyspread/irange.py</Source>
+    <Source>_pyspread/_grid_view.py</Source>
+    <Source>_pyspread/_widgets.py</Source>
+    <Source>_pyspread/config.py</Source>
+    <Source>_pyspread/_dialogs.py</Source>
+    <Source>setup.py</Source>
+    <Source>__init__.py</Source>
+    <Source>_pyspread/test/test_grid_model.py</Source>
+    <Source>src/pyspread.py</Source>
+    <Source>src/config.py</Source>
+    <Source>src/gui/_menubars.py</Source>
+    <Source>src/gui/_events.py</Source>
+    <Source>src/gui/_main_window.py</Source>
+    <Source>src/gui/_grid.py</Source>
+    <Source>src/gui/_toolbars.py</Source>
+    <Source>src/gui/_widgets.py</Source>
+    <Source>src/gui/_dialogs.py</Source>
+    <Source>src/actions/_grid_actions.py</Source>
+    <Source>src/actions/_main_window_actions.py</Source>
+    <Source>src/actions/_grid_cell_actions.py</Source>
+    <Source>src/lib/irange.py</Source>
+    <Source>src/lib/xrect.py</Source>
+    <Source>src/model/_data_array.py</Source>
+    <Source>src/gui/_grid_table.py</Source>
+    <Source>src/gui/_grid_renderer.py</Source>
+    <Source>src/lib/_interfaces.py</Source>
+    <Source>src/gui/_grid_mixins.py</Source>
+    <Source>src/gui/_gui_interfaces.py</Source>
+    <Source>src/actions/test/test_grid_cell_actions.py</Source>
+    <Source>src/actions/test/test_grid_actions.py</Source>
+    <Source>src/actions/test/test_main_window_actions.py</Source>
+    <Source>src/lib/vartypes.py</Source>
+  </Sources>
+  <Forms>
+  </Forms>
+  <Translations>
+  </Translations>
+  <Resources>
+  </Resources>
+  <Interfaces>
+  </Interfaces>
+  <Others>
+    <Other>_pyspread/pyspread</Other>
+  </Others>
+  <MainScript>_pyspread/pyspread</MainScript>
+  <Vcs>
+    <VcsType>None</VcsType>
+  </Vcs>
+  <FiletypeAssociations>
+    <FiletypeAssociation pattern="*.pyw" type="SOURCES" />
+    <FiletypeAssociation pattern="*.idl" type="INTERFACES" />
+    <FiletypeAssociation pattern="*.py" type="SOURCES" />
+    <FiletypeAssociation pattern="*.ptl" type="SOURCES" />
+  </FiletypeAssociations>
+</Project>
