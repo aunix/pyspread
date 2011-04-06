@@ -245,10 +245,10 @@ class UnRedoActions(object):
     """Undo and redo operations on grid level"""
     
     def undo(self):
-        pass
+        raise NotImplementedError
         
     def redo(self):
-        pass
+        raise NotImplementedError
         
 
 
@@ -278,19 +278,20 @@ class GridActions(object):
     def _switch_to_table(self, newtable):
         """Switches grid to table"""
         
-        if newtable in xrange(self.Actions.shape[2]):
-            # Update the whole grid including the empty cells
-            
-            self.grid.current_table = newtable
-            
-            self.grid.ClearGrid()
-            self.grid.Update()
-            
-            self.grid.zoom_rows()
-            self.grid.zoom_cols()
-            self.grid.zoom_labels()
-            
-            post_entryline_text(self.grid, "")
+        raise NotImplementedError
+#        if newtable in xrange(self.Actions.shape[2]):
+#            # Update the whole grid including the empty cells
+#            
+#            self.grid.current_table = newtable
+#            
+#            self.grid.ClearGrid()
+#            self.grid.Update()
+#            
+#            self.grid.zoom_rows()
+#            self.grid.zoom_cols()
+#            self.grid.zoom_labels()
+#            
+#            post_entryline_text(self.grid, "")
 
     def set_cursor(self, value):
         """Changes the grid cursor cell."""

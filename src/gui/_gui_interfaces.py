@@ -37,7 +37,6 @@ import wx.lib.agw.genericmessagedialog as GMD
 
 from _dialogs import DimensionsEntryDialog
 
-from config import file_approval_warning
 
 class ModalDialogInterfaceMixin(object):
     """Main window interfaces to model dialogs"""
@@ -116,20 +115,18 @@ class ModalDialogInterfaceMixin(object):
         dlg.ShowModal()
         dlg.Destroy()
 
-    def get_safe_mode_proceed(self):
+    def get_warning_choice(self, message, short_message, 
+                        style=wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING):
         """Launches proceeding dialog and returns True if ok to proceed"""
         
-        # The file can damage the system --> Ask again
-        
-        
-        dlg = GMD.GenericMessageDialog(self.main_window, file_approval_warning,
-            "Security warning", wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING)
+        dlg = GMD.GenericMessageDialog(self.main_window, message, short_message,
+                                       style)
             
-        proceed = dlg.ShowModal() == wx.ID_YES
+        choice = dlg.ShowModal()
         
         dlg.Destroy()
         
-        return proceed
+        return choice
 
 class GuiInterfaces(ModalDialogInterfaceMixin):
     """Main window interfaces to GUI elements"""

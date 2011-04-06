@@ -36,6 +36,7 @@ import wx.aui
 import wx.lib.agw.genericmessagedialog as GMD
 
 from config import MAIN_WINDOW_ICON, MAIN_WINDOW_SIZE
+from config import file_approval_warning
 
 from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
@@ -276,6 +277,16 @@ class MainWindowEventHandlers(object):
     def OnClose(self, event):
         """Program exit event handler"""
         
+        # Ask if the user really wants to close pyspread
+        
+        msg = "Do you want to close pyspread?"
+        short_msg = "Close pyspread"
+        style = wx.OK | wx.CANCEL | wx.NO_DEFAULT | wx.ICON_QUESTION
+        
+        if self.main_window.interfaces\
+                .get_warning_choice(msg, short_msg, style) == wx.ID_CANCEL:
+            return 
+        
         # If changes have taken place save of old grid
         
         if self.main_window.changed_since_save:
@@ -436,7 +447,11 @@ class MainWindowEventHandlers(object):
         if not self.main_window.safe_mode:
             return
         
-        if self.main_window.interfaces.get_safe_mode_proceed():
+        msg = file_approval_warning
+        short_msg = "Security warning"
+        
+        if self.main_window.interfaces.get_warning_choice(msg, short_msg) == \
+                wx.ID_YES:
             # Leave safe mode
             post_command_event(self.main_window, SaveModeExitMsg)
     
