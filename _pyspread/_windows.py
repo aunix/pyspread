@@ -55,15 +55,13 @@ import _pyspread._grid as _grid
 
 from _pyspread.irange import irange
 from _pyspread._menubars import MainMenu
-from _pyspread._events import post_status_text, post_entryline_text, \
-            post_shape_change
 from _pyspread._toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _pyspread._dialogs import MacroDialog, CsvImportDialog, CsvExportDialog, \
             DimensionsEntryDialog, CellEntryDialog, AboutDialog
 from _pyspread._interfaces import CsvInterfaces, PysInterfaces, TxtInterfaces, \
             string_match, is_pyme_present, sign, verify
-from _pyspread.config import PROG_DIR, KEYFUNCTIONS, displaysize
-from _pyspread._widgets import EntryLine, StatusBar, TableChoiceIntCtrl
+from _pyspread.config import PROG_DIR, icon_size, KEYFUNCTIONS
+            
 
 
 class MainWindow(wx.Frame):
@@ -106,23 +104,23 @@ class MainWindow(wx.Frame):
         self.SetMenuBar(self.main_window_menubar)
         
         # Status bar
-        self.main_window_statusbar = StatusBar(self)
-        self.SetStatusBar(self.main_window_statusbar)
-        
-        post_status_text(self, "Welcome to pyspread.")
+        self.main_window_statusbar = self.CreateStatusBar(1, wx.ST_SIZEGRIP)
         
         # Main tool bar
         self.main_window_toolbar = MainToolbar(self, -1)
         
+        # Combo box for table choice
+        self.cb_id = wx.NewId()
+        self.cbox_z = wx.ComboBox(self.main_window_toolbar, self.cb_id, "0", \
+                      size=(icon_size[0]*2, icon_size[1]-4), \
+                      style=wx.CB_DROPDOWN)
+        self.main_window_toolbar.AddControl(self.cbox_z)
         self.main_window_toolbar.Realize()
         
-        self.entry_line = EntryLine(self)
-        
-        # IntCtrl for table choice
-        self.table_choice = TableChoiceIntCtrl(self, dim[2])
-        
         # Main grid
-        self.MainGrid = _grid.MainGrid(self, *dim)
+        self.MainGrid = _grid.MainGrid(self, -1, size=(1, 1), dim=dim, \
+            set_statustext=self.main_window_statusbar.SetStatusText, 
+            cbox_z = self.cbox_z)
         
         # Find tool bar
         self.find_toolbar = FindToolbar(self, -1)
@@ -151,16 +149,20 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_FIND_REPLACE, self.OnFind)
         self.Bind(wx.EVT_FIND_REPLACE_ALL, self.OnFind)
         self.Bind(wx.EVT_FIND_CLOSE, self.OnFindClose)
-        ##wx.EVT_KEY_DOWN(self.MainGrid._mgrid, self.OnKey)
+        self.Bind(wx.EVT_TEXT, self.MainGrid.OnCombo, id=self.cb_id)
+        self.Bind(wx.EVT_COMBOBOX, self.MainGrid.OnCombo, id=self.cb_id)
+        wx.EVT_KEY_DOWN(self.MainGrid, self.OnKey)
         
         # Misc
         self.macro_dlg = None # Macro dialog if present
+        self.MainGrid.mainwindow = self
+        self.MainGrid.deletion_imminent = False
         self.filepath = None # No file loaded yet
         self.borderstate = "AllBorders" # For color and width changes
         
         # Scale for Custom Renderer drawn content (needs TableBase!!)
         self.scale = 1.0
-    
+        
     def _set_properties(self):
         """Setup title, icon, size, scale, statusbar, main grid"""
         
@@ -170,10 +172,20 @@ class MainWindow(wx.Frame):
                              wx.BITMAP_TYPE_ANY))
         self.SetIcon(_icon)
         
-        self.SetInitialSize((int(displaysize[0] * 0.9), 
-                             int(displaysize[1] * 0.9)))
-        self.SetMinSize((320, 200))
+        self.SetInitialSize((1024, 768))
+        #self.Maximize()
         
+        # Status bar
+        
+        self.main_window_statusbar.SetStatusWidths([-1])
+        
+        # statusbar fields
+        main_window_statusbar_fields = [""]
+        for i in range(len(main_window_statusbar_fields)):
+            self.main_window_statusbar.SetStatusText( \
+                            main_window_statusbar_fields[i], i)
+        self.main_window_toolbar.SetToolBitmapSize(icon_size)
+        self.main_window_toolbar.SetMargins((1, 1))
         self.main_window_toolbar.Realize()
     
     def _do_layout(self):
@@ -195,21 +207,14 @@ class MainWindow(wx.Frame):
                           ToolbarPane().Top().Row(1).MaximizeButton(False).
                           LeftDockable(False).RightDockable(False))
                           
-                          
-        self._mgr.AddPane(self.table_choice, wx.aui.AuiPaneInfo().
-                          Name("table_choice").Caption("Table choice").
-                          ToolbarPane().MaxSize((50, 50)).Row(2).
-                          Top().CloseButton(False).MaximizeButton(False).
-                          LeftDockable(True).RightDockable(True))
-        
-        self._mgr.AddPane(self.entry_line, wx.aui.AuiPaneInfo().
+        self._mgr.AddPane(self.MainGrid.entry_line, wx.aui.AuiPaneInfo().
                           Name("entry_line").Caption("Entry line").
-                          ToolbarPane().MinSize((10, 10)).Row(2).
+                          ToolbarPane().MinSize((800, 10)).Row(2).
                           Top().CloseButton(False).MaximizeButton(False).
-                          LeftDockable(True).RightDockable(True))
+                          LeftDockable(False).RightDockable(False))
         
         # Add the main grid
-        self._mgr.AddPane(self.MainGrid._main_grid, wx.CENTER)
+        self._mgr.AddPane(self.MainGrid, wx.CENTER)
         
         # Hide panes initially
         #self._mgr.GetPane("find_toolbar").Hide()
@@ -273,7 +278,7 @@ class MainWindow(wx.Frame):
         self = MainWindow(None, dimensions=dimensions)
         self.Show()
         
-        self.MainGrid.model.pysgrid.unredo.reset()
+        self.MainGrid.pysgrid.unredo.reset()
     
     def validate_signature(self, filename):
         """Returns True if a valid signature is present for filename"""
@@ -294,12 +299,14 @@ class MainWindow(wx.Frame):
         """Sets safe mode if signature missing of invalid"""
         
         if self.validate_signature(filepath):
-            self.MainGrid.model.pysgrid.safe_mode = False
-            post_status_text(self, "Valid signature found. File is trusted.")
+            self.MainGrid.pysgrid.safe_mode = False
+            self.main_window_statusbar.SetStatusText( \
+                "Valid signature found. File is trusted.")
         else:
-            self.MainGrid.model.pysgrid.safe_mode = True
-            post_status_text(self, "File is not properly signed. Safe mode " + \
-                "activated. Select File -> Approve to leave safe mode.")
+            self.MainGrid.pysgrid.safe_mode = True
+            self.main_window_statusbar.SetStatusText( \
+                "File is not properly signed. Safe mode activated. " + \
+                "Select File -> Approve to leave safe mode.")
             
             # Enable menu item for entering save mode
             self.main_menu.enable_file_approve()
@@ -361,11 +368,6 @@ class MainWindow(wx.Frame):
         """Opens file dialog and loads file"""
         
         filepath, _ = self._get_filepath(style=wx.OPEN|wx.CHANGE_DIR, safe=True)
-        
-        # Set Window title to new filename
-        
-        self.SetTitle("pyspread - " + filepath.split("/")[-1])
-        
         self.loadfile(filepath)
     
     def loadfile(self, filepath):
@@ -376,7 +378,7 @@ class MainWindow(wx.Frame):
         
         self.filepath = filepath
         try:
-            self.MainGrid.model.load(self.filepath)
+            self.MainGrid.loadfile(self.filepath)
         except IOError:
             msg =  "Could not read file " + self.filepath
             dlg = gmd.GenericMessageDialog(self, msg, 'File read error',
@@ -390,11 +392,10 @@ class MainWindow(wx.Frame):
             def GetString(self):
                 return "0"
         
-        self.MainGrid.view.freeze()
-        self.MainGrid.controller.cursor = 0, 0, 0
-        
-        self.MainGrid.view.force_refresh()
-        self.MainGrid.view.thaw()
+        self.MainGrid.Freeze()
+        self.MainGrid.OnCombo(Dummyevent())
+        self.MainGrid.ForceRefresh()
+        self.MainGrid.Thaw()
     
     def sign_file(self):
         """Signs file if possible"""
@@ -417,12 +418,13 @@ class MainWindow(wx.Frame):
         if self.filepath is None:
             self.OnFileSaveAs(event)
         else:
-            self.MainGrid.model.save(self.filepath, self.wildcard_interface)
-            if self.MainGrid.model.pysgrid.safe_mode:
-                post_status_text(self, "Untrusted file saved")
+            self.MainGrid.savefile(self.filepath, self.wildcard_interface)
+            if self.MainGrid.pysgrid.safe_mode:
+                self.main_window_statusbar.SetStatusText("Untrusted file saved")
             else:
                 self.sign_file()
-                post_status_text(self, "File saved and sigend")
+                self.main_window_statusbar.SetStatusText( \
+                    "File saved and sigend")
     
     def OnFileSaveAs(self, event):
         """Opens the file dialog and saves the file to the chosen location"""
@@ -438,17 +440,17 @@ class MainWindow(wx.Frame):
                 filepath += ".pys"
             
             self.filepath = filepath
-            self.SetTitle("pyspread - " + filepath.split("/")[-1])
                 
             self.wildcard_interface = self.wildcard_interfaces[filterindex]()
             
-            self.MainGrid.model.save(filepath, self.wildcard_interface)
+            self.MainGrid.savefile(filepath, self.wildcard_interface)
             
-            if self.MainGrid.model.pysgrid.safe_mode or filterindex == 1:
-                post_status_text(self, "Untrusted file saved")
+            if self.MainGrid.pysgrid.safe_mode or filterindex == 1:
+                self.main_window_statusbar.SetStatusText("Untrusted file saved")
             else:
                 self.sign_file()
-                post_status_text(self, "File saved and sigend")
+                self.main_window_statusbar.SetStatusText( \
+                    "File saved and sigend")
     
     def csv_import(self, path):
         """CSV import workflow"""
@@ -479,11 +481,10 @@ class MainWindow(wx.Frame):
         
         # The actual data import
         csv_interface = CsvInterfaces(path, dialect, digest_types, has_header)
-        
-        topleftcell = self.MainGrid.controller.cursor
-        
+        topleftcell = tuple(list(self.MainGrid.get_currentcell()) + \
+                            [self.MainGrid.current_table])
         try:
-            csv_interface.read(self.MainGrid.model.pysgrid, key=topleftcell)
+            csv_interface.read(self.MainGrid.pysgrid, key=topleftcell)
         except ValueError, err:
             msg = 'The file "' + csvfilename + '" has only been loaded ' + \
                 'partly. \n \nError message:\n' + str(err)
@@ -493,15 +494,15 @@ class MainWindow(wx.Frame):
                     
             dlg.ShowModal()
             dlg.Destroy()
-        self.MainGrid.view.force_refresh()
+        self.MainGrid.ForceRefresh()
 
     def txt_import(self, path):
         """Whitespace-delimited txt import workflow. This should be fast."""
         
-        topleftcell = self.MainGrid.controller.cursor
-        
+        topleftcell = tuple(list(self.MainGrid.get_currentcell()) + \
+                            [self.MainGrid.current_table])
         txt_interface = TxtInterfaces(path)
-        txt_interface.read(self.MainGrid.model.pysgrid, key=topleftcell)
+        txt_interface.read(self.MainGrid.pysgrid, key=topleftcell)
 
     def OnFileImport(self, event):
         """Imports files. Currently only CSV files supported"""
@@ -515,7 +516,8 @@ class MainWindow(wx.Frame):
                     wildcard=" CSV file|*.*|Tab-delimited text file|*.*", \
                     style=wx.OPEN | wx.CHANGE_DIR)
         except TypeError:
-            post_status_text(self, "Error opening directory" + os.getcwd())
+            self.main_window_statusbar.SetStatusText("Error opening " + \
+                "directory" + os.getcwd())
             return 0
         
         
@@ -526,7 +528,8 @@ class MainWindow(wx.Frame):
             # TXT import option choice
             self.txt_import(path)
         else:
-            post_status_text(self, "Unknown import choice" +  str(filterindex))
+            self.main_window_statusbar.SetStatusText("Unknown import choice" + \
+                str(filterindex))
             
             msg = "Unknown import choice" + str(filterindex)
                 
@@ -540,12 +543,15 @@ class MainWindow(wx.Frame):
         """Exports files. Currently only CSV files supported"""
         
         # Get Selection --> iterable
-        selection = self.MainGrid.controller.selection()
-        rowslice, colslice = self._get_export_area_slices(selection)
+        selection = self.MainGrid.get_selection()
+        if len(selection) == 1:
+            slice_x, slice_y = self.MainGrid.get_visiblecell_slice()[:2]
+            selection = [(x, y) for x in xrange(slice_x.start, slice_x.stop)
+                                for y in xrange(slice_y.start, slice_y.stop)]
         
-        data = self.MainGrid.controller.selection.get_data( \
-            self.MainGrid.model.pysgrid, rowslice, colslice, 
-            omittedfield_repr=' ')
+        rowslice, colslice = self.MainGrid.get_selected_rows_cols(selection)
+        data = self.MainGrid.getselectiondata(self.MainGrid.pysgrid, \
+                                    rowslice, colslice, omittedfield_repr=' ')
                                     
         # Get CSV export options via dialog
         filterdlg = CsvExportDialog(self, data=data)
@@ -590,7 +596,7 @@ class MainWindow(wx.Frame):
     def OnFileApprove(self, event):
         """Signs the current file and leaves safe mode"""
         
-        if not self.MainGrid.model.pysgrid.safe_mode:
+        if not self.MainGrid.pysgrid.safe_mode:
             return None
         
         # The file can damage the system --> Ask again
@@ -606,38 +612,16 @@ class MainWindow(wx.Frame):
 
         if proceed:
             # Leave safe mode
-            self.MainGrid.model.pysgrid.safe_mode = False
+            self.MainGrid.pysgrid.safe_mode = False
             
             # Run macros
-            self.MainGrid.model.pysgrid.sgrid.execute_macros(safe_mode=False)
+            self.MainGrid.pysgrid.sgrid.execute_macros(safe_mode=False)
             
             # Disable menu item for leaving save mode
             self.main_menu.enable_file_approve(False)
             
             # Refresh grid
-            self.MainGrid.view.force_refresh()
-    
-    def _get_export_area_slices(self, selection):
-        """Returns 2-tuple of slice that comprise selected or visible cells
-        
-        If there is no selection but the current cell then the visible area 
-        is used instead of the selection area.
-        
-        """
-        
-        # No selection --> use visible area instead
-        if selection is None or len(selection) <= 1:
-            slice_x, slice_y = self.MainGrid.view.get_visiblecell_slice()[:2]
-            
-            selection = [(x, y) for x in irange(slice_x.start, slice_x.stop)
-                                for y in irange(slice_y.start, slice_y.stop)]
-        
-        selection_rows, selection_cols = zip(*selection)
-        rowslice = slice(min(selection_rows), max(selection_rows) + 1)
-        colslice = slice(min(selection_cols), max(selection_cols) + 1)
-        
-        return rowslice, colslice
-    
+            self.MainGrid.ForceRefresh()
     
     def OnFilePrint(self, event):
         """Displays print dialog"""
@@ -649,12 +633,19 @@ class MainWindow(wx.Frame):
         
         printer = wx.Printer(pdd)
         
-        selection = self.MainGrid.controller.selection()
+        selection = self.MainGrid.get_selection()
+        #print selection
         
-        rowslice, colslice = self._get_export_area_slices(selection)
+        if len(selection) == 1:
+            slice_x, slice_y = self.MainGrid.get_visiblecell_slice()[:2]
+            #print slice_x, slice_y
+            selection = [(x, y) for x in irange(slice_x.start, slice_x.stop)
+                                for y in irange(slice_y.start, slice_y.stop)]
         
-        tab = self.MainGrid.controller.cursor[2]
-        canvas = printout.MyCanvas(self, self.MainGrid, rowslice, colslice, tab)
+        rowslice, colslice = self.MainGrid.get_selected_rows_cols(selection)
+        tab = self.MainGrid.current_table
+        canvas = printout.MyCanvas(self, self.MainGrid, 
+                                   rowslice, colslice, tab)
         
         __printout = printout.MyPrintout(canvas)
 
@@ -677,29 +668,28 @@ class MainWindow(wx.Frame):
         """Cut from main grid to clipboard"""
         
         self.MainGrid.cut()
-        self.MainGrid.controller.unredo_mark()
+        self.MainGrid.pysgrid.unredo.mark()
         event.Skip()
     
     def OnCopy(self, event):
         """Copy from main grid to clipboard"""
         
-        self.MainGrid.controller.clipboard.copy(\
-                            source=self.MainGrid.model.pysgrid.sgrid)
-        self.MainGrid.controller.unredo_mark()
+        self.MainGrid.copy(source=self.MainGrid.pysgrid.sgrid)
+        self.MainGrid.pysgrid.unredo.mark()
         event.Skip()
     
     def OnCopyResult(self, event):
         """Copy results from main grid to clipboard"""
         
-        self.MainGrid.copy(source=self.MainGrid.model.pysgrid)
-        self.MainGrid.controller.unredo_mark()
+        self.MainGrid.copy(source=self.MainGrid.pysgrid)
+        self.MainGrid.pysgrid.unredo.mark()
         event.Skip()
     
     def OnPaste(self, event):
         """Paste from clipboard to main grid"""
         
-        self.MainGrid.controller.clipboard.paste()
-        self.MainGrid.controller.unredo_mark()
+        self.MainGrid.paste()
+        self.MainGrid.pysgrid.unredo.mark()
         event.Skip()
     
     def OnGoToCell(self, event):
@@ -712,7 +702,11 @@ class MainWindow(wx.Frame):
             col = int(dlg.col_textctrl.GetValue())
             tab = int(dlg.tab_textctrl.GetValue())
             
-            self.MainGrid.controller.cursor = row, col, tab
+            if tab != self.MainGrid.current_table:
+                # Switch to target table
+                self.MainGrid.cbox_z.SetValue(str(tab))
+                self.MainGrid.switch_to_table(tab)
+            
             self.MainGrid.MakeCellVisible(row, col)
         
         dlg.Destroy()
@@ -761,51 +755,47 @@ class MainWindow(wx.Frame):
         
         about_dialog = AboutDialog(self)
     
-    def OnInsertRows(self, event):
+    def OnInsertRows(self, event): # wxGlade: MainWindow.<event_handler>
         """Insert the maximum of 1 and the number of selected rows"""
-        
-        self.MainGrid.controller.selection.insert(axis=0)
+        self.MainGrid.insert_selected_rows()
         event.Skip()
     
-    def OnInsertColumns(self, event):
-        """Inserts the maximum of 1 and the number of selected columns"""
-        
-        self.MainGrid.controller.selection.insert(axis=1)
+    def OnInsertColumns(self, event): # wxGlade: MainWindow.<event_handler>
+        """Inserts the maximum of 1 and the number of selected columns """
+        self.MainGrid.insert_selected_cols()
         event.Skip()
     
-    def OnInsertTable(self, event):
-        """Insert one table into MainGrid and pysgrid"""
-        
-        row, col, tab = self.MainGrid.controller.cursor
-        
-        self.MainGrid.controller.selection.insert(axis=2)
-        self.MainGrid.controller.cursor = row, col, tab + 1
-        
+    def OnInsertTable(self, event): # wxGlade: MainWindow.<event_handler>
+        """Insert one table into MainGrid and pysgrid """
+        self.MainGrid.insert_selected_tables()
+        event.GetString = lambda x=0: unicode(self.MainGrid.current_table)
+        self.MainGrid.OnCombo(event)
         event.Skip()
     
-    def OnDeleteRows(self, event):
+    def OnDeleteRows(self, event): # wxGlade: MainWindow.<event_handler>
         """Deletes rows from all tables of the grid"""
         
-        self.MainGrid.controller.selection.delete(axis=0)
+        self.MainGrid.delete_selected_rows()
         event.Skip()
     
-    def OnDeleteColumns(self, event):
+    def OnDeleteColumns(self, event): # wxGlade: MainWindow.<event_handler>
         """Deletes columnss from all tables of the grid"""
         
-        self.MainGrid.controller.selection.delete(axis=1)
+        self.MainGrid.delete_selected_cols()
         event.Skip()
     
-    def OnDeleteTable(self, event):
+    def OnDeleteTable(self, event): # wxGlade: MainWindow.<event_handler>
         """Deletes tables"""
         
-        row, col, tab = self.MainGrid.controller.cursor
+        self.MainGrid.delete_selected_tables()
         
-        self.MainGrid.controller.selection.delete(axis=2)
+        newtable = max(0, min(self.MainGrid.current_table, \
+                           self.MainGrid.pysgrid.sgrid.shape[2] - 1))
         
-        if self.MainGrid.model.shape[2] < tab:
-            tab = self.MainGrid.model.shape[2]
+        event.GetString = lambda x=0: unicode(newtable)
+        self.MainGrid.OnCombo(event)
         
-        self.MainGrid.controller.cursor = row, col, tab
+        self.cbox_z.SetSelection(newtable)
         
         event.Skip()
     
@@ -821,14 +811,19 @@ class MainWindow(wx.Frame):
         
         dimensions = tuple(dim_dialog.dimensions)
         
-        post_shape_change(self, dimensions)
+        # Check for each dimension, how many items are inserted or deleted
+        dim_diff = [dimensions[i] - self.MainGrid.pysgrid.shape[i] \
+                        for i in xrange(3)]
         
-        event.Skip()
+        for dim, diff in enumerate(dim_diff):
+            self.MainGrid.change_dim(dim, diff)
+        
+        self.MainGrid.pysgrid.unredo.reset()
     
     def OnMacroList(self, event):
         """Invokes the MacroDialog and updates the macros in the app"""
         
-        macros = self.MainGrid.model.pysgrid.sgrid.macros
+        macros = self.MainGrid.pysgrid.sgrid.macros
         if self.macro_dlg:
             self.macro_dlg.Raise()
             self.macro_dlg.SetFocus()
@@ -847,7 +842,7 @@ class MainWindow(wx.Frame):
             macro_infile = open(macropath, "r")
             macrocode = macro_infile.read()
             macro_infile.close()
-            self.MainGrid.model.pysgrid.sgrid.macros += "\n" + macrocode.strip("\n")
+            self.MainGrid.pysgrid.sgrid.macros += "\n" + macrocode.strip("\n")
         
         event.Skip()
     
@@ -859,7 +854,7 @@ class MainWindow(wx.Frame):
         macropath, _ = self._get_filepath(style=wx.SAVE|wx.CHANGE_DIR, 
                                           wildcard=macrowildcard)
         
-        macros = self.MainGrid.model.pysgrid.sgrid.macros
+        macros = self.MainGrid.pysgrid.sgrid.macros
         
         macro_outfile = open(macropath, "w")
         macro_outfile.write(macros)
@@ -867,7 +862,7 @@ class MainWindow(wx.Frame):
         
         event.Skip()
     
-    def OnFind(self, event):
+    def OnFind(self, event): # wxGlade: MainWindow.<event_handler>
         """Find functionality should be in interfaces"""
         
         newstring = ""
@@ -891,7 +886,7 @@ class MainWindow(wx.Frame):
             event_type = wx_map[evt_type]
             event_flags = wx_flags[evt_flags]
         except KeyError:
-            post_status_text(self, "Unknown event type " + \
+            self.main_window_statusbar.SetStatusText("Unknown event type " + \
                 "or flag:" + unicode(evt_type) + unicode(evt_flags))
             return 0
         event_find_string = event.GetFindString()
@@ -915,33 +910,38 @@ class MainWindow(wx.Frame):
         noreplaced = 0
         while findpos is not None:
             noreplaced += 1
-            cellstring = self.MainGrid.model.pysgrid.sgrid[findpos]
+            cellstring = self.MainGrid.pysgrid.sgrid[findpos]
             string_position = string_match(cellstring, \
                                 event_find_string, event_flags)
             newstring = cellstring[:string_position]
             newstring += cellstring[string_position:].replace(\
                                    event_find_string, \
                                    event_replace_string, 1)
-            self.MainGrid.model.pysgrid[findpos] = newstring
+            self.MainGrid.pysgrid[findpos] = newstring
             if event_type == "REPLACE":
-                post_status_text(self, "'" + cellstring + "' replaced by '" + \
-                    newstring + "'.", 0)
+                self.main_window_statusbar.SetStatusText("'" +
+                             cellstring + "' replaced by '" + \
+                             newstring + "'.", 0)
                 break
             elif event_type == "REPLACE_ALL":
-                findpos = self.MainGrid.model.pysgrid.findnextmatch( \
+                findpos = self.MainGrid.pysgrid.findnextmatch( \
                              findpos, event_find_string, event_flags)
             else:
                 raise ValueError, "Event type " + event_type + " unknown."
 
-        self.MainGrid.view.force_refresh()
-        self.MainGrid.controller.unredo_mark()
+        self.MainGrid.ForceRefresh()
+        self.MainGrid.pysgrid.unredo.mark()
 
         if event_type == "REPLACE_ALL":
-            post_status_text(self, unicode(noreplaced) + " occurrences of '" +  \
-                event_find_string + "' replaced by '" + event_replace_string + \
-                "'.", 0)
+            self.main_window_statusbar.SetStatusText(unicode(noreplaced) + \
+                             " occurrences of '" + event_find_string + \
+                             "' replaced by '" +  event_replace_string + \
+                             "'.", 0)
         else:
-            post_entryline_text(self, newstring)
+            try:
+                self.MainGrid.entry_line.SetValue(newstring)
+            except UnboundLocalError:
+                pass
     
     def find_position(self, event_find_string, event_flags):
         """Find position of event_find_string in MainGrid
@@ -955,16 +955,16 @@ class MainWindow(wx.Frame):
         
         """
         
-        findfunc = self.MainGrid.model.pysgrid.findnextmatch
+        findfunc = self.MainGrid.pysgrid.findnextmatch
         
         # Search starts in next cell after the current onez
-        gridpos = list(self.MainGrid.controller.cursor)
+        gridpos = list(self.MainGrid.key)
         if "DOWN" in event_flags:
-            if gridpos[0] < self.MainGrid.model.shape[0]:
+            if gridpos[0] < self.MainGrid.shape[0]:
                 gridpos[0] += 1
-            elif gridpos[1] < self.MainGrid.model.shape[1]:
+            elif gridpos[1] < self.MainGrid.shape[1]:
                 gridpos[1] += 1
-            elif gridpos[2] < self.MainGrid.model.shape[2]:
+            elif gridpos[2] < self.MainGrid.shape[2]:
                 gridpos[2] += 1
             else:
                 gridpos = (0, 0, 0)
@@ -976,7 +976,7 @@ class MainWindow(wx.Frame):
             elif gridpos[2] > 0:
                 gridpos[2] -= 1
             else:
-                gridpos = [dim - 1 for dim in self.MainGrid.model.pysgrid.shape]
+                gridpos = [dim - 1 for dim in self.MainGrid.pysgrid.shape]
         
         return findfunc(tuple(gridpos), event_find_string, event_flags)
     
@@ -993,32 +993,34 @@ class MainWindow(wx.Frame):
         
         """
         if findpos is not None:
-            self.MainGrid.controller.cursor = findpos
-            self.MainGrid.controller.select_cell(*findpos[:2])
-            
-            post_status_text(self, "Found '" + event_find_string + \
-                "' in cell " + unicode(list(findpos)) + ".")
+            self.MainGrid.selectnewcell(findpos, event)
+            self.MainGrid.SelectBlock(findpos[0], findpos[1], 
+                                      findpos[0], findpos[1])
+            self.main_window_statusbar.SetStatusText("Found '" + \
+                             event_find_string +  "' in cell " + \
+                             unicode(list(findpos)) + ".", 0)
         else:
-            post_status_text(self, "'" + event_find_string + "' not found.", 0)
+            self.main_window_statusbar.SetStatusText("'" + \
+                             event_find_string + "' not found.", 0)
         
     def OnFindClose(self, event):
         """Refreshes the grid after closing the find dialog"""
         
         event.GetDialog().Destroy()
-        post_status_text(self, "", 0)
-        self.MainGrid.view.force_refresh()
+        self.main_window_statusbar.SetStatusText("", 0)
+        self.MainGrid.ForceRefresh()
         event.Skip()
     
     def OnUndo(self, event):
         """Calls the gris undo method"""
         
-        self.MainGrid.controller.undo()
+        self.MainGrid.undo()
         event.Skip()
     
     def OnRedo(self, event):
         """Calls the gris redo method"""
         
-        self.MainGrid.controller.redo()
+        self.MainGrid.redo()
         event.Skip()
     
     def OnShowFind(self, event):
@@ -1043,7 +1045,7 @@ class MainWindow(wx.Frame):
         """Event handler for refreshing the selected cells via menu"""
         
         # Get selected cells
-        selected_cells = self.MainGrid.controller.selection()
+        selected_cells = self.MainGrid.get_selection()
         
         # Update each selected cell regardless of frozen state
         frozen_cache = {}  
@@ -1051,15 +1053,15 @@ class MainWindow(wx.Frame):
             key = tuple(list(key) + [self.MainGrid.current_table])
             try:
                 frozen_cache[key] = \
-                    self.MainGrid.model.pysgrid.sgrid.frozen_cells.pop(key)
+                    self.MainGrid.pysgrid.sgrid.frozen_cells.pop(key)
             except KeyError:
                 pass
                 
-        self.MainGrid.view.force_refresh()
+        self.MainGrid.ForceRefresh()
         
         for key in frozen_cache:
-            self.MainGrid.model.pysgrid.sgrid.frozen_cells[key] = \
-                self.MainGrid.model.pysgrid[key]
+            self.MainGrid.pysgrid.sgrid.frozen_cells[key] = \
+                self.MainGrid.pysgrid[key]
         
     def OnZoom(self, event):
         """Event handler for setting grid zoom via menu"""
@@ -1067,9 +1069,30 @@ class MainWindow(wx.Frame):
         try:
             menuitem = event.GetEventObject().FindItemById(event.Id)
             menuitemtext = menuitem.GetText()
-            self.MainGrid.view.zoom = int(menuitemtext[:-1]) / 100.0
+            self.MainGrid.zoom = int(menuitemtext[:-1]) / 100.0
         except AttributeError: 
             pass
+        
+        old_zoom = self.MainGrid.zoom
+        
+        self.MainGrid.Freeze()
+        
+        if self.MainGrid.zoom < 1.0 and old_zoom > self.MainGrid.zoom + 0.1:
+            old_zoom, self.MainGrid.zoom = \
+                self.MainGrid.zoom, self.MainGrid.zoom + 0.1
+            self.MainGrid.zoom_rows()
+            self.MainGrid.zoom_cols()
+            self.MainGrid.zoom_labels()
+            
+            self.MainGrid.zoom = old_zoom
+        
+        self.MainGrid.zoom_rows()
+        self.MainGrid.zoom_cols()
+        self.MainGrid.zoom_labels()
+
+        self.MainGrid.ForceRefresh()
+        
+        self.MainGrid.Thaw()
         
         event.Skip()
     

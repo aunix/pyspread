@@ -27,9 +27,6 @@ _interfaces
 
 Provides
 --------
-
- * EVT_STATUSBAR_TEXT: Event for updating the main statusbar
- 
  * SafeUnpickler: Basic security for loading pys files
  
  * sorted_keys:  Generator for sorting keys
@@ -67,7 +64,6 @@ Provides
 import bz2
 import cPickle as pickle
 import csv
-import datetime
 from itertools import ifilter
 import optparse
 import re
@@ -78,8 +74,6 @@ import cStringIO as StringIO
 
 import numpy
 import wx
-import wx.lib.newevent
-
 
 try:
     from pyme import core, pygpgme
@@ -89,7 +83,6 @@ except ImportError:
 
 from _pyspread.config import VERSION, SNIFF_SIZE, default_dimensions, faces
 from _pyspread.config import GPG_KEY_UID, GPG_KEY_PARMS, GPG_KEY_PASSPHRASE
-
 
 class SafeUnpickler(object):
     """Unpicklung with this class only allows PICKLE_SAVE classes"""
@@ -460,25 +453,6 @@ def make_float(obj):
 
     return float(obj)
 
-def make_date(obj):
-    """Makes a date from comparable types"""
-    
-    from dateutil.parser import parse
-    return parse(obj).date()
-
-def make_datetime(obj):
-    """Makes a datetime from comparable types"""
-    
-    from dateutil.parser import parse
-    return parse(obj)
-
-def make_time(obj):
-    """Makes a time from comparable types"""
-    
-    from dateutil.parser import parse
-    return parse(obj).time()
-
-
 def make_object(obj):
     """Returns the object"""
     
@@ -507,15 +481,6 @@ def get_font_from_data(fontdata):
     
     return textfont
 
-def hex_to_rgb(value):
-    """Hex conversion for wx.Color RGB"""
-    
-    color = wx.Colour()
-    color.SetRGB(value)
-    return color.Get(includeAlpha=True)
-
-def rgb_to_hex(rgb):
-    return '#%02x%02x%02x' % rgb
 
 def get_pen_from_data(pendata):
     """Returns wx.Pen from pendata attribute list"""
@@ -970,9 +935,6 @@ class Digest(object):
             types.IntType: make_int, \
             types.FloatType: make_float, \
             types.CodeType: make_object, \
-            datetime.date: make_date, \
-            datetime.datetime: make_datetime, \
-            datetime.time: make_time, \
             }
 
         if self.fallback_type is not None and \

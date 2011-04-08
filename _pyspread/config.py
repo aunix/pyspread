@@ -11,7 +11,7 @@ Program info
 """
 
 # The current version of pyspread
-VERSION = "0.1.3" 
+VERSION = "0.1.2" 
 
 
 """
@@ -72,10 +72,8 @@ System info
 # the real application is instanciated.
 # These checks need a wx.App in order to work.
 
-displaysize = wx.GetDisplaySize()
-
 dpi = map(lambda (pixels, length_mm): pixels * 25.6 / length_mm, 
-          zip(displaysize, wx.GetDisplaySizeMM()))
+          zip(wx.GetDisplaySize(), wx.GetDisplaySizeMM()))
 
 """
 Grid lines
@@ -169,7 +167,7 @@ Default cell font size
 
 FONT_SIZES = range(3, 14) + range(16, 32, 2) + range(36, 99, 4)
 
-selected_cell_brush = 127, 127, 255
+selected_cell_brush = wx.Brush(wx.Colour(127, 127, 255), wx.SOLID)
 
 default_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
 
@@ -310,30 +308,11 @@ Provides the dict 'icons' with paths to the toolbar icons.
 
 """
 
-if wx.Platform == '__WXMAC__':
-    # Mac does not support "uncommon" icon sizes
-    icon_size = (24, 24)
-    wide_icon = ""
-else:
-    icon_size = (36, 36)
-    wide_icon = "_w"
-    
+icon_size = (36, 36)
 small_icon_size = (24, 24)
+_action_path = PROG_DIR + "icons/actions/"
+_toggle_path = PROG_DIR + "icons/toggles/"
 
-theme = "Tango"
-
-_action_path = PROG_DIR + "icons/" + theme + "/" + \
-               str(icon_size[0]) + "x" + str(icon_size[1]) + \
-               "/actions/"
-               
-_action_path_small = PROG_DIR + "icons/" + theme + "/" + \
-                     str(small_icon_size[0]) + "x" + str(small_icon_size[1]) + \
-                     "/actions/"
-               
-_toggle_path = PROG_DIR + "icons/" + theme + "/" + \
-               str(small_icon_size[0]) + "x" + str(small_icon_size[1]) + \
-               "/toggles/"
-               
 icons = {"FileNew": _action_path + "filenew.png", 
          "FileOpen": _action_path + "fileopen.png", 
          "FileSave": _action_path + "filesave.png", 
@@ -346,19 +325,18 @@ icons = {"FileNew": _action_path + "filenew.png",
          "Redo": _action_path + "edit-redo.png",
          "Find": _action_path + "edit-find.png",
          "FindReplace": _action_path + "edit-find-replace.png",
-         "FormatTextBold": _action_path_small + "format-text-bold.png",
-         "FormatTextItalic": _action_path_small + "format-text-italic.png",
-         "FormatTextUnderline": _action_path_small + \
-                                            "format-text-underline.png",
-         "FormatTextStrikethrough": _action_path_small + \
+         "FormatTextBold": _action_path + "format-text-bold.png",
+         "FormatTextItalic": _action_path + "format-text-italic.png",
+         "FormatTextUnderline": _action_path + "format-text-underline.png",
+         "FormatTextStrikethrough": _action_path + \
                                             "format-text-strikethrough.png",
-         "JustifyRight": _action_path_small + "format-justify-right.png",
-         "JustifyCenter": _action_path_small + "format-justify-center.png",
-         "JustifyLeft": _action_path_small + "format-justify-left.png",
-         "AlignTop": _action_path_small + "format-text-aligntop.png",
-         "AlignCenter": _action_path_small + "format-text-aligncenter.png", 
-         "AlignBottom": _action_path_small + "format-text-alignbottom.png", 
-         "Freeze": _action_path_small + "frozen_small.png",
+         "JustifyRight": _action_path + "format-justify-right.png",
+         "JustifyCenter": _action_path + "format-justify-center.png",
+         "JustifyLeft": _action_path + "format-justify-left.png",
+         "AlignTop": _action_path + "format-text-aligntop.png",
+         "AlignCenter": _action_path + "format-text-aligncenter.png", 
+         "AlignBottom": _action_path + "format-text-alignbottom.png", 
+         "Freeze": _action_path + "frozen_small.png",
          "AllBorders": _toggle_path + "border_all.xpm",
          "LeftBorders": _toggle_path + "border_left.xpm",
          "RightBorders": _toggle_path + "border_right.xpm",
@@ -369,23 +347,11 @@ icons = {"FileNew": _action_path + "filenew.png",
          "TopBottomBorders": _toggle_path + "border_top_n_bottom.xpm",
          "SearchDirectionUp": _toggle_path + "go-down.png",
          "SearchDirectionDown": _toggle_path + "go-up.png",
-         "SearchCaseSensitive": _toggle_path + "aA" + wide_icon + ".png",
-         "SearchRegexp": _toggle_path + "regex" + wide_icon + ".png",
-         "SearchWholeword": _toggle_path + "wholeword" + wide_icon + ".png",
+         "SearchCaseSensitive": _toggle_path + "aA.png",
+         "SearchRegexp": _toggle_path + "regex.png",
+         "SearchWholeword": _toggle_path + "wholeword.png",
          }
-
-# Bitmap and position of cell overflow rects
-overflow_rects = { \
-    "RIGHT": [wx.Bitmap(_toggle_path + "arrow_right.xpm", wx.BITMAP_TYPE_XPM), 
-              lambda x, y, w, h: (x - 6, y + h / 2 - 5)], 
-    "LEFT": [wx.Bitmap(_toggle_path + "arrow_left.xpm", wx.BITMAP_TYPE_XPM), 
-              lambda x, y, w, h: (x + w + 1, y + h / 2 - 5)], 
-    "UP": [wx.Bitmap(_toggle_path + "arrow_up.xpm", wx.BITMAP_TYPE_XPM), 
-              lambda x, y, w, h: (x + w / 2 - 5, y + h + 1)], 
-    "DOWN": [wx.Bitmap(_toggle_path + "arrow_down.xpm", wx.BITMAP_TYPE_XPM), 
-              lambda x, y, w, h: (x + w / 2 - 5, y - 6)], 
-}
-
+         
 """
 Border toggles
 ==============
