@@ -96,6 +96,8 @@ class MainApplication(App):
 
         # Load filename if provided
         if self.filename is not None:
+            raise NotImplementedError
+            ## TODO
             self.main_window.make_safe(self.filename)
             self.main_window.loadfile(self.filename)
         

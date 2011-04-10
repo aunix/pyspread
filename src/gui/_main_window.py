@@ -500,29 +500,22 @@ class MainWindowEventHandlers(object):
         """Manual launch event handler"""
         
         self.main_window.actions.launch_help("Pyspread manual", "manual.html")
-        
-        event.Skip()
     
     def OnTutorial(self, event):
         """Tutorial launch event handler"""
         
-        self.main_window.actions.launch_help("Pyspread tutorial", "tutorial.html")
-        
-        event.Skip()
+        self.main_window.actions.launch_help("Pyspread tutorial", 
+                                             "tutorial.html")
         
     def OnFaq(self, event):
         """FAQ launch event handler"""
         
         self.main_window.actions.launch_help("Pyspread tutorial", "faq.html")
-        
-        event.Skip()
     
     def OnAbout(self, event):
         """About dialog event handler"""
         
-        raise NotImplementedError
-        
-        event.Skip()
+        self.main_window.interfaces.display_about(self.main_window)
     
     # Macro events
     

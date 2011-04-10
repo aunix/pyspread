@@ -35,11 +35,11 @@ import os
 import wx
 import wx.lib.agw.genericmessagedialog as GMD
 
-from _dialogs import DimensionsEntryDialog
+from _dialogs import DimensionsEntryDialog, AboutDialog
 
 
 class ModalDialogInterfaceMixin(object):
-    """Main window interfaces to model dialogs"""
+    """Main window interfaces to modal dialogs"""
     
     def get_dimensions_from_user(self, no_dim):
         """Queries grid dimensions in a model dialog and returns n-tuple
@@ -128,7 +128,16 @@ class ModalDialogInterfaceMixin(object):
         
         return choice
 
-class GuiInterfaces(ModalDialogInterfaceMixin):
+class DialogInterfaceMixin(object):
+    """Main window interfaces to dialogs that are not modal"""
+    
+    def display_about(self, parent):
+        """Displays About dialog"""
+        
+        about_dialog = AboutDialog(parent)
+    
+    
+class GuiInterfaces(DialogInterfaceMixin, ModalDialogInterfaceMixin):
     """Main window interfaces to GUI elements"""
     
     def __init__(self, main_window):

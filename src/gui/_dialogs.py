@@ -51,10 +51,10 @@ import wx.grid
 from wx.lib.wordwrap import wordwrap
 import wx.stc as stc
 
-from _pyspread._widgets import PythonSTC
-from _pyspread._interfaces import Digest, sniff, fill_wxgrid
-from _pyspread._interfaces import ALPHA_ONLY, DIGIT_ONLY, Validator
-from _pyspread.config import VERSION
+from gui._widgets import PythonSTC
+from lib._interfaces import Digest, sniff, fill_wxgrid
+from lib._interfaces import ALPHA_ONLY, DIGIT_ONLY, Validator
+from config import VERSION, PROG_DIR
 
 class ChoiceRenderer(wx.grid.PyGridCellRenderer):
     """Renders choice dialog box for grid
@@ -986,7 +986,7 @@ class AboutDialog(object):
         info.Developers = ["Martin Manns"]
         info.DocWriters = ["Martin Manns", "Bosko Markovic"]
         
-        license_file = open(parent.module_path + "/COPYING", "r")
+        license_file = open(PROG_DIR + "/COPYING", "r")
         license_text = license_file.read()
         license_file.close()
         

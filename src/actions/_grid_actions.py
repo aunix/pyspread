@@ -106,6 +106,9 @@ class FileActions(object):
         try:
             interface.open(filepath)
         except IOError:
+            statustext = "Error opening file " + filepath + "."
+            post_command_event(self.main_window, StatusBarMsg, text=statustext)
+            
             return 0
         
         # Make loading safe
