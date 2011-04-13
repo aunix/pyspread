@@ -49,13 +49,14 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
     def __init__(self, parent, *args, **kwargs):
         self.parent = parent
         
-        # The currently visible table
-        self.current_table = 0
+        self._states()
+
+        dimensions = kwargs.pop("dimensions")
         
         wx.grid.Grid.__init__(self, parent, *args, **kwargs)
         
         # Create new grid
-        self.data_array = DataArray()
+        self.data_array = DataArray(dimensions)
         post_command_event(self, GridActionNewMsg, data_array=self.data_array)
 
         _grid_table = GridTable(self, self.data_array)
@@ -77,6 +78,12 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         
         self._layout()
         self._bind()
+    
+    def _states(self):
+        """Sets grid states"""
+        
+        # The currently visible table
+        self.current_table = 0
         
     def _layout(self):
         """Initial layout of grid"""
@@ -147,6 +154,9 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
 
         parent.Bind(EVT_COMMAND_UNDO, handlers.OnUndo)
         parent.Bind(EVT_COMMAND_REDO, handlers.OnRedo)
+    
+    _get_selection = lambda self: self.actions.get_selection()
+    selection = property(_get_selection, doc="Grid selection")
 
 class GridCellEventHandlers(object):
     """Contains grid cell event handlers incl. attribute events"""

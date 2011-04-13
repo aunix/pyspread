@@ -35,7 +35,7 @@ import wx.aui
 
 import wx.lib.agw.genericmessagedialog as GMD
 
-from config import MAIN_WINDOW_ICON, MAIN_WINDOW_SIZE
+from config import MAIN_WINDOW_ICON, MAIN_WINDOW_SIZE, DEFAULT_DIM
 from config import file_approval_warning
 
 from _menubars import MainMenu
@@ -68,6 +68,8 @@ class MainWindow(wx.Frame):
         # Program states
         # --------------
         
+        self._states()
+        
         # Has the current file been changed since the last save?
         self.changed_since_save = False
         self.filepath = None
@@ -98,22 +100,31 @@ class MainWindow(wx.Frame):
         # Entry line
         self.entry_line = EntryLine(self)
         
-        # IntCtrl for table choice
-        self.table_choice = TableChoiceIntCtrl(self, 1) ## Link to grid dim here!
-        
         # Main grid
         
-        self.grid = Grid(self, -1)
-        
+        self.grid = Grid(self, -1, dimensions=DEFAULT_DIM)
+
+        # IntCtrl for table choice
+        self.table_choice = TableChoiceIntCtrl(self, DEFAULT_DIM[2])
+
         # Main window actions
         
-        self.actions = AllMainWindowActions(self)
+        self.actions = AllMainWindowActions(self, self.grid)
         
         # Layout and bindings
         
         self._set_properties()
         self._do_layout()
         self._bind()
+    
+        
+    def _states(self):
+        """Sets main window states"""
+        # Print data
+        
+        self.print_data = wx.PrintData()
+        # wx.PrintData properties setup from 
+        # http://aspn.activestate.com/ASPN/Mail/Message/wxpython-users/3471083
     
     def _set_properties(self):
         """Setup title, icon, size, scale, statusbar, main grid"""
@@ -193,6 +204,8 @@ class MainWindow(wx.Frame):
         
         # Print events
         
+        self.Bind(EVT_COMMAND_PAGE_SETUP, handlers.OnPageSetup)
+        self.Bind(EVT_COMMAND_PRINT_PREVIEW, handlers.OnPrintPreview)
         self.Bind(EVT_COMMAND_PRINT, handlers.OnPrint)
         
         # Clipboard events
@@ -224,13 +237,8 @@ class MainWindow(wx.Frame):
         """Returns safe_mode state from data_array"""
         
         return self.grid.data_array.safe_mode
-        
-    def set_safe_mode(self, value):
-        """Sets safe_mode state in data_array"""
-        
-        self.grid.data_array.safe_mode = value
 
-    safe_mode = property(get_safe_mode, set_safe_mode)
+    safe_mode = property(get_safe_mode)
 
 # End of class MainWindow
 
@@ -251,8 +259,6 @@ class MainWindowEventHandlers(object):
     def OnSaveModeEntry(self, event):
         """Save mode entry event handler"""
         
-        self.main_window.safe_mode = True
-        
         # Enable menu item for leaving save mode
         
         self.main_window.main_menu.enable_file_approve(True)
@@ -261,8 +267,6 @@ class MainWindowEventHandlers(object):
     
     def OnSaveModeExit(self, event):
         """Save mode exit event handler"""
-        
-        self.main_window.safe_mode = False
         
         # Run macros
         
@@ -330,6 +334,10 @@ class MainWindowEventHandlers(object):
         # Create new grid
         post_command_event(self.main_window, GridActionNewMsg, 
                            data_array=data_array)
+        
+        # Update TableChoiceIntCtrl
+        post_command_event(self.main_window, ResizeGridMsg, 
+                           dim=dim)
         
         # Display grid creation in status bar
         
@@ -430,9 +438,25 @@ class MainWindowEventHandlers(object):
     def OnImport(self, event):
         """File import event handler"""
         
-        raise NotImplementedError
+        # Get filepath from user
         
-        event.Skip()
+        wildcard = wildcard=" CSV file|*.*|Tab-delimited text file|*.*"
+        message = "Choose file to import."
+        style = wx.OPEN | wx.CHANGE_DIR
+        path, filterindex = self.interfaces.get_filepath_findex_from_user( \
+                                    wildcard, message, style)
+        
+        if path is None:
+            return
+        
+        # Get generator of import data
+        import_data = self.main_window.actions.import_file(path, filterindex)
+        
+        if import_data is None:
+            return
+        
+        # Paste import data to grid
+        ##TODO
         
     def OnExport(self, event):
         """File export event handler"""
@@ -453,16 +477,51 @@ class MainWindowEventHandlers(object):
         if self.main_window.interfaces.get_warning_choice(msg, short_msg) == \
                 wx.ID_YES:
             # Leave safe mode
-            post_command_event(self.main_window, SaveModeExitMsg)
+            self.main_window.grid.actions.leave_save_mode()
+            
+            # Display safe mode end in status bar
+        
+            statustext = "Safe mode deactivated."
+            post_command_event(self.main_window, StatusBarMsg, text=statustext)
     
     # Print events
+    
+    def OnPageSetup(self, event):
+        """Page setup handler for printing framework"""
+        
+        print_data = self.main_window.print_data
+        new_print_data = self.main_window.interfaces.get_print_setup(print_data)
+        self.main_window.print_data = new_print_data
+
+    
+    def _get_print_area(self):
+        """Returns selection bounding box or visible area"""
+        
+        # Get print area from current selection
+        selection = self.main_window.grid.selection
+        print_area = selection.get_bbox()
+        
+        # If there is no selection use the visible area on the screen
+        if print_area is None:
+            print_area = self.main_window.grid.actions.get_visible_area()
+        
+        return print_area
+    
+    def OnPrintPreview(self, event):
+        """Print preview handler"""
+        
+        print_area = self._get_print_area()
+        print_data = self.main_window.print_data
+        
+        self.main_window.actions.print_preview(print_area, print_data)
     
     def OnPrint(self, event):
         """Print event handler"""
         
-        raise NotImplementedError
+        print_area = self._get_print_area()
+        print_data = self.main_window.print_data
         
-        event.Skip()
+        self.main_window.actions.printout(print_area, print_data)
     
     # Clipboard events
 

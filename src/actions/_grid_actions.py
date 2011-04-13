@@ -73,16 +73,29 @@ class FileActions(object):
         # Check if the sig is valid for the sigfile
         return verify(sigfilename, filename)
 
+    def enter_save_mode(self):
+        """Enters save mode"""
+        
+        self.data_array.safe_mode = True
+
+    def leave_save_mode(self):
+        """Leaves save mode"""
+        
+        self.data_array.safe_mode = False
+        
+        
     def approve(self, filepath):
         """Sets safe mode if signature missing of invalid"""
         
         if self.validate_signature(filepath):
+            self.leave_save_mode()
             post_command_event(self.main_window, SaveModeExitMsg)
             
             statustext = "Valid signature found. File is trusted."
             post_command_event(self.main_window, StatusBarMsg, text=statustext)
             
         else:
+            self.enter_save_mode()
             post_command_event(self.main_window, SaveModeEntryMsg)
             
             statustext = "File is not properly signed. Safe mode " + \
@@ -105,17 +118,25 @@ class FileActions(object):
         
         try:
             interface.open(filepath)
+            
         except IOError:
             statustext = "Error opening file " + filepath + "."
             post_command_event(self.main_window, StatusBarMsg, text=statustext)
             
-            return 0
+            return False
         
         # Make loading safe
         self.approve(filepath)
         
         # Get cell values
-        self.grid.data_array.sgrid = interface.get_values()
+        try:
+            self.grid.data_array.sgrid = interface.get_values()
+            
+        except IOError:
+            statustext = "Error opening file " + filepath + "."
+            post_command_event(self.main_window, StatusBarMsg, text=statustext)
+            
+            return False
         
         interface.close()
         
@@ -260,6 +281,8 @@ class GridActions(object):
     
     def __init__(self):
         self.main_window.Bind(EVT_COMMAND_GRID_ACTION_NEW, self.new)
+        self.main_window.Bind(EVT_COMMAND_GRID_ACTION_TABLE_SWITCH, 
+                              self.switch_to_table)
     
     def new(self, event):
         """Creates a new spreadsheet. Expects data_array in event."""
@@ -273,35 +296,70 @@ class GridActions(object):
     def zoom(self):
         pass
     
+    def get_visible_area(self):
+        """Returns visible area
+       
+        Format is a tuple of the top left tuple and the lower right tuple
+        
+        """
+        
+        grid = self.grid
+        
+        top = grid.YToRow(grid.GetViewStart()[1] * grid.ScrollLineX)
+        left = grid.XToCol(grid.GetViewStart()[0] * grid.ScrollLineY)
+        
+        # Now start at top left for determining the bottom right visible cell
+        
+        bottom, right = top, left 
+        
+        while grid.IsVisible(bottom, left, wholeCellVisible=False):
+            bottom += 1
+            
+        while grid.IsVisible(top, right, wholeCellVisible=False):
+            right += 1
+            
+        # The derived lower right cell is *NOT* visible
+        
+        bottom -= 1
+        right -= 1
+        
+        return (top, left), (bottom, right)
+    
     def get_cursor(self):
         """Returns current grid cursor cell"""
         
         return self.grid.key
 
-    def _switch_to_table(self, newtable):
-        """Switches grid to table"""
+    def switch_to_table(self, event):
+        """Switches grid to table
         
-        raise NotImplementedError
-#        if newtable in xrange(self.Actions.shape[2]):
-#            # Update the whole grid including the empty cells
-#            
-#            self.grid.current_table = newtable
-#            
-#            self.grid.ClearGrid()
-#            self.grid.Update()
-#            
-#            self.grid.zoom_rows()
-#            self.grid.zoom_cols()
-#            self.grid.zoom_labels()
-#            
-#            post_entryline_text(self.grid, "")
+        Parameters
+        ----------
+        
+        event.newtable: Integer
+        \tTable that the grid is switched to
+        
+        """
+        
+        newtable = event.newtable
+        
+        no_tabs = self.grid.data_array.shape[2]
+        
+        if 0 <= newtable <= no_tabs:
+            self.grid.current_table = newtable
+            
+            ##self.grid.zoom_rows()
+            ##self.grid.zoom_cols()
+            ##self.grid.zoom_labels()
+            
+            ##post_entryline_text(self.grid, "")
 
     def set_cursor(self, value):
         """Changes the grid cursor cell."""
         
         if len(value) == 3:
             row, col, tab = value
-            self._switch_to_table(tab)
+            self.switch_to_table(tab)
         else:
             row, col = value
         
@@ -311,8 +369,139 @@ class GridActions(object):
         
     cursor = property(get_cursor, set_cursor)
     
+class Selection(object):
+    """Represents grid selection"""
+    
+    def __init__(self, block_top_left, block_bottom_right, rows, cols, cells):
+        self.block_tl = block_top_left
+        self.block_br = block_bottom_right
+        self.rows = rows
+        self.cols = cols
+        self.cells = cells
+    
+    def __str__(self):
+        """String output for printing selection"""
+        
+        return "Selection" + str( \
+            (self.block_tl, 
+             self.block_br, 
+             self.rows,
+             self.cols, 
+             self.cells))
+    
+    def __contains__(self, cell):
+        """Returns True iif cell is in selection
+        
+        Parameters
+        ----------
+        
+        cell: 2-Tuple
+        \tIndex of cell that is checked if it is inside selection.
+        
+        """
+        
+        assert len(cell) == 2
+        
+        cell_row, cell_col = cell
+        
+        # Block selections
+        
+        for top_left, bottom_right in zip(self.block_tl, self.block_br):
+            top, left = top_left
+            bottom, right = bottom_right
+            
+            if top <= cell_row <= bottom and left <= cell_col <= right:
+                return True
+        
+        # Row and column selections
+        
+        if cell_row in self.rows or cell_col in self.cols:
+            return True
+        
+        # Cell selections
+        
+        if cell in self.cells:
+            return True
+        
+        return False
+
+    def get_bbox(self):
+        """Returns top left and bottom right of bounding box
+        
+        A bounding box is the smallest rectangle that contains all selections.
+        
+        """
+        
+        bb_top, bb_left, bb_bottom, bb_right = [None] * 4
+        
+        # Block selections
+        
+        for top_left, bottom_right in zip(self.block_tl, self.block_br):
+            top, left = top_left
+            bottom, right = bottom_right
+            
+            if bb_top is None or bb_top > top:
+                bb_top = top
+            if bb_left is None or bb_left > left:
+                bb_left = left
+            if bb_bottom is None or bb_bottom < bottom:
+                bb_bottom = bottom
+            if bb_right is None or bb_right > right:
+                bb_right = right
+        
+        # Row and column selections
+        
+        for row in self.rows:
+            if bb_top is None or bb_top > row:
+                bb_top = row
+            if bb_bottom is None or bb_bottom < row:
+                bb_bottom = row
+        
+        for col in self.cols:
+            if bb_left is None or bb_left > col:
+                bb_left = col
+            if bb_right is None or bb_right < col:
+                bb_right = col
+        
+        # Cell selections
+        
+        for cell in self.cells:
+            cell_row, cell_col = cell
+            
+            if bb_top is None or bb_top > cell_row:
+                bb_top = cell_row
+            if bb_left is None or bb_left > cell_col:
+                bb_left = cell_col
+            if bb_bottom is None or bb_bottom < cell_row:
+                bb_bottom = cell_row
+            if bb_right is None or bb_right > cell_col:
+                bb_right = cell_col
+        
+        if all(val is None for val in [bb_top, bb_left, bb_bottom, bb_right]):
+            return None
+        
+        return ((bb_top, bb_left), (bb_bottom, bb_right))
+
 class SelectionActions(object):
     """Actions that affect the grid selection"""
+    
+    def get_selection(self):
+        """Returns selected cells in grid as Selection object"""
+        
+        # GetSelectedCells: individual cells selected by ctrl-clicking
+        # GetSelectedRows: rows selected by clicking on the labels
+        # GetSelectedCols: cols selected by clicking on the labels
+        # GetSelectionBlockTopLeft
+        # GetSelectionBlockBottomRight: For blocks of cells selected by dragging
+        # across the grid cells.
+        
+        block_top_left = self.grid.GetSelectionBlockTopLeft()
+        block_bottom_right = self.grid.GetSelectionBlockBottomRight()
+        rows = self.grid.GetSelectedRows()
+        cols = self.grid.GetSelectedCols()
+        cells = self.grid.GetSelectedCells()
+        
+        return Selection(block_top_left, block_bottom_right, rows, cols, cells)
     
     def select_cell(self, row, col, add_to_selected=False):
         self.grid.SelectBlock(row, col, row, col, addToSelected=add_to_selected)

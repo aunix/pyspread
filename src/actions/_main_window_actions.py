@@ -43,6 +43,7 @@ Provides:
 
 """
 
+import csv
 import os
 
 import wx
@@ -50,11 +51,119 @@ import wx.html
 
 from config import DEFAULT_FILENAME, HELP_SIZE, HELP_DIR
 
+from gui._printout import PrintCanvas, Printout
+
+class CsvGenerator(object):
+    """Generator of generators of csv data cell content"""
+    
+    def __init__(self, path, dialect, digest_types, has_header):
+        self.path = path
+        self.csvfilename = os.path.split(path)[1]
+        
+        self.dialect = dialect
+        self.digest_types = digest_types
+        self.has_header = has_header
+        
+        self._get_csv_lines_gen()
+        
+    def _get_csv_cells_gen(self, first_line):
+        """Generator of values in a csv line"""
+        
+        digest_types = self.digest_types
+        
+        for j, value in enumerate(line):
+            if first_line:
+                digest = lambda x: x
+            else:
+                try:
+                    digest = Digest(acceptable_types=[digest_types[j]])
+                except IndexError:
+                    digest = Digest(acceptable_types=[digest_types[0]])
+            try:
+                digest_res = digest(value)
+                
+                if digest_res is not None and digest_res != "\b" and \
+                   digest_key is not types.CodeType:
+                    digest_res = repr(digest_res)
+                elif digest_res == "\b":
+                    digest_res = None
+                
+            except Exception, err:
+                digest_res = str(err)
+            
+            yield digest_res
+    
+    def _get_csv_lines_gen(self):
+        """Generator of generators of csv data cell content"""
+
+        # Getting a generator of generators that yield csv data
+        
+        csv_reader = csv.reader(self.path, self.dialect)
+        first_line = self.has_header
+        
+        try:
+            for line in csv_reader:
+                yield self._get_csv_cells_gen(first_line)
+                first_line = False
+                                              
+        except Error, err:
+            msg = 'The file "' + self.csvfilename + '" only partly loaded.' + \
+                  '\n \nError message:\n' + str(err)
+            short_msg = 'Error reading CSV file'
+            self.main_window.interfaces.display_warning(msg, short_msg)
+
 class ExchangeActions(object):
     """Actions for foreign format import and export"""
     
-    def __import(self):
-        raise NotImplementedError
+    def _import_csv(self, path):
+        """CSV import workflow"""
+
+        # Get csv info
+        
+        csv_info = self.main_window.interfaces.get_csv_info(path)
+        
+        if csv_info is None:
+            return
+        
+        try:
+            dialect, digest_types, has_header = csv_info
+        except TypeError:
+            return
+        
+        return CsvGenerator(path, dialect, digest_types, has_header)
+    
+    def _import_txt(self, path):
+        """Whitespace-delimited txt import workflow. This should be fast."""
+        ## TODO
+        topleftcell = self.MainGrid.controller.cursor
+        
+        txt_interface = TxtInterfaces(path)
+        txt_interface.read(self.MainGrid.model.pysgrid, key=topleftcell)
+    
+    def import_file(self, filepath, filterindex):
+        """Imports external file
+        
+        Parameters
+        ----------
+        
+        filepath: String
+        \tPath of import file
+        filterindex: Integer
+        \tIndex for type of file, 0: csv, 1: tab-delimited text file
+        
+        """
+        
+        if filterindex == 0:
+            # CSV import option choice
+            return self._import_csv(filepath)
+        elif filterindex == 1:
+            # TXT import option choice
+            return self._import_txt(filepath)
+        else:
+            msg = "Unknown import choice" + str(filterindex)
+            short_msg = 'Error reading CSV file'
+            
+            self.main_window.interfaces.display_warning(msg, short_msg)
 
     def export(self):
         raise NotImplementedError
@@ -63,8 +172,52 @@ class ExchangeActions(object):
 class PrintActions(object):
     """Actions for printing"""
     
-    def __print(self):
-        raise NotImplementedError
+    def print_preview(self, print_area, print_data):
+        """Launch print preview"""
+        
+        pdd = wx.PrintDialogData(print_data)
+        
+        # Create the print canvas
+        canvas = PrintCanvas(self.main_window, self.grid, print_area)
+        
+        printout = Printout(canvas)
+        printout2 = Printout(canvas)
+        
+        self.preview = wx.PrintPreview(printout, printout2, print_data)
+
+        if not self.preview.Ok():
+            print "Houston, we have a problem...\n"
+            return
+
+        pfrm = wx.PreviewFrame(self.preview, self.main_window, "Print preview")
+
+        pfrm.Initialize()
+        pfrm.SetPosition(self.main_window.GetPosition())
+        pfrm.SetSize(self.main_window.GetSize())
+        pfrm.Show(True)
+    
+    def printout(self, print_area, print_data):
+        """Print out print area
+        
+        See:
+        http://aspn.activestate.com/ASPN/Mail/Message/wxpython-users/3471083
+        
+        """
+        
+        pdd = wx.PrintDialogData(print_data)
+        printer = wx.Printer(pdd)
+        
+        # Create the print canvas
+        canvas = PrintCanvas(self.main_window, self.grid, print_area)
+        
+        printout = Printout(canvas)
+        
+        if printer.Print(self.main_window, printout, True):
+            self.print_data = \
+                wx.PrintData(printer.GetPrintDialogData().GetPrintData())
+        
+        printout.Destroy()
+        canvas.Destroy()
 
 
 class ClipboardActions(object):
@@ -139,8 +292,9 @@ class AllMainWindowActions(ExchangeActions, PrintActions,
                            HelpActions):
     """All main window actions as a bundle"""
     
-    def __init__(self, main_window):
+    def __init__(self, main_window, grid):
         self.main_window = main_window
+        self.grid = grid
         
         ExchangeActions.__init__(self)
         PrintActions.__init__(self)

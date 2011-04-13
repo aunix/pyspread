@@ -27,71 +27,125 @@ class TestFileActions(object):
     def test_validate_signature(self):
         """Tests signature validation"""
         
-        # Test wrong file name
-
-        filename_wrong = "test-1.pys"
-        class Event(object):
-            attr = {"interface": PysInterface}
-        event = Event()
-        event.attr["filepath"] = filename_wrong
-        
-        assert self.grid.actions.open(event) == 0
-        
-        # Test non-existent sig files
+        # Test missing sig file
         filename_no_sig = "test2.pys"
+        assert not self.grid.actions.validate_signature(filename_no_sig)
         
-        post_command_event(self.main_window, GridActionOpenMsg, 
-            attr={"filepath": filename_no_sig, "interface": PysInterface})
-        
-        assert self.grid.data_array.safe_mode
-        
-        # Test valid sig files
+        # Test valid sig file
         filename_valid_sig = "test1.pys"
-        post_command_event(self.main_window, GridActionOpenMsg, 
-            attr={"filepath": filename_valid_sig, "interface": PysInterface})
-            
-        assert not self.grid.data_array.safe_mode
+        assert self.grid.actions.validate_signature(filename_valid_sig)
         
-        # Test invalid sig files
+        # Test invalid sig file
         filename_invalid_sig = "test3.pys"
-        post_command_event(self.main_window, GridActionOpenMsg, 
-            attr={"filepath": filename_invalid_sig, "interface": PysInterface})
-        assert self.grid.data_array.safe_mode
+        assert not self.grid.actions.validate_signature(filename_invalid_sig)
 
     def test_approve(self):
         
         # Test if safe_mode is correctly set for invalid sig
+        filename_invalid_sig = "test3.pys"
+        
+        self.grid.actions.approve(filename_invalid_sig)
+        
+        assert self.grid.data_array.safe_mode
         
         # Test if safe_mode is correctly set for valid sig
         
+        filename_valid_sig = "test1.pys"
+        
+        self.grid.actions.approve(filename_valid_sig)
+            
+        assert not self.grid.data_array.safe_mode
+        
         # Test if safe_mode is correctly set for missing sig
+        filename_no_sig = "test2.pys"
+        
+        self.grid.actions.approve(filename_no_sig)
+        
+        assert self.grid.data_array.safe_mode
         
         # Test if safe_mode is correctly set for io-error sig
         
-        pass
+        filename_not_permitted = "test6.pys"
+        
+        os.chmod(filename_not_permitted, 0200)
+        os.chmod(filename_not_permitted + ".sig", 0200)
+        
+        self.grid.actions.approve(filename_not_permitted)
+        
+        assert self.grid.data_array.safe_mode
+        
+        os.chmod(filename_not_permitted, 0644)
+        os.chmod(filename_not_permitted + ".sig", 0644)
         
     def test_open(self):
         """Tests open functionality"""
-        
-        # Test missing event attributes
-        
-        # Test wrong event attribute types
+
+        class Event(object):
+            attr = {"interface": PysInterface}
+        event = Event()
         
         # Test missing file
+
+        filename_wrong = "test-1.pys"
+
+        event.attr["filepath"] = filename_wrong
+        
+        assert not self.grid.actions.open(event)
         
         # Test unaccessible file
         
+        filename_not_permitted = "test6.pys"
+        os.chmod(filename_not_permitted, 0200)
+        
+        event.attr["filepath"] = filename_not_permitted
+        assert not self.grid.actions.open(event)
+        
+        os.chmod(filename_not_permitted, 0644)
+        
         # Test empty file
+        filename_empty = "test5.pys"
+        
+        event.attr["filepath"] = filename_empty
+        assert not self.grid.actions.open(event)
+        
+        assert self.grid.data_array.safe_mode # sig is also empty
+        
+        # Test invalid sig files
+        filename_invalid_sig = "test3.pys"
+        
+        event.attr["filepath"] = filename_invalid_sig
+        self.grid.actions.open(event)
+        
+        assert self.grid.data_array.safe_mode
         
         # Test file with sig
+        filename_valid_sig = "test1.pys"
+        
+        event.attr["filepath"] = filename_valid_sig
+        self.grid.actions.open(event)
+            
+        assert not self.grid.data_array.safe_mode
         
         # Test file without sig
+        filename_no_sig = "test2.pys"
+        
+        event.attr["filepath"] = filename_no_sig
+        self.grid.actions.open(event)
+        
+        assert self.grid.data_array.safe_mode
         
         # Test grid size for valid file
+        filename_gridsize = "test4.pys"
+        
+        event.attr["filepath"] = filename_gridsize
+        self.grid.actions.open(event)
+        
+        assert not self.grid.data_array.safe_mode
+        assert self.grid.data_array.shape == (1111, 2222, 3333)
         
         # Test grid content for valid file
         
-        pass
+        assert self.grid.data_array[0, 0, 0] == "test4"
     
     def test_save(self):
         """Tests save functionality"""
@@ -130,6 +184,13 @@ class TestFileActions(object):
         
         pass
 
+class TestMacroActions(object):
+    pass
+
+
+class TestUnRedoActions(object):
+    pass
+
 
 class TestGridActions(object):
     """Grid level grid actions test class"""
@@ -145,6 +206,7 @@ class TestGridActions(object):
         
     def test_new(self):
         """Tests creation of a new spreadsheets"""
+        
         no_tests = 10
         
         dims = vartypes.getints(1, 1000000, no_tests*3)
@@ -156,4 +218,51 @@ class TestGridActions(object):
             self.event.data_array = data_array
             self.grid.actions.new(self.event)
             assert self.grid.GetTable().data_array.shape == dim
+    
+
+
+class TestSelection(object):
+    """Selection class test class"""
+    
+    def setup_method(self, method):
+        self.SelectionCls = actions._grid_actions.Selection
+
+    def test_contains(self):
+        """Tests __contains__ functionality of selection class"""
+        
+        # Test block selection
+        
+        selection = self.SelectionCls([(4, 5)], [(100, 200)], [], [], [])
+        cells_in_selection = ((i, j) for i in xrange(4, 100, 5) 
+                                     for j in xrange(5, 200, 5))
+        
+        for cell in cells_in_selection:
+            assert cell in selection
+        
+        cells_not_in_selection = \
+            [(0, 0), (0, 1), (1, 0), (1, 1), (4, 4), (3, 5),
+             (100, 201), (101, 200), (101, 201), (10**10, 10**10),
+             [0, 0]]
+        
+        for cell in cells_not_in_selection:
+            assert cell not in selection
+        
+        # Test row selection
+        
+        # Test column selection
+        
+        # Test cell selection
+    
+    def test_get_bbox(self):
+        """Tests bounding boxes of selection class"""
+        
+        sel_tl, sel_br = [(4, 5)], [(100, 200)]
+        
+        selection = self.SelectionCls(sel_tl, sel_br, [], [], [])
+        bbox_tl, bbox_br = selection.get_bbox() 
+        assert bbox_tl == sel_tl[0]
+        assert bbox_br == sel_br[0]
+        
+class TestSelectionActions(object):
+    pass
     

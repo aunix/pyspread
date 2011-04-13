@@ -37,7 +37,7 @@ Provides:
   7. BitmapToggleButton: Button that toggles through a list of bitmaps
   8. EntryLine: The line for entering cell code
   9. StatusBar: Main window statusbar
-  10. TableChoiceCombobox: ComboBox for choosing the current grid table
+  10. TableChoiceIntCtrl: IntCtrl for choosing the current grid table
 
 """
 
@@ -49,7 +49,8 @@ import wx.combo
 import wx.stc  as  stc
 from wx.lib.intctrl import IntCtrl, EVT_INT
 
-from _events import EVT_STATUSBAR_MSG
+from _events import post_command_event, GridActionTableSwitchMsg 
+from _events import EVT_STATUSBAR_MSG, EVT_COMMAND_RESIZE_GRID
 
 from config import faces, text_styles, fold_symbol_style
 from config import icons, icon_size, pen_styles
@@ -531,7 +532,8 @@ class EntryLine(wx.TextCtrl):
         if self.ignore_changes:
             return
         
-        post_grid_text(self.parent, event.GetString())
+        post_command_event(self, GridActionTableSwitchMsg, 
+                           newtable=event.GetString())
         
         event.Skip()
         
@@ -594,8 +596,8 @@ class TableChoiceIntCtrl(IntCtrl):
         
         self.Bind(EVT_INT, self.OnInt)
         self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
-        
-        ##self.parent.Bind(EVT_GRID_SHAPE, self.OnShapeChange)
+        self.parent.Bind(EVT_COMMAND_RESIZE_GRID, self.OnResizeGrid)
+
 
     def change_max(self, no_tabs):
         """Updates to a new number of tables
@@ -617,10 +619,18 @@ class TableChoiceIntCtrl(IntCtrl):
         if no_tabs != self.no_tabs:
             self.SetMax(no_tabs - 1)
     
+    # Event handlers
+    
+    def OnResizeGrid(self, event):
+        """Event handler for grid resizing"""
+        
+        self.change_max(event.dim[2])
+        
     def OnInt(self, event):
         """IntCtrl event method that updates the current table"""
         
-        post_table_change(self.parent, event.GetValue())
+        post_command_event(self, GridActionTableSwitchMsg, 
+                           newtable=event.GetValue())
         
         event.Skip()
     
@@ -641,3 +651,6 @@ class TableChoiceIntCtrl(IntCtrl):
         self.change_max(event.shape[2])
         
         event.Skip()
+        
+        
+# end of class TableChoiceIntCtrl

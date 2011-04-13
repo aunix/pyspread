@@ -126,6 +126,8 @@ ApproveMsg, EVT_COMMAND_APPROVE = new_command_event()
 
 # Print events
 
+PageSetupMsg, EVT_COMMAND_PAGE_SETUP = new_command_event()
+PrintPreviewMsg, EVT_COMMAND_PRINT_PREVIEW = new_command_event()
 PrintMsg, EVT_COMMAND_PRINT = new_command_event()
 
 # Clipboard events
@@ -175,6 +177,8 @@ GridActionNewMsg, EVT_COMMAND_GRID_ACTION_NEW = new_command_event()
 GridActionOpenMsg, EVT_COMMAND_GRID_ACTION_OPEN = new_command_event() 
 GridActionSaveMsg, EVT_COMMAND_GRID_ACTION_SAVE = new_command_event() 
 
+GridActionTableSwitchMsg, EVT_COMMAND_GRID_ACTION_TABLE_SWITCH = \
+                                                  new_command_event() 
 
 # EntryLine
 # =========

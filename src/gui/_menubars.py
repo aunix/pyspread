@@ -172,15 +172,19 @@ class MainMenu(_filledMenu):
             [item, [SaveAsMsg, "Save &As\tShift+Ctrl+s", 
                 "Save spreadsheet to a new file"], wx.ID_SAVEAS], \
             ["Separator"], \
-            [item, [ImportMsg, "&Import", "Import a file " + \
-                "(Supported formats: CSV, Tab separated text)"]], \
+            [item, [ImportMsg, "&Import", "Import a file and paste it into " + \
+                "current grid (Supported formats: CSV, Tab separated text)"]], \
             [item, [ExportMsg, "&Export", 
-                "Export a file (Supported formats: CSV)"]], \
+                "Export selection to file (Supported formats: CSV)"]], \
             ["Separator"], \
             [item, [ApproveMsg, "&Approve file", 
                 "Approve, unfreeze and sign the current file"]], \
             ["Separator"], \
-            [item, [PrintMsg, "&Print...\tCtrl+p", 
+            [item, [PageSetupMsg, "Page setup", 
+                "Setup printer page"]], \
+            [item, [PrintPreviewMsg, "Print preview", 
+                "Print previe&w", wx.ID_PREVIEW]], \
+            [item, [PrintMsg, "&Print\tCtrl+p", 
                 "Print current spreadsheet", wx.ID_PRINT]], \
             ["Separator"], \
             [item, [CloseMsg, "E&xit\tCtrl+q", "Exit Program", wx.ID_EXIT]]] \
@@ -222,20 +226,20 @@ class MainMenu(_filledMenu):
         [wx.Menu, "F&ormat", [ \
             [wx.Menu, "Font", [ \
                 [item, [FontMsg, str(font), 
-                        "Zoom " + str(font)] \
+                        "Font " + str(font)] \
                 ] for font in get_font_list()]
                 ], \
             [wx.Menu, "Font size", [ \
                 [item, [FontSizeMsg, str(size), 
-                        "Zoom " + str(size)] \
+                        "Font size " + str(size) + "pt"] \
                 ] for size in FONT_SIZES]
                 ], \
             [item, [FontBoldMsg, "Bold", 
-                        "Toggles bold font."]],
+                        "Toggles bold font.", wx.ID_BOLD]],
             [item, [FontItalicsMsg, "Italics", 
-                        "Toggles italics font."]],
+                        "Toggles italics font.", wx.ID_ITALIC]],
             [item, [FontUnderlineMsg, "Underline", 
-                        "Toggles underline."]],
+                        "Toggles underline.", wx.ID_UNDERLINE]],
             [item, [FontStrikethroughMsg, "Strikethrough", 
                         "Toggles strikethrough."]],
             ["Separator"], \
@@ -261,7 +265,7 @@ class MainMenu(_filledMenu):
         [wx.Menu, "&View", [ \
             [item, [RefreshSelectionMsg, "Refresh selected cells\tF5", 
                         "Refresh selected cells even when frozen"]],
-            [item, [GotoCellMsg, "Go to cell ...", 
+            [item, [GotoCellMsg, "Go to cell", 
                         "Moves the grid to a cell."]],
             [wx.Menu, "Zoom", [ \
                 [item, [ZoomMsg, str(int(zoom)) + "%", 

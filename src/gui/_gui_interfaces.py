@@ -30,12 +30,13 @@ Provides:
 
 """
 
+import csv
 import os
 
 import wx
 import wx.lib.agw.genericmessagedialog as GMD
 
-from _dialogs import DimensionsEntryDialog, AboutDialog
+from _dialogs import DimensionsEntryDialog, AboutDialog, CsvImportDialog
 
 
 class ModalDialogInterfaceMixin(object):
@@ -128,6 +129,67 @@ class ModalDialogInterfaceMixin(object):
         
         return choice
 
+    def get_print_setup(self, print_data):
+        """Opens print setup dialog and returns print_data"""
+        
+        psd = wx.PageSetupDialogData(print_data)
+        ##psd.EnablePrinter(False) 
+        psd.CalculatePaperSizeFromId()
+        dlg = wx.PageSetupDialog(self.main_window, psd)
+        dlg.ShowModal()
+
+        # this makes a copy of the wx.PrintData instead of just saving
+        # a reference to the one inside the PrintDialogData that will
+        # be destroyed when the dialog is destroyed
+        new_print_data = wx.PrintData(dlg.GetPageSetupData().GetPrintData())
+        
+        dlg.Destroy()
+        
+        return new_print_data
+    
+    def get_csv_info(self, path):
+        """Launches the csv dialog and returns csv_info
+        
+        csv_info is a tuple of dialect, digest_types, has_header
+        
+        Parameters
+        ----------
+        
+        path: String
+        \tFile path of csv file
+        
+        """
+        
+        csvfilename = os.path.split(path)[1]
+        
+        try:
+            filterdlg = CsvImportDialog(self.main_window, csvfilepath=path)
+            
+        except csv.Error, err:
+            # Display modal warning dialog
+            
+            msg = csvfilename + '" does not seem to be a valid CSV file.' + \
+                '\n \nOpening it yielded the error:\n' + str(err)
+            short_msg = 'Error reading CSV file'
+            
+            self.display_warning(msg, short_msg)
+                
+            return
+        
+        if filterdlg.ShowModal() == wx.ID_OK:
+            dialect, has_header = filterdlg.csvwidgets.get_dialect()
+            digest_types = filterdlg.grid.dtypes
+            
+        else:
+            filterdlg.Destroy()
+            
+            return
+        
+        filterdlg.Destroy()
+        
+        return dialect, has_header, digest_types
+
+
 class DialogInterfaceMixin(object):
     """Main window interfaces to dialogs that are not modal"""
     
@@ -142,3 +204,4 @@ class GuiInterfaces(DialogInterfaceMixin, ModalDialogInterfaceMixin):
     
     def __init__(self, main_window):
         self.main_window = main_window
+        

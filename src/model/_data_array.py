@@ -43,7 +43,7 @@ import numpy
 
 from lib.irange import irange, slice_range
 from lib._interfaces import sorted_keys, string_match, Digest, UserString
-from config import default_cell_attributes, MAX_UNREDO, DEFAULT_DIM
+from config import default_cell_attributes, MAX_UNREDO
 
 S = None
 
@@ -64,7 +64,7 @@ class DataArray(object):
 
     """
         
-    def __init__(self, dimensions=DEFAULT_DIM):
+    def __init__(self, dimensions):
         """ Init
         
         Parameters
