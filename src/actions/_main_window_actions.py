@@ -64,15 +64,15 @@ class CsvGenerator(object):
         self.digest_types = digest_types
         self.has_header = has_header
         
-        self._get_csv_lines_gen()
+        self.first_line = False
         
-    def _get_csv_cells_gen(self, first_line):
+    def _get_csv_cells_gen(self, line):
         """Generator of values in a csv line"""
         
         digest_types = self.digest_types
         
         for j, value in enumerate(line):
-            if first_line:
+            if self.first_line:
                 digest = lambda x: x
             else:
                 try:
@@ -93,17 +93,17 @@ class CsvGenerator(object):
             
             yield digest_res
     
-    def _get_csv_lines_gen(self):
+    def get_csv_lines_gen(self):
         """Generator of generators of csv data cell content"""
 
         # Getting a generator of generators that yield csv data
         
         csv_reader = csv.reader(self.path, self.dialect)
-        first_line = self.has_header
+        self.first_line = self.has_header
         
         try:
             for line in csv_reader:
-                yield self._get_csv_cells_gen(first_line)
+                yield self._get_csv_cells_gen(line)
                 first_line = False
                                               
         except Error, err:
@@ -130,7 +130,9 @@ class ExchangeActions(object):
         except TypeError:
             return
         
-        return CsvGenerator(path, dialect, digest_types, has_header)
+        csvgen = CsvGenerator(path, dialect, digest_types, has_header)
+        
+        return csvgen.get_csv_lines_gen()
     
     def _import_txt(self, path):
         """Whitespace-delimited txt import workflow. This should be fast."""

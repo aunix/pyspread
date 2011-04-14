@@ -51,6 +51,8 @@ from gui._grid_table import GridTable
 from gui._events import *
 from lib._interfaces import sign, verify, is_pyme_present
 
+from actions._grid_cell_actions import CellActions
+
 class FileActions(object):
     """File actions on the grid"""
     
@@ -229,7 +231,39 @@ class TableTabActionsMixin(object):
 class TableActions(TableRowActionsMixin, TableColumnActionsMixin, 
                    TableTabActionsMixin):
     """Table controller actions"""
+
+    def paste(self, tl_key, data):
+        """Pastes data into grid table starting at top left cell tl_key
         
+        Parameters
+        ----------
+        
+        ul_key: Tuple
+        \key of top left cell of paste area
+        data: iterable of iterables where inner iterable returns string
+        
+        """
+        
+        set_cell_code = self.cell_actions.set_cell_code
+        
+        try:
+            tl_row, tl_col, tl_tab = tl_key
+        
+        except ValueError:
+            tl_row, tl_col = tl_key
+            tl_tab = self.grid.current_table
+        
+        for src_col, col_data in enumerate(data):
+            target_col = tl_col + src_col
+            
+            for src_row, cell_data in enumerate(col_data):
+                target_row = tl_row + src_row
+                
+                key = target_row, target_col, tl_tab
+                
+                set_cell_code(key, cell_data)
+                
+
     def OnShapeChange(self, event):
         """Grid shape change event handler"""
         
@@ -545,6 +579,8 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
         self.main_window = grid.parent
         self.grid = grid
         self.data_array = data_array
+        
+        self.cell_actions = CellActions(grid, data_array)
         
         FileActions.__init__(self)
         TableActions.__init__(self)

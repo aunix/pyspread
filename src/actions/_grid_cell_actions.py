@@ -41,9 +41,6 @@ Provides:
 class CellTextActions(object):
     """Cell text controller prototype"""
     
-    def __init__(self):
-        pass
-    
     def set_text_font(self, key, font):
         """Sets text font for key cell"""
         
@@ -77,9 +74,6 @@ class CellTextActions(object):
 class CellBackgroundActions(object):
     """Cell background controller prototype"""
 
-    def __init__(self):
-        pass
-
     def set_background_color(self, key, color):
         """Sets text font for key cell"""
         
@@ -88,9 +82,6 @@ class CellBackgroundActions(object):
     
 class CellBorderActions(object):
     """Cell border controller prototype"""
-
-    def __init__(self):
-        pass
 
     def set_cell_border_color(self, key, color):
         """Sets text font for key cell"""
@@ -112,14 +103,15 @@ class CellAttributeActions(CellTextActions, CellBackgroundActions,
                               CellBorderActions):
     """Cell attribute controller prototype"""
 
-    def __init__(self):
-        pass
+    pass
 
 class CellActions(CellAttributeActions):
     """Cell controller prototype"""
 
-    def __init__(self):
-        pass
+    def __init__(self, grid, data_array):
+        self.main_window = grid.parent
+        self.grid = grid
+        self.data_array = data_array
 
     def get_cell_code(self):
         """Gets code for key cell"""
@@ -129,7 +121,7 @@ class CellActions(CellAttributeActions):
     def set_cell_code(self,  key,  code):
         """Sets code for key cell"""
         
-        raise NotImplementedError
+        self.data_array[key] = code
         
     def delete_cell(self,  key):
         """Deletes key cell"""

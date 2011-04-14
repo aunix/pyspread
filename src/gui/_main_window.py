@@ -456,7 +456,10 @@ class MainWindowEventHandlers(object):
             return
         
         # Paste import data to grid
-        ##TODO
+        grid = self.main_window.grid
+        tl_cell = grid.GetGridCursorRow(), grid.GetGridCursorCol()
+        
+        grid.actions.paste(tl_cell, import_data)
         
     def OnExport(self, event):
         """File export event handler"""
