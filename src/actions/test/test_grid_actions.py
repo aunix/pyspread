@@ -9,7 +9,6 @@ app = wx.App()
 
 from gui._main_window import MainWindow
 from gui._grid import Grid
-from gui._grid import Grid
 import actions._grid_actions
 import lib.vartypes as vartypes
 from lib._interfaces import PysInterface
