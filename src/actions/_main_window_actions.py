@@ -138,9 +138,7 @@ class ExchangeActions(object):
         except TypeError:
             return
         
-        csvgen = CsvGenerator(path, dialect, digest_types, has_header)
-        
-        return csvgen.get_csv_lines_gen()
+        return CsvGenerator(path, dialect, digest_types, has_header)
     
     def _import_txt(self, path):
         """Whitespace-delimited txt import workflow. This should be fast."""
