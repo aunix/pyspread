@@ -45,12 +45,14 @@ Provides:
 
 import csv
 import os
+import types
 
 import wx
 import wx.html
 
 from config import DEFAULT_FILENAME, HELP_SIZE, HELP_DIR
 
+from lib._interfaces import Digest
 from gui._printout import PrintCanvas, Printout
 
 class CsvGenerator(object):
@@ -65,40 +67,12 @@ class CsvGenerator(object):
         self.has_header = has_header
         
         self.first_line = False
-        
-    def _get_csv_cells_gen(self, line):
-        """Generator of values in a csv line"""
-        
-        digest_types = self.digest_types
-        
-        for j, value in enumerate(line):
-            if self.first_line:
-                digest = lambda x: x
-            else:
-                try:
-                    digest = Digest(acceptable_types=[digest_types[j]])
-                except IndexError:
-                    digest = Digest(acceptable_types=[digest_types[0]])
-            try:
-                digest_res = digest(value)
-                
-                if digest_res is not None and digest_res != "\b" and \
-                   digest_key is not types.CodeType:
-                    digest_res = repr(digest_res)
-                elif digest_res == "\b":
-                    digest_res = None
-                
-            except Exception, err:
-                digest_res = str(err)
-            
-            yield digest_res
     
-    def get_csv_lines_gen(self):
-        """Generator of generators of csv data cell content"""
-
-        # Getting a generator of generators that yield csv data
+    def __iter__(self):
+        """Generator of generators that yield csv data"""
         
-        csv_reader = csv.reader(self.path, self.dialect)
+        csv_file = open(self.path, "r")
+        csv_reader = csv.reader(csv_file, self.dialect)
         self.first_line = self.has_header
         
         try:
@@ -111,6 +85,40 @@ class CsvGenerator(object):
                   '\n \nError message:\n' + str(err)
             short_msg = 'Error reading CSV file'
             self.main_window.interfaces.display_warning(msg, short_msg)
+        
+        csv_file.close()
+    
+    def _get_csv_cells_gen(self, line):
+        """Generator of values in a csv line"""
+        
+        digest_types = self.digest_types
+        
+        for j, value in enumerate(line):
+            if self.first_line:
+                digest_key = None
+                digest = lambda x: x
+            else:
+                try:
+                    digest_key = digest_types[j]
+                except IndexError:
+                    digest_key = digest_types[0]
+                    
+                digest = Digest(acceptable_types=[digest_key])
+                
+            try:
+                digest_res = digest(value)
+                
+                if digest_key is not None and digest_res != "\b" and \
+                   digest_key is not types.CodeType:
+                    digest_res = repr(digest_res)
+                elif digest_res == "\b":
+                    digest_res = None
+                
+            except Exception, err:
+                digest_res = str(err)
+            
+            yield digest_res
+
 
 class ExchangeActions(object):
     """Actions for foreign format import and export"""
