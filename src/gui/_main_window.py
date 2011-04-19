@@ -451,7 +451,7 @@ class MainWindowEventHandlers(object):
         
         # Get generator of import data
         import_data = self.main_window.actions.import_file(path, filterindex)
-        
+        print repr(list(import_data))
         if import_data is None:
             return
         

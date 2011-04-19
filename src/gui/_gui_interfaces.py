@@ -111,7 +111,7 @@ class ModalDialogInterfaceMixin(object):
     def display_warning(self, message, short_message):
         """Displays a warning message"""
         
-        dlg = gmd.GenericMessageDialog(self, message, short_message,
+        dlg = GMD.GenericMessageDialog(self.main_window, message, short_message,
                                        wx.CANCEL | wx.ICON_WARNING)
         dlg.ShowModal()
         dlg.Destroy()

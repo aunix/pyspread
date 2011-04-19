@@ -292,7 +292,10 @@ def fill_wxgrid(target, src_it, digest_types, key=(0, 0)):
             break
         for j, value in enumerate(line):
             col = j + key[1]
-            digest_key = digest_types[j]
+            try:
+                digest_key = digest_types[j]
+            except IndexError:
+                digest_key = digest_types[0]
             
             digest = Digest(acceptable_types=[digest_key])
             try:

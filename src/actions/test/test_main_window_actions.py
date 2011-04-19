@@ -18,24 +18,30 @@ import actions._main_window_actions as main_window_actions
 
 class TestCsvGenerator(object):
     def setup_method(self, method):
-        test_filename = "test.csv"
-        test_file = open(test_filename)
+        pass
+        
+        
+    def get_csv_gen(self, filename, digest_types=None):
+        test_file = open(filename)
         dialect = csv.Sniffer().sniff(test_file.read(1024))
         test_file.close()
         
-        digest_types = [type(1)]
+        if digest_types is None:
+            digest_types = [type(1)]
+            
         has_header = False
 
-        self.csv_gen = main_window_actions.CsvGenerator( \
-            test_filename, dialect, digest_types, has_header)
-
+        return main_window_actions.CsvGenerator( \
+            filename, dialect, digest_types, has_header)
 
     def test_get_csv_cells_gen(self):
         """Tests generator from csv content"""
+        test_filename = "test.csv"
+        csv_gen = self.get_csv_gen(test_filename)
         
         column = xrange(100)
         
-        cell_gen = self.csv_gen._get_csv_cells_gen(column)
+        cell_gen = csv_gen._get_csv_cells_gen(column)
         
         for i, cell in enumerate(cell_gen):
             assert str(i) == cell
@@ -44,10 +50,22 @@ class TestCsvGenerator(object):
     def test_iter(self):
         """Tests csv generator"""
         
-
+        test_filename = "test.csv"
+        csv_gen = self.get_csv_gen(test_filename)
         
-        assert [list(col) for col in self.csv_gen] == [['1', '2'], ['3', '4']]
-                
+        assert [list(col) for col in csv_gen] == [['1', '2'], ['3', '4']]
+        
+
+        test_filename = "test_one_col.csv"
+        csv_gen = self.get_csv_gen(test_filename, digest_types = [type("")])
+        
+        
+        for i, col in enumerate(csv_gen):
+            list_col = list(col)
+            if i < 6:
+                assert list_col == ["'" + str(i + 1) + "'", "''"]
+            else:
+                assert list_col == ["''", "''"]
         
         
 class TestExchangeActions(object):

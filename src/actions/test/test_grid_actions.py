@@ -261,7 +261,29 @@ class TestSelection(object):
         bbox_tl, bbox_br = selection.get_bbox() 
         assert bbox_tl == sel_tl[0]
         assert bbox_br == sel_br[0]
-        
+    
+    
 class TestSelectionActions(object):
     pass
     
+    
+class TestTableActions(object):
+    def setup_method(self, method):
+        self.main_window = MainWindow(None, -1)
+        self.grid = self.main_window.grid
+        
+    def test_paste(self):
+        """Tests paste into grid"""
+        
+        # Test 1D paste of strings
+        tl_cell = 0, 0, 0
+        data = [map(str, [1, 2, 3, 4]), [""] * 4]
+        
+        self.grid.actions.paste(tl_cell, data)
+        
+        assert self.grid.data_array[tl_cell] == 1
+        assert self.grid.data_array.sgrid[tl_cell] == '1'
+        assert self.grid.data_array[0, 1, 0] == 2
+        assert self.grid.data_array[0, 2, 0] == 3
+        assert self.grid.data_array[0, 3, 0] == 4
+        

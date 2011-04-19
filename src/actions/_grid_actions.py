@@ -241,6 +241,7 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
         ul_key: Tuple
         \key of top left cell of paste area
         data: iterable of iterables where inner iterable returns string
+        \tThe outer iterable represents rows
         
         """
         
@@ -253,11 +254,11 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
             tl_row, tl_col = tl_key
             tl_tab = self.grid.current_table
         
-        for src_col, col_data in enumerate(data):
-            target_col = tl_col + src_col
+        for src_row, col_data in enumerate(data):
+            target_row = tl_row + src_row
             
-            for src_row, cell_data in enumerate(col_data):
-                target_row = tl_row + src_row
+            for src_col, cell_data in enumerate(col_data):
+                target_col = tl_col + src_col
                 
                 key = target_row, target_col, tl_tab
                 
