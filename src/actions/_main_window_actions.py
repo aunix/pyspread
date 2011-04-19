@@ -120,6 +120,21 @@ class CsvGenerator(object):
             yield digest_res
 
 
+class TxtGenerator(object):
+    """Generator of generators of Whitespace separated txt file cell content"""
+        
+    def __init__(self, filename):
+        self.filename = filename
+
+    def __iter__(self):
+        infile = open(self.filename)
+        
+        for line in infile:
+            for col in line.split():
+                yield col
+        
+        infile.close()
+
 class ExchangeActions(object):
     """Actions for foreign format import and export"""
     
@@ -142,11 +157,8 @@ class ExchangeActions(object):
     
     def _import_txt(self, path):
         """Whitespace-delimited txt import workflow. This should be fast."""
-        ## TODO
-        topleftcell = self.MainGrid.controller.cursor
         
-        txt_interface = TxtInterfaces(path)
-        txt_interface.read(self.MainGrid.model.pysgrid, key=topleftcell)
+        return TxtGenerator(path)
     
     def import_file(self, filepath, filterindex):
         """Imports external file

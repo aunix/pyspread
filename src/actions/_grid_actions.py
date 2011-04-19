@@ -231,8 +231,64 @@ class TableTabActionsMixin(object):
 class TableActions(TableRowActionsMixin, TableColumnActionsMixin, 
                    TableTabActionsMixin):
     """Table controller actions"""
-
-    def paste(self, tl_key, data):
+    
+    def __init__(self):
+        
+        # Action states
+        
+        self.pasting = False
+        
+        # Bindings
+        
+        self.main_window.Bind(wx.EVT_KEY_DOWN, self.on_key)
+    
+    def on_key(self, event):
+        """Sets abort if pasting and if escape is pressed"""
+        
+        # If paste is running and Esc is pressed then we need to abort
+        
+        if self.pasting and event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.need_abort = True
+        
+        event.Skip()
+    
+    def _abort_paste(self, src_row):
+        """Aborts import"""
+        
+        statustext = "Import aborted after importing " + \
+                     str(src_row) + " rows."
+        post_command_event(self.main_window, StatusBarMsg, 
+                           text=statustext)
+        
+        self.pasting = False
+        self.need_abort = False
+    
+    def _show_final_overflow_message(self, row_overflow, col_overflow):
+        """Displays overflow message after import in statusbar"""
+        
+        if row_overflow and col_overflow:
+            overflow_cause = "rows and columns"
+        elif row_overflow:
+            overflow_cause = "rows"
+        elif col_overflow:
+            overflow_cause = "columns"
+        else:
+            raise AssertionError, "Import cell overflow missing"
+        
+        statustext = "The imported data did not fit into the grid " + \
+                     overflow_cause + ". It has been truncated. " + \
+                     "Use a larger grid for full import."
+        post_command_event(self.main_window, StatusBarMsg, text=statustext)
+    
+    def _show_paste_progress(self, src_row, abort_msg=False):
+        """Shows progress in statusbar"""
+        
+        statustext = str(src_row) + " rows imported."
+        if abort_msg:
+            statustext += " Press <Esc> to abort."
+        post_command_event(self.main_window, StatusBarMsg, text=statustext)
+    
+    def paste(self, tl_key, data, fast=False):
         """Pastes data into grid table starting at top left cell tl_key
         
         Parameters
@@ -245,7 +301,13 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
         
         """
         
+        self.pasting = True
+        
+        set_cell_code_fast = self.cell_actions.set_cell_code_fast
         set_cell_code = self.cell_actions.set_cell_code
+        grid_rows, grid_cols, _ = self.grid.data_array.shape
+        
+        self.need_abort = False
         
         try:
             tl_row, tl_col, tl_tab = tl_key
@@ -254,16 +316,51 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
             tl_row, tl_col = tl_key
             tl_tab = self.grid.current_table
         
+        row_overflow = False
+        col_overflow = False
+        
         for src_row, col_data in enumerate(data):
             target_row = tl_row + src_row
+            
+            # Show progress in statusbar each 1000 rows
+            
+            if src_row % 1000 == 0:
+                self._show_paste_progress(src_row, abort_msg=True)
+                
+                # Now wait for the statusbar update to be written on screen
+                wx.Yield()
+                
+                # Abort if we have to
+                if self.need_abort:
+                    self._abort_paste(src_row)
+                    return
+
+            
+            # Check if rows fit into grid
+            if target_row > grid_rows:
+                row_overflow = True
+                break
             
             for src_col, cell_data in enumerate(col_data):
                 target_col = tl_col + src_col
                 
+                if target_col > grid_cols:
+                    col_overflow = True
+                    break
+                
                 key = target_row, target_col, tl_tab
                 
-                set_cell_code(key, cell_data)
-                
+                if fast:
+                    set_cell_code_fast(key, cell_data)
+                else:
+                    set_cell_code(key, cell_data)
+        
+        if row_overflow or col_overflow:
+            self._show_final_overflow_message(row_overflow, col_overflow)
+        else:
+            self._show_paste_progress(src_row)
+
+        self.pasting = False
 
     def OnShapeChange(self, event):
         """Grid shape change event handler"""

@@ -287,3 +287,8 @@ class TestTableActions(object):
         assert self.grid.data_array[0, 2, 0] == 3
         assert self.grid.data_array[0, 3, 0] == 4
         
+        # Test row overflow
+        ##TODO
+        
+        # Test col overflow
+        ##TODO

@@ -451,7 +451,7 @@ class MainWindowEventHandlers(object):
         
         # Get generator of import data
         import_data = self.main_window.actions.import_file(path, filterindex)
-        print repr(list(import_data))
+        
         if import_data is None:
             return
         
@@ -459,7 +459,7 @@ class MainWindowEventHandlers(object):
         grid = self.main_window.grid
         tl_cell = grid.GetGridCursorRow(), grid.GetGridCursorCol()
         
-        grid.actions.paste(tl_cell, import_data)
+        grid.actions.paste(tl_cell, import_data, fast=True)
         
     def OnExport(self, event):
         """File export event handler"""
