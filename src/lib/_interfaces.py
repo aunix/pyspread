@@ -643,52 +643,6 @@ class PysInterface(object):
         
         return {}
 
-class TxtInterfaces(object):
-    """Whitespace separated txt file handling class
-    
-    Parameters:
-    -----------
-    filename: string
-    \tFilename of txt input file
-    
-    Methods
-    -------
-    read: Fills target with values.
-    
-    """
-    def __init__(self, filename):
-        self.filename = filename
-
-    def read(self, target, key=(0, 0, 0)):
-        """Fills target with csv values.
-        
-        The targets dimensions are assumed as default limits
-        unless specified otherwise.
-        
-        Parameters:
-        -----------
-        target: Mutable array or list with 2 dimensions
-        \tIn this array, the csv values are stored
-        
-        key: 3-tuple, defaults to (0, 0, 0)
-        \tTop-left insertion position
-        
-        """
-        
-        tl_row, tl_col, tl_tab = key
-        maxrows, maxcols, _ = target.shape
-        
-        infile = open(self.filename)
-        
-        for row, line in enumerate(infile):
-            if row >= maxrows - tl_row:
-                break
-            sline = line.split()[:maxcols-tl_col]
-            for col, ele in enumerate(sline):
-                target_key = (row + tl_row, col + tl_col, tl_tab)
-                target.__setitem__(target_key, ele, fast=True)
-        infile.close()
-
 class Clipboard(object):
     """Clipboard access
 

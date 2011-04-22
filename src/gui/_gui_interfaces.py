@@ -32,11 +32,13 @@ Provides:
 
 import csv
 import os
+import types
 
 import wx
 import wx.lib.agw.genericmessagedialog as GMD
 
-from _dialogs import DimensionsEntryDialog, AboutDialog, CsvImportDialog
+from _dialogs import DimensionsEntryDialog, AboutDialog
+from _dialogs import CsvImportDialog, CsvExportDialog
 
 
 class ModalDialogInterfaceMixin(object):
@@ -147,10 +149,10 @@ class ModalDialogInterfaceMixin(object):
         
         return new_print_data
     
-    def get_csv_info(self, path):
+    def get_csv_import_info(self, path):
         """Launches the csv dialog and returns csv_info
         
-        csv_info is a tuple of dialect, digest_types, has_header
+        csv_info is a tuple of dialect, has_header, digest_types
         
         Parameters
         ----------
@@ -183,6 +185,36 @@ class ModalDialogInterfaceMixin(object):
         else:
             filterdlg.Destroy()
             
+            return
+        
+        filterdlg.Destroy()
+        
+        return dialect, has_header, digest_types
+
+    def get_csv_export_info(self, data):
+        """Shows csv export preview dialog and returns csv_info
+        
+        csv_info is a tuple of dialect, has_header, digest_types
+        
+        Parameters
+        ----------
+        data: Iterable of iterables
+        \tContains csv export data row-wise
+        
+        """
+        
+        preview_rows = 100
+        preview_cols = 100
+        
+        export_preview = data[:preview_rows, :preview_cols]
+        
+        filterdlg = CsvExportDialog(self.main_window, data=export_preview)
+        
+        if filterdlg.ShowModal() == wx.ID_OK:
+            dialect, has_header = filterdlg.csvwidgets.get_dialect()
+            digest_types = [types.StringType]
+        else:
+            filterdlg.Destroy()
             return
         
         filterdlg.Destroy()

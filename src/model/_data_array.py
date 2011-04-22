@@ -91,7 +91,7 @@ class DataArray(object):
                                # if True
         
         self._resultcache = {}
-    
+        
     def _getshape(self):
         """Returns the shape of the array sgrid"""
         
@@ -103,6 +103,11 @@ class DataArray(object):
         self.sgrid.set_shape(shape)
     
     shape = property(_getshape, _set_shape)
+    
+    def keys(self):
+        """Returns generator of cell keys with non-empty code content"""
+        
+        return (key for key in self.sgrid.keys() if self.sgrid[key] != "")
     
     def _eval_cell(self, key):
         """Evaluates one cell"""
@@ -341,7 +346,6 @@ class DataArray(object):
     
     def __len__(self):
         return len(self.sgrid)
-    
     
     def isinsclice(self, slc, dim, index):
         """
@@ -848,7 +852,7 @@ class UnRedo(object):
 # end of class UnRedo
 
 class DictGrid(UserDict.IterableUserDict):
-    """Dict absed numpy array drop-in replacement"""
+    """Dict based numpy array drop-in replacement"""
     
     def __init__(self, shape=(1000, 100, 10), default_value=None):
         self.shape = shape

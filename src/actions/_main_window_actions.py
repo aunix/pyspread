@@ -47,6 +47,8 @@ import csv
 import os
 import types
 
+from copy import copy
+
 import wx
 import wx.html
 
@@ -55,8 +57,15 @@ from config import DEFAULT_FILENAME, HELP_SIZE, HELP_DIR
 from lib._interfaces import Digest
 from gui._printout import PrintCanvas, Printout
 
-class CsvGenerator(object):
-    """Generator of generators of csv data cell content"""
+class CsvInterface(object):
+    """CSV interface class
+    
+    Provides
+    --------
+     * __iter__: CSV reader - generator of generators of csv data cell content
+     * write: CSV writer
+    
+    """
     
     def __init__(self, path, dialect, digest_types, has_header):
         self.path = path
@@ -67,7 +76,7 @@ class CsvGenerator(object):
         self.has_header = has_header
         
         self.first_line = False
-    
+        
     def __iter__(self):
         """Generator of generators that yield csv data"""
         
@@ -78,7 +87,7 @@ class CsvGenerator(object):
         try:
             for line in csv_reader:
                 yield self._get_csv_cells_gen(line)
-                first_line = False
+                self.first_line = False
                                               
         except Error, err:
             msg = 'The file "' + self.csvfilename + '" only partly loaded.' + \
@@ -118,6 +127,17 @@ class CsvGenerator(object):
                 digest_res = str(err)
             
             yield digest_res
+    
+    def write(self, iterable):
+        """Writes values from iterable into CSV file"""
+        
+        csvfile = open(self.path, "wb")
+        csv_writer = csv.writer(csvfile, self.dialect)
+        
+        for line in iterable:
+            csv_writer.writerow(line)
+        
+        csvfile.close()
 
 
 class TxtGenerator(object):
@@ -143,7 +163,7 @@ class ExchangeActions(object):
 
         # Get csv info
         
-        csv_info = self.main_window.interfaces.get_csv_info(path)
+        csv_info = self.main_window.interfaces.get_csv_import_info(path)
         
         if csv_info is None:
             return
@@ -153,7 +173,7 @@ class ExchangeActions(object):
         except TypeError:
             return
         
-        return CsvGenerator(path, dialect, digest_types, has_header)
+        return CsvInterface(path, dialect, digest_types, has_header)
     
     def _import_txt(self, path):
         """Whitespace-delimited txt import workflow. This should be fast."""
@@ -185,8 +205,38 @@ class ExchangeActions(object):
             
             self.main_window.interfaces.display_warning(msg, short_msg)
 
-    def export(self):
-        raise NotImplementedError
+    def _export_csv(self, filepath, data):
+        """CSV import workflow"""
+
+        # Get csv info
+        
+        csv_info = self.main_window.interfaces.get_csv_export_info(data)
+        
+        if csv_info is None:
+            return
+        
+        try:
+            dialect, digest_types, has_header = csv_info
+        except TypeError:
+            return
+        
+        # Export CSV file
+        
+        csv_interface = CsvInterface(filepath, dialect, digest_types, 
+                                     has_header)
+        
+        try:
+            csv_interface.write(data)
+        except IOError, err:
+            msg = 'The file "' + path + '" could not be fully written ' + \
+                  '\n \nError message:\n' + str(err)
+            short_msg = 'Error writing CSV file'
+            self.main_window.interfaces.display_warning(msg, short_msg)
+
+    def export_file(self, filepath, filterindex, data):
+        """Exports external file. Only CSV supported yet."""
+        
+        self._export_csv(filepath, data)
 
 
 class PrintActions(object):

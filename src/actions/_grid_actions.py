@@ -614,6 +614,7 @@ class Selection(object):
         
         return ((bb_top, bb_left), (bb_bottom, bb_right))
 
+
 class SelectionActions(object):
     """Actions that affect the grid selection"""
     

@@ -42,6 +42,7 @@ from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _widgets import EntryLine, StatusBar, TableChoiceIntCtrl
 from lib._interfaces import PysInterface
+from lib.irange import irange
 from _gui_interfaces import GuiInterfaces
 
 from _grid import Grid
@@ -462,11 +463,44 @@ class MainWindowEventHandlers(object):
         grid.actions.paste(tl_cell, import_data, fast=True)
         
     def OnExport(self, event):
-        """File export event handler"""
+        """File export event handler
         
-        raise NotImplementedError
+        Currently, only CSV export is supported
         
-        event.Skip()
+        """
+        
+        selection = self.main_window.grid.selection
+        
+        # Check if no selection is present
+        
+        selection_bbox = selection.get_bbox()
+        
+        if selection_bbox is None:
+            # No selection --> Use current screen
+            
+            selection_bbox = self.main_window.grid.actions.get_visible_area()
+        
+        (top, left), (bottom, right) = selection_bbox
+        
+        # Generator of row and column keys in correct order
+        
+        data_array = self.main_window.grid.data_array
+        tab = self.main_window.grid.current_table
+        
+        data = data_array[top:bottom+1, left:right+1, tab]
+        
+        # Get target filepath from user
+        
+        wildcard = wildcard=" CSV file|*.*"
+        message = "Choose filename for export."
+        style = wx.OPEN | wx.CHANGE_DIR
+        path, filterindex = self.interfaces.get_filepath_findex_from_user( \
+                                    wildcard, message, style)
+        
+        # Export file
+        # -----------
+        
+        self.main_window.actions.export_file(path, filterindex, data)
     
     def OnApprove(self, event):
         """File approve event handler"""
@@ -602,4 +636,4 @@ class MainWindowEventHandlers(object):
         
         event.Skip()
     
-# End of class MainWindowEventHandlerMixin
+# End of class MainWindowEventHandlers
