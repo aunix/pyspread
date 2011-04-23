@@ -35,17 +35,18 @@ Provides
 """
 
 from itertools import count, takewhile
+import types
 
-def irange(start, stop=None, step=1):
+class IRange(object):
     """Range for long integers
     
-    Usage: irange([start], stop, [step])
+    Usage: irange([start], [stop], [step])
     
     Parameters
     ----------
-    start: Integer, defaults to 0
-    stop: Integer
-    step: Integer, defaults to 1
+    start: Integer, defaults to None
+    stop: Integer, defaults to None
+    step: Integer, defaults to None
     
     Note on long integers
     ---------------------
@@ -55,46 +56,70 @@ def irange(start, stop=None, step=1):
     If stop > start: start(stop-start+step+1) // step must be a short integer.
     
     """
+
+    def __init__(self, start=None, stop=None, step=None):
+        self.start = start
+        self.stop = stop
+        self.step = step
     
-    if start is None:
-        raise TypeError, "range() integer argument expected, got NoneType"
-    
-    if stop is None:
-        stop = start
-        start = 0
-    
-    if step is None:
-        step = 1
-    
-    if step > 0:
-        if stop < start:
-            return (_ for _ in [])
-        cond = lambda x: x < stop
+    def __iter__(self):
         
-    elif step < 0:
-        if stop > start:
-            return (_ for _ in [])
-        cond = lambda x: x > stop
+        start = self.start
+        stop = self.stop
+        step = self.step
         
-    else:
-        raise ValueError, "irange() step argument must not be zero"
-    
-    return takewhile(cond, (start + i * step for i in count()))
+        if start is None:
+            raise TypeError, "range() integer argument expected, got NoneType"
         
+        if stop is None:
+            stop = start
+            start = 0
+        
+        if step is None:
+            step = 1
+        
+        if step > 0:
+            if stop < start:
+                return (_ for _ in [])
+            cond = lambda x: x < stop
+            
+        elif step < 0:
+            if stop > start:
+                return (_ for _ in [])
+            cond = lambda x: x > stop
+            
+        else:
+            raise ValueError, "irange() step argument must not be zero"
+        
+        return takewhile(cond, (start + i * step for i in count()))
+
+    def __len__(self):
+        
+        start = self.start
+        stop = self.stop
+        step = self.step
+        
+        return max(0, (stop - start) / step)
+
 
 def indices(slc, length):
-    """Long integer drop-in for slice method indices"""
+    """indices(slice, len) -> (start, stop, stride)
+
+    Assuming a sequence of length len, calculate the start and stop
+    indices, and the stride length of the extended slice described by
+    S. Out of bounds indices are clipped in a manner consistent with the
+    handling of normal slices."""
     
     if length < 0:
         raise ValueError, "Length must be >= 0"
         
     if slc.step is None:
-        step = 1
+        stride = 1
     else:
-        step = slc.step
+        stride = slc.step
     
     if slc.start is None:
-        if step < 0:
+        if stride < 0:
             start = length - 1
         else:
             start = 0
@@ -104,7 +129,7 @@ def indices(slc, length):
             start += length
     
     if slc.stop is None:
-        if step < 0:
+        if stride < 0:
             stop = -1
         else:
             stop = length
@@ -113,8 +138,8 @@ def indices(slc, length):
         if stop < 0:
             stop += length
     
-    return start, stop, step
-
+    return start, stop, stride
+    
 def slice_range(slc, length):
     """Replaces range(length)[slc]"""
     
