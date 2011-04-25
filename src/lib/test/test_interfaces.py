@@ -18,6 +18,10 @@
 # along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 # --------------------------------------------------------------------
 
+from sys import path, modules
+path.insert(0, "..") 
+path.insert(0, "../..") 
+
 import types
 
 import gmpy

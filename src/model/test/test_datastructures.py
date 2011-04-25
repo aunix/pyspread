@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Unit test for _datastructures.py"""
+"""Unit test for _data_array.py"""
 
 # --------------------------------------------------------------------
 # pyspread is free software: you can redistribute it and/or modify
@@ -18,6 +18,9 @@
 # along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 # --------------------------------------------------------------------
 
+from sys import path, modules
+path.insert(0, "..") 
+path.insert(0, "../..") 
 
 import gmpy
 import numpy
@@ -26,7 +29,7 @@ import wx
 
 app = wx.App()
 
-import _pyspread._datastructures as _datastructures
+import model._data_array as _data_array
 import vartypes as v
 
 gmpy.rand('seed', 2)
@@ -38,7 +41,7 @@ class TestPyspreadGrid(object):
         """Creates a basic grid"""
         
         self.dim = 100, 10, 3
-        self.grid = _datastructures.PyspreadGrid(dimensions=self.dim)
+        self.grid = _data_array.PyspreadGrid(dimensions=self.dim)
         
     def test_init(self):
         """Test for completeness of grid attributes and correct size."""
@@ -48,7 +51,7 @@ class TestPyspreadGrid(object):
         assert hasattr (self.grid, 'unredo')
         x_list, y_list, z_list = [v.getints(1, 100, 100) for i in xrange(3)]
         for dim in zip(x_list, y_list, z_list):
-            self.grid = _datastructures.PyspreadGrid(dimensions=dim)
+            self.grid = _data_array.PyspreadGrid(dimensions=dim)
             del self.grid
     
     def test_getitem(self):
@@ -67,11 +70,11 @@ class TestPyspreadGrid(object):
         orig_shape = self.grid.sgrid.shape
         assert get_shape == orig_shape
         
-        empty_grid = _datastructures.PyspreadGrid(dimensions=(0, 0, 0))
+        empty_grid = _data_array.PyspreadGrid(dimensions=(0, 0, 0))
         assert empty_grid[:, :, :].tolist() == []
         
         gridsize = 100
-        filled_grid = _datastructures.PyspreadGrid(dimensions=(gridsize, 10, 1))
+        filled_grid = _data_array.PyspreadGrid(dimensions=(gridsize, 10, 1))
         for i in v.getints(-2**99, 2**99, 10):
             for j in xrange(gridsize):
                 filled_grid[j, 0, 0] = str(i)
@@ -306,7 +309,7 @@ class TestUnRedo(object):
     def setup_method(self, method):
         """Setup for dummy undo steps"""
         
-        self.unredo = _datastructures.UnRedo()
+        self.unredo = _data_array.UnRedo()
         self.list = []
         self.step = (self.list.append, ["Test"], self.list.pop, [])
     
@@ -374,7 +377,7 @@ class TestDictGrid(object):
     def setup_method(self, method):
         """Setup for dummy undo steps"""
         
-        self.dictgrid = _datastructures.DictGrid(shape = (1000,1000,1000))
+        self.dictgrid = _data_array.DictGrid(shape = (1000,1000,1000))
         self.dictgrid[(1, 2, 3)] = 1
         self.dictgrid[(2, 2, 3)] = 2
         self.dictgrid[(3, 2, 3)] = 3

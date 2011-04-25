@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from types import SliceType
 
-class D(dict):
+class ArrayDict(dict):
     def __missing__(self, value):
         return None
     
@@ -42,11 +42,4 @@ class D(dict):
                     
                 break
 
-d = D()
 
-d[2,3] = 3
-
-cell_gen = d.cell_array_generator((slice(1, 300000), slice(0, 70)))
-
-for row in cell_gen:
-    [cell for cell in row]
