@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project pyspread -->
-<!-- Saved: 2011-04-12, 23:11:01 -->
+<!-- Saved: 2011-04-23, 12:33:52 -->
 <!-- Copyright (C) 2011 Martin Manns, mmanns@gmx.net -->
 <Project version="4.6">
   <Language>en</Language>
@@ -66,6 +66,9 @@
     <Source>src/actions/test/test_grid_actions.py</Source>
     <Source>src/actions/test/test_main_window_actions.py</Source>
     <Source>src/gui/_printout.py</Source>
+    <Source>src/lib/test/test_xrect.py</Source>
+    <Source>src/lib/test/test_irange.py</Source>
+    <Source>src/lib/test/test_interfaces.py</Source>
   </Sources>
   <Forms>
   </Forms>
