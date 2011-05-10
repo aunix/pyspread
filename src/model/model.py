@@ -35,6 +35,7 @@ Layer 0:
 
 """
 
+import itertools
 from types import SliceType
 
 from lib.irange import slice_range
@@ -63,7 +64,7 @@ class DataArray(object):
     
     Enhancements comprise:
      * Slicing
-     * Multi-dimensional operations such as insertion and deletion of sub-arrays
+     * Multi-dimensional operations such as insertion and deletion along 1 axis
      * Undo/redo operations
     
     This class represents layer 2 of the model.
@@ -101,6 +102,16 @@ class DataArray(object):
     
     # Slice support
     
+    def _is_slice_like(self, obj):
+        """Returns True if obj is slice like, i.e. has attribute indices"""
+        
+        return hasattr(key_ele, "split")
+        
+    def _is_string_like(self, obj):
+        """Returns True if obj is string like, i.e. has method split"""
+        
+        return hasattr(key_ele, "indices")
+    
     def __getitem__(self, key):
         """Adds slicing access to cell code retrieval
         
@@ -118,22 +129,46 @@ class DataArray(object):
         """
         
         for key_ele in key:
-            if hasattr(key_ele, "split"):
-                # We have something string-like here 
-                
-                raise NotImplementedError
-            
-            elif hasattr(key_ele, "indices"):
+            if self._is_slice_like(key_ele):
                 # We have something slice-like here 
                 
                 return self.cell_array_generator(key)
                 
+            elif self._is_string_like(key_ele):
+                # We have something string-like here 
+                
+                raise NotImplementedError
+                
         # key_ele should be a single cell
         
         return self.dict_grid[key]
-        
+    
+    
     def __setitem__(self, key, value):
-        raise NotImplementedError
+        """Accepts index and slice keys"""
+        
+        single_keys_per_dim = []
+        
+        for key_ele in key:
+            if self._is_slice_like(key_ele):
+                # We have something slice-like here 
+                
+                single_keys_per_dim.append(slice_range(key_ele))
+                
+            elif self._is_string_like(key_ele):
+                # We have something string-like here 
+                
+                raise NotImplementedError
+            
+            else:
+                # key_ele should be a single cell
+                
+                single_keys_per_dim.append(key_ele)
+        
+        single_keys = itertools.product(single_keys_per_dim)
+        
+        for single_key in single_keys:
+            self.dict_grid[single_key] = value
     
     def cell_array_generator(self, key):
         """Generator traversing cells specified in key
@@ -170,6 +205,43 @@ class DataArray(object):
                         yield self[tuple(key_list)]
                     
                 break
+    
+    def insert(self, insertion_point, no_to_insert, axis):
+        """Inserts no_to_insert rows/cols/tabs/... before insertion_point
+        
+        Axis specifies number of dimension, i.e. 0 == row, 1 == col, ...
+        
+        """
+        
+        if not 0 <= axis <= len(self.shape):
+            raise ValueError, "Axis not in grid dimensions"
+        
+        if insertion_point > self.shape[axis] or \
+           insertion_point <= -self.shape[axis]:
+            raise IndexError, "Insertion point not in grid"
+        
+        deleted_cells = {} # For undo
+        new_cells = {}
+        
+        for key in self:
+            if key[axis] >= insertion_point:
+                new_key = list(key)
+                new_key[axis] += no_to_insert
+                new_cells[tuple(new_key)] = deleted_cells[key] = self.pop(key)
+        
+        self.update(new_cells)
+
+    def delete(self, deletion_point, no_to_delete, axis):
+        """Deletes no_to_delete rows/cols/tabs/... starting with deletion_point
+        
+        Axis specifies number of dimension, i.e. 0 == row, 1 == col, ...
+        
+        """
+        
+        if no_to_delete < 0:
+            raise ValueError, "Cannot delete negative number of rows/cols/..."
+        
+        raise NotImplementedError
 
 # End of class DataArray
 
@@ -315,6 +387,17 @@ class DictGrid(KeyValueStore):
         
         self.cell_attributes = CellAttributes()
         self.macros = u""
+    
+    def __getitem__(self, key):
+        
+        shape = self.shape
+        
+        for axis, key_ele in enumerate(key):
+            if shape[i] <= key_ele or key_ele < -shape[i]:
+                raise IndexError, "Grid index" + \
+                      str(key) + "outside grid shape" + str(shape)
+        
+        return KeyValueStore.__getitem__(key)
 
 # End of class DictGrid
 
