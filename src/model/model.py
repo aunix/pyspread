@@ -41,23 +41,207 @@ from types import SliceType
 from lib.irange import slice_range
 from lib.selection import Selection
 
-class CodeArray(DataArray):
-    """CodeArray provides objects when accessing cells via __getitem__
+from config import MAX_UNREDO
+
+class KeyValueStore(dict):
+    """Key-Value store in memory. Currently a dict with default value None.
     
-    Cell code can be accessed via get_code
-    
-    This class represents layer 3 of the model.
+    This class represents layer 0 of the model.
     
     """
     
-    get_code = DataArray.__getitem__
-    
-    def __getitem__(self, key):
-        pass
-    
-# End of class CodeArray
+    def __missing__(self, value):
+        """Returns the default value None"""
+        
+        return
+        
+# End of class KeyValueStore
 
 # ------------------------------------------------------------------------------
+
+class CellAttributes(list):
+    """Stores cell formatting attributes in a list of 2 - tuples
+    
+    The first element of each tuple is a Selection.
+    The second element is a dict of attributes that are altered.
+    
+    The class provides attribute read access to single cells via __getitem__
+    Otherwise it behaves similar to a list.
+    
+    """
+    
+    def __getitem__(self, key):
+        """Returns attribute dict for a single key"""
+        
+        assert not any(type(key_ele) is SliceType for key_ele in key)
+        
+        result_dict = {}
+        
+        for selection, attr_dict in self:
+            if key in selection:
+                result_dict.update(attr_dict)
+        
+        return result_dict
+
+# End of class CellAttributes
+
+
+class DictGrid(KeyValueStore):
+    """The core data class with all information that is stored in a pys file.
+    
+    Besides grid code access via standard dict operations, it provides 
+    the following attributes:
+    
+    * cell_attributes: Stores cell formatting attributes
+    * macros:          String of all macros
+    
+    This class represents layer 1 of the model.
+    
+    Parameters
+    ----------
+    shape: n-tuple of integer
+    \tShape of the grid
+    
+    """
+    
+    def __init__(self, shape):
+        KeyValueStore.__init__(self)
+        
+        self.shape = shape
+        
+        self.cell_attributes = CellAttributes()
+        self.macros = u""
+    
+    def __getitem__(self, key):
+        
+        shape = self.shape
+        
+        for axis, key_ele in enumerate(key):
+            if shape[axis] <= key_ele or key_ele < -shape[axis]:
+                raise IndexError, "Grid index" + \
+                      str(key) + "outside grid shape" + str(shape)
+        
+        return KeyValueStore.__getitem__(key)
+
+# End of class DictGrid
+
+# ------------------------------------------------------------------------------
+
+
+class UnRedo(object):
+    """Undo/Redo framework class.
+    
+    For each undo-able operation, the undo/redo framework stores the
+    undo operation and the redo operation. For each step, a 4-tuple of:
+    1) the function object that has to be called for the undo operation
+    2) the undo function parameters as a list
+    3) the function object that has to be called for the redo operation
+    4) the redo function parameters as a list
+    is stored.
+    
+    One undo step in the application can comprise of multiple operations.
+    Undo steps are separated by the string "MARK".
+    
+    The attributes should only be written to by the class methods.
+
+    Attributes
+    ----------
+    undolist: List
+    \t
+    redolist: List
+    \t
+    active: Boolean
+    \tTrue while an undo or a redo step is executed.
+
+    """
+    
+    def __init__(self):
+        """[(undofunc, [undoparams, ...], redofunc, [redoparams, ...]), 
+        ..., "MARK", ...]
+        "MARK" separartes undo/redo steps
+        
+        """
+        
+        self.undolist = []
+        self.redolist = []
+        self.active = False
+        
+    def mark(self):
+        """Inserts a mark in undolist and empties redolist"""
+        
+        if self.undolist != [] and self.undolist[-1] != "MARK":
+            self.undolist.append("MARK")
+    
+    def undo(self):
+        """Undos operations until next mark and stores them in the redolist"""
+        
+        self.active = True
+        
+        while self.undolist != [] and self.undolist[-1] == "MARK":
+            self.undolist.pop()
+            
+        if self.redolist != [] and self.redolist[-1] != "MARK":
+            self.redolist.append("MARK")
+        
+        while self.undolist != []:
+            step = self.undolist.pop()
+            if step == "MARK": 
+                break
+            self.redolist.append(step)
+            step[0](*step[1])
+        
+        self.active = False
+        
+    def redo(self):
+        """Redos operations until next mark and stores them in the undolist"""
+        
+        self.active = True
+        
+        while self.redolist and self.redolist[-1] == "MARK":
+            self.redolist.pop()
+        
+        if self.undolist:
+            self.undolist.append("MARK")
+        
+        while self.redolist:
+            step = self.redolist.pop()
+            if step == "MARK": 
+                break
+            self.undolist.append(step)
+            step[2](*step[3])
+            
+        self.active = False
+
+    def reset(self):
+        """Empties both undolist and redolist"""
+        
+        self.__init__()
+
+    def append(self, undo_operation, operation):
+        """Stores an operation and its undo operation in the undolist
+        
+        undo_operation: (undo_function, [undo_function_attribute_1, ...])
+        operation: (redo_function, [redo_function_attribute_1, ...])
+        
+        """
+        
+        # If the lists grow too large they are emptied
+        if len(self.undolist) > MAX_UNREDO or \
+           len(self.redolist) > MAX_UNREDO:
+            self.reset()
+        
+        # Check attribute types
+        for unredo_operation in [undo_operation, operation]:
+            iter(unredo_operation)
+            assert len(unredo_operation) == 2
+            assert hasattr(unredo_operation[0], "__call__")
+            iter(unredo_operation[1])
+        
+        if not self.active:
+            self.undolist.append(undo_operation + operation)
+
+# End of class UnRedo
+
 
 class DataArray(object):
     """DataArray provides enhanced grid read/write access.
@@ -82,13 +266,31 @@ class DataArray(object):
     # Shape mask
     
     def _get_shape(self):
+        """Returns dict_grid shape"""
+        
         return self.dict_grid.shape
         
     def _set_shape(self, shape):
+        """Deletes all cells beyond new shape and sets dict_grid shape"""
+        
+        # Delete each cell that is beyond new borders
+        
+        old_shape = self.shape
+        
+        if any(new_axis < old_axis 
+               for new_axis, old_axis in zip(shape, old_shape)):
+            for key in self.dict_grid:
+                if any(key_ele >= new_axis 
+                       for key_ele, new_axis in zip(key, shape)):
+                    self.dict_grid.pop(key)
+        
+        # Set dict_grid shape attribute
+        
         self.dict_grid.shape = shape
+
     
     shape = property(_get_shape, _set_shape)
-        
+
     # Pickle support
     
     def __getstate__(self):
@@ -245,201 +447,25 @@ class DataArray(object):
 
 # End of class DataArray
 
-
-class UnRedo(object):
-    """Undo/Redo framework class.
-    
-    For each undoable operation, the undo/redo framework stores the
-    undo operation and the redo operation. For each step, a 4-tuple of:
-    1) the function object that has to be called for the undo operation
-    2) the undo function paarmeters as a list
-    3) the function object that has to be called for the redo operation
-    4) the redo function paarmeters as a list
-    is stored.
-    
-    One undo step in the application can comprise of multiple operations.
-    Undo steps are separated by the string "MARK".
-    
-    The attributes should only be written to by the class methods.
-
-    Attributes
-    ----------
-    undolist: List
-    \t
-    redolist: List
-    \t
-    active: Boolean
-    \tTrue while an undo or a redo step is executed.
-
-    """
-    
-    def __init__(self):
-        """[(undofunc, [undoparams, ...], redofunc, [redoparams, ...]), 
-        ..., "MARK", ...]
-        "MARK" separartes undo/redo steps
-        
-        """
-        
-        self.undolist = []
-        self.redolist = []
-        self.active = False
-        
-    def mark(self):
-        """Inserts a mark in undolist and empties redolist"""
-        
-        if self.undolist != [] and self.undolist[-1] != "MARK":
-            self.undolist.append("MARK")
-    
-    def undo(self):
-        """Undos operations until next mark and stores them in the redolist"""
-        
-        self.active = True
-        
-        while self.undolist != [] and self.undolist[-1] == "MARK":
-            self.undolist.pop()
-            
-        if self.redolist != [] and self.redolist[-1] != "MARK":
-            self.redolist.append("MARK")
-        
-        while self.undolist != []:
-            step = self.undolist.pop()
-            if step == "MARK": 
-                break
-            self.redolist.append(step)
-            step[0](*step[1])
-        
-        self.active = False
-        
-    def redo(self):
-        """Redos operations until next mark and stores them in the undolist"""
-        
-        self.active = True
-        
-        while self.redolist and self.redolist[-1] == "MARK":
-            self.redolist.pop()
-        
-        if self.undolist:
-            self.undolist.append("MARK")
-        
-        while self.redolist:
-            step = self.redolist.pop()
-            if step == "MARK": 
-                break
-            self.undolist.append(step)
-            step[2](*step[3])
-            
-        self.active = False
-
-    def reset(self):
-        """Empties both undolist and redolist"""
-        
-        self.__init__()
-
-    def append(self, undo_operation, operation):
-        """Stores an operation and its undo operation in the undolist
-        
-        undo_operation: (undo_function, [undo_function_attribute_1, ...])
-        operation: (redo_function, [redo_function_attribute_1, ...])
-        
-        """
-        
-        # If the lists grow too large they are emptied
-        if len(self.undolist) > MAX_UNREDO or \
-           len(self.redolist) > MAX_UNREDO:
-            self.reset()
-        
-        # Check attribute types
-        for unredo_operation in [undo_operation, operation]:
-            iter(unredo_operation)
-            assert len(unredo_operation) == 2
-            assert hasattr(unredo_operation[0], "__call__")
-            iter(unredo_operation[1])
-        
-        if not self.active:
-            self.undolist.append(undo_operation + operation)
-
-# End of class UnRedo
-
 # ------------------------------------------------------------------------------
 
-class DictGrid(KeyValueStore):
-    """The core data class with all information that is stored in a pys file.
+class CodeArray(DataArray):
+    """CodeArray provides objects when accessing cells via __getitem__
     
-    Besides grid code access via standard dict operations, it provides 
-    the following attributes:
+    Cell code can be accessed via function call
     
-    * cell_attributes: Stores cell formatting attributes
-    * macros:          String of all macros
-    
-    This class represents layer 1 of the model.
-    
-    Parameters
-    ----------
-    shape: n-tuple of integer
-    \tShape of the grid
+    This class represents layer 3 of the model.
     
     """
     
-    def __init__(self, shape):
-        KeyValueStore.__init__(self)
-        
-        self.shape = shape
-        
-        self.cell_attributes = CellAttributes()
-        self.macros = u""
+    __call__ = DataArray.__getitem__
     
     def __getitem__(self, key):
-        
-        shape = self.shape
-        
-        for axis, key_ele in enumerate(key):
-            if shape[i] <= key_ele or key_ele < -shape[i]:
-                raise IndexError, "Grid index" + \
-                      str(key) + "outside grid shape" + str(shape)
-        
-        return KeyValueStore.__getitem__(key)
-
-# End of class DictGrid
+        pass
+    
+# End of class CodeArray
 
 
-class CellAttributes(list):
-    """Stores cell formatting attributes in a list of 2 - tuples
-    
-    The first element of each tuple is a Selection.
-    The second element is a dict of attributes that are altered.
-    
-    The class provides attribute read access to single cells via __getitem__
-    Otherwise it behaves similar to a list.
-    
-    """
-    
-    def __getitem__(self, key, value):
-        """Returns attribute dict for a single key"""
-        
-        assert not any(type(key_ele) is SliceType for key_ele in key)
-        
-        result_dict = {}
-        
-        for selection, attr_dict in self:
-            if key in selection:
-                result_dict.update(attr_dict)
-        
-        return result_dict
-
-# End of class CellAttributes
 
 
-# ------------------------------------------------------------------------------
-class KeyValueStore(dict):
-    """Key-Value store in memory. Currently a dict with default value None.
-    
-    This class represents layer 0 of the model.
-    
-    """
-    
-    def __missing__(self, value):
-        """Returns the default value None"""
-        
-        return
-        
-# End of class KeyValueStore
+

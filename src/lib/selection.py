@@ -29,7 +29,23 @@ Grid selection representation
 """
 
 class Selection(object):
-    """Represents grid selection"""
+    """Represents grid selection
+    
+    Parameters
+    ----------
+    
+    block_top_left: List of 2-tuples
+    \tTop left edges of all selection rectangles
+    block_bottom_right: List of 2-tuples
+    \tBottom right edges of all selection rectangles
+    rows: List
+    \tList of selected rows
+    cols: List
+    \tList of selected columns
+    cells: List of 2-tuples
+    \tList of (row, column) tuples of individually selected cells
+    
+    """
     
     def __init__(self, block_top_left, block_bottom_right, rows, cols, cells):
         self.block_tl = block_top_left
@@ -64,7 +80,6 @@ class Selection(object):
         cell_row, cell_col = cell
         
         # Block selections
-        
         for top_left, bottom_right in zip(self.block_tl, self.block_br):
             top, left = top_left
             bottom, right = bottom_right
@@ -133,7 +148,7 @@ class Selection(object):
                 bb_left = cell_col
             if bb_bottom is None or bb_bottom < cell_row:
                 bb_bottom = cell_row
-            if bb_right is None or bb_right > cell_col:
+            if bb_right is None or bb_right < cell_col:
                 bb_right = cell_col
         
         if all(val is None for val in [bb_top, bb_left, bb_bottom, bb_right]):
