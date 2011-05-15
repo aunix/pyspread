@@ -38,8 +38,9 @@ Layer 0:
 import itertools
 from types import SliceType
 
+import wx
+
 from lib.irange import slice_range
-from lib.selection import Selection
 
 from config import MAX_UNREDO
 
@@ -307,12 +308,12 @@ class DataArray(object):
     def _is_slice_like(self, obj):
         """Returns True if obj is slice like, i.e. has attribute indices"""
         
-        return hasattr(key_ele, "split")
+        return hasattr(obj, "split")
         
     def _is_string_like(self, obj):
         """Returns True if obj is string like, i.e. has method split"""
         
-        return hasattr(key_ele, "indices")
+        return hasattr(obj, "indices")
     
     def __getitem__(self, key):
         """Adds slicing access to cell code retrieval
@@ -351,11 +352,12 @@ class DataArray(object):
         
         single_keys_per_dim = []
         
-        for key_ele in key:
+        for axis, key_ele in enumerate(key):
             if self._is_slice_like(key_ele):
                 # We have something slice-like here 
                 
-                single_keys_per_dim.append(slice_range(key_ele))
+                single_keys_per_dim.append(slice_range(key_ele, 
+                                                       length = key[axis]))
                 
             elif self._is_string_like(key_ele):
                 # We have something string-like here 
@@ -387,7 +389,7 @@ class DataArray(object):
             # Get first element of key that is a slice
             
             if type(key_ele) is SliceType:
-                slc_keys = slicerange(key_ele, self.dict_grid.shape[i])
+                slc_keys = slice_range(key_ele, self.dict_grid.shape[i])
                 
                 key_list = list(key)
                 
@@ -429,9 +431,12 @@ class DataArray(object):
             if key[axis] >= insertion_point:
                 new_key = list(key)
                 new_key[axis] += no_to_insert
-                new_cells[tuple(new_key)] = deleted_cells[key] = self.pop(key)
+                
+                new_cells[tuple(new_key)] = \
+                deleted_cells[key] = \
+                    self.dict_grid.pop(key)
         
-        self.update(new_cells)
+        self.dict_grid.update(new_cells)
 
     def delete(self, deletion_point, no_to_delete, axis):
         """Deletes no_to_delete rows/cols/tabs/... starting with deletion_point
@@ -443,7 +448,29 @@ class DataArray(object):
         if no_to_delete < 0:
             raise ValueError, "Cannot delete negative number of rows/cols/..."
         
-        raise NotImplementedError
+        if not 0 <= axis <= len(self.shape):
+            raise ValueError, "Axis not in grid dimensions"
+        
+        if deletion_point > self.shape[axis] or \
+           deletion_point <= -self.shape[axis]:
+            raise IndexError, "Deletion point not in grid"
+        
+        deleted_cells = {} # For undo
+        new_cells = {}
+        
+        for key in self:
+            if deletion_point <= key[axis] < deletion_point + no_to_delete:
+                deleted_cells[key] = self.dict_grid.pop(key)
+            
+            elif key[axis] >= deletion_point + no_to_delete:
+                new_key = list(key)
+                new_key[axis] -= no_to_delete
+                
+                new_cells[tuple(new_key)] = \
+                deleted_cells[key] = \
+                    self.dict_grid.pop(key)
+        
+        self.dict_grid.update(new_cells)
 
 # End of class DataArray
 
@@ -458,14 +485,68 @@ class CodeArray(DataArray):
     
     """
     
+    operators = ["+", "-", "*", "**", "/", "//",
+             "%", "<<", ">>", "&", "|", "^", "~",
+             "<", ">", "<=", ">=", "==", "!=", "<>",
+            ]
+    
     __call__ = DataArray.__getitem__
     
     def __getitem__(self, key):
-        pass
+        """Yields to other events and returns _eval_cell
+       
+        This allows GUI to unlock on deep iterations through the grid
+        
+        """
+        
+        wx.Yield()
+
+        return self._eval_cell(key)
+    
+    def _eval_cell(self, key):
+        """Evaluates one cell"""
+        
+        # Set up environment for evaluation
+        env = globals().copy()
+        env.update( {'X':key[0], 'Y':key[1], 'Z':key[2],
+                     'R':key[0], 'C':key[1], 'T':key[2],
+                     'S':self } )
+        
+        # Check if there is a global assignment
+        split_exp = self.dict_grid[key].split("=")
+        
+        # Assignment is valid iif 
+        #  * only one term in front of "=" and 
+        #  * no "==" and 
+        #  * no operators left and 
+        #  * parentheses balanced
+        
+        has_assignment = \
+            len(split_exp) > 1 and \
+            len(split_exp[0].split()) == 1 and \
+            split_exp[1] != "" and \
+            (not max(op in split_exp[0] for op in self.operators)) and \
+            split_exp[0].count("(") == split_exp[0].count(")")
+        
+        # If only 1 term in front of the "=" --> global
+        
+        if has_assignment:
+            glob_var = split_exp[0].strip()
+            expression = "=".join(split_exp[1:])
+        else:
+            glob_var = None
+            expression = self.dict_grid[key]
+        
+        try:
+            result = eval(expression, env, {})
+        except Exception, err:
+            result = err
+        
+        if glob_var is not None:
+            globals().update({glob_var: result})
+        
+        return result
     
 # End of class CodeArray
-
-
-
 
 
