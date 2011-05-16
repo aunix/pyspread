@@ -38,6 +38,8 @@ Layer 0:
 import itertools
 from types import SliceType
 
+from numpy import array as numpy_array
+
 import wx
 
 from lib.irange import slice_range
@@ -119,10 +121,11 @@ class DictGrid(KeyValueStore):
         
         for axis, key_ele in enumerate(key):
             if shape[axis] <= key_ele or key_ele < -shape[axis]:
+                print axis, shape, key_ele
                 raise IndexError, "Grid index" + \
                       str(key) + "outside grid shape" + str(shape)
         
-        return KeyValueStore.__getitem__(key)
+        return KeyValueStore.__getitem__(self, key)
 
 # End of class DictGrid
 
@@ -308,12 +311,12 @@ class DataArray(object):
     def _is_slice_like(self, obj):
         """Returns True if obj is slice like, i.e. has attribute indices"""
         
-        return hasattr(obj, "split")
+        return hasattr(obj, "indices")
         
     def _is_string_like(self, obj):
         """Returns True if obj is string like, i.e. has method split"""
         
-        return hasattr(obj, "indices")
+        return hasattr(obj, "split")
     
     def __getitem__(self, key):
         """Adds slicing access to cell code retrieval
@@ -340,7 +343,8 @@ class DataArray(object):
             elif self._is_string_like(key_ele):
                 # We have something string-like here 
                 
-                raise NotImplementedError
+                raise NotImplementedError, \
+                      "Cell string based access not implemented"
                 
         # key_ele should be a single cell
         
@@ -367,12 +371,19 @@ class DataArray(object):
             else:
                 # key_ele should be a single cell
                 
-                single_keys_per_dim.append(key_ele)
+                single_keys_per_dim.append((key_ele, ))
         
-        single_keys = itertools.product(single_keys_per_dim)
+        single_keys = itertools.product(*single_keys_per_dim)
         
         for single_key in single_keys:
-            self.dict_grid[single_key] = value
+            if value:
+                self.dict_grid[single_key] = value
+            else:
+                # Value is empty --> delete cell
+                try:
+                    self.dict_grid.pop(key)
+                except KeyError:
+                    pass
     
     def cell_array_generator(self, key):
         """Generator traversing cells specified in key
@@ -503,6 +514,23 @@ class CodeArray(DataArray):
 
         return self._eval_cell(key)
     
+    def _make_nested_list(self, gen):
+        """Makes nested list from generator for creating numpy.array"""
+        
+        res = []
+        
+        for ele in gen:
+            if ele is None:
+                res.append(None)
+            elif hasattr(ele, "split"):
+                # Code
+                res.append(self._eval_cell(ele))
+            else:
+                # Nested generator
+                res.append(self._make_nested_list(ele))
+        
+        return res
+    
     def _eval_cell(self, key):
         """Evaluates one cell"""
         
@@ -512,8 +540,20 @@ class CodeArray(DataArray):
                      'R':key[0], 'C':key[1], 'T':key[2],
                      'S':self } )
         
+        code = self(key)
+        
+        # If cell is not present return None
+        
+        if code is None:
+            return
+            
+        elif not hasattr(code, "split"):
+            # We have multiple cells and therefore a generator object
+            
+            return numpy_array(self._make_nested_list(code))
+        
         # Check if there is a global assignment
-        split_exp = self.dict_grid[key].split("=")
+        split_exp = code.split("=")
         
         # Assignment is valid iif 
         #  * only one term in front of "=" and 

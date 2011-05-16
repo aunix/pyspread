@@ -23,12 +23,18 @@ from sys import path, modules
 path.insert(0, "..") 
 path.insert(0, "../..") 
 
+import gmpy
+
+import numpy
+
 import wx
 
 from model.model import KeyValueStore, CellAttributes, DictGrid, UnRedo
 from model.model import DataArray, CodeArray
 
 from lib.selection import Selection
+
+import lib.vartypes as v
 
 class TestKeyValueStore(object):
     """Unit test for KeyValueStore"""
@@ -215,9 +221,60 @@ class TestCodeArray(object):
     def setup_method(self, method):
         """Creates empty DataArray"""
         
-        self.code_array = CodeArray((100, 100, 100))
+        self.code_array = CodeArray((100, 10, 3))
         
     def test_getitem(self):
-        """Test shape attribute"""
+        """Test for item getting, slicing, basic evaluation correctness."""
         
-        pass
+        shape = self.code_array.shape
+        x_list = v.getints(1, shape[0]-1, 100)
+        y_list = v.getints(1, shape[1]-1, 100)
+        z_list = v.getints(1, shape[2]-1, 100)
+        for x, y, z in zip(x_list, y_list, z_list):
+            assert self.code_array[x, y, z] == None
+            self.code_array[:x, :y, :z]
+            self.code_array[:x:2, :y:2, :z:-1]
+            
+        get_shape = numpy.array(self.code_array[:, :, :]).shape
+        orig_shape = self.code_array.shape
+        assert get_shape == orig_shape
+        
+        empty_grid = CodeArray((0, 0, 0))
+        assert empty_grid[:, :, :].tolist() == []
+        
+        gridsize = 100
+        filled_grid = CodeArray((gridsize, 10, 1))
+        for i in v.getints(-2**99, 2**99, 10):
+            for j in xrange(gridsize):
+                filled_grid[j, 0, 0] = str(i)
+                filled_grid[j, 1, 0] = str(i) + '+' + str(j)
+                filled_grid[j, 2, 0] = str(i) + '*' + str(j)                
+            
+            for j in xrange(gridsize):
+                assert filled_grid[j, 0, 0] == i
+                assert filled_grid[j, 1, 0] == i + j
+                assert filled_grid[j, 2, 0] == i * j
+                
+            for j, funcname in enumerate(['int', 'gmpy.mpz', 'gmpy.mpq']):
+                filled_grid[0, 0, 0] = "gmpy = __import__('gmpy')"
+                filled_grid[0, 0, 0]
+                filled_grid[1, 0, 0] = "math = __import__('math')"
+                filled_grid[1, 0, 0]
+                filled_grid[j, 3, 0] = funcname +' (' + str(i) + ')'
+                
+                res = eval(funcname +"("+"i"+")")
+                assert filled_grid[j, 3, 0] == eval(funcname +"("+"i"+")")
+        #Test X, Y, Z
+        for i in xrange(10):
+            self.code_array[i, 0, 0] = str(i)
+        assert [self.code_array((i, 0, 0)) for i in xrange(10)] == \
+                    map(str, xrange(10))
+        
+        assert [self.code_array[i, 0, 0] for i in xrange(10)] == range(10)
+        
+        # Test cycle detection
+        
+        filled_grid[0, 0, 0] = "numpy.arange(0, 10, 0.1)"
+        filled_grid[1, 0, 0] = "sum(S[0,0,0])"
+        
+        assert filled_grid[1, 0, 0] == sum(numpy.arange(0, 10, 0.1))
