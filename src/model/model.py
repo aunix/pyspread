@@ -35,10 +35,11 @@ Layer 0:
 
 """
 
+from copy import copy
 import itertools
 from types import SliceType
 
-from numpy import array as numpy_array
+import numpy
 
 import wx
 
@@ -121,9 +122,8 @@ class DictGrid(KeyValueStore):
         
         for axis, key_ele in enumerate(key):
             if shape[axis] <= key_ele or key_ele < -shape[axis]:
-                print axis, shape, key_ele
-                raise IndexError, "Grid index" + \
-                      str(key) + "outside grid shape" + str(shape)
+                raise IndexError, "Grid index " + \
+                      str(key) + " outside grid shape " + str(shape)
         
         return KeyValueStore.__getitem__(self, key)
 
@@ -350,6 +350,8 @@ class DataArray(object):
         
         return self.dict_grid[key]
     
+    def __str__(self):
+        return self.dict_grid.__str__()
     
     def __setitem__(self, key, value):
         """Accepts index and slice keys"""
@@ -424,7 +426,15 @@ class DataArray(object):
     def insert(self, insertion_point, no_to_insert, axis):
         """Inserts no_to_insert rows/cols/tabs/... before insertion_point
         
-        Axis specifies number of dimension, i.e. 0 == row, 1 == col, ...
+        Parameters
+        ----------
+        
+        insertion_point: Integer
+        \tPont on axis, before which insertion takes place
+        no_to_insert: Integer >= 0
+        \tNumber of rows/cols/tabs that shall be inserted
+        axis: Integer
+        \tSpecifies number of dimension, i.e. 0 == row, 1 == col, ...
         
         """
         
@@ -438,7 +448,7 @@ class DataArray(object):
         deleted_cells = {} # For undo
         new_cells = {}
         
-        for key in self:
+        for key in copy(self.dict_grid):
             if key[axis] >= insertion_point:
                 new_key = list(key)
                 new_key[axis] += no_to_insert
@@ -448,6 +458,13 @@ class DataArray(object):
                     self.dict_grid.pop(key)
         
         self.dict_grid.update(new_cells)
+        
+        # Adjust shape
+        
+        new_shape = list(self.shape)
+        new_shape[axis] += no_to_insert
+        self.shape = tuple(new_shape)
+        
 
     def delete(self, deletion_point, no_to_delete, axis):
         """Deletes no_to_delete rows/cols/tabs/... starting with deletion_point
@@ -550,7 +567,7 @@ class CodeArray(DataArray):
         elif not hasattr(code, "split"):
             # We have multiple cells and therefore a generator object
             
-            return numpy_array(self._make_nested_list(code))
+            return numpy.array(self._make_nested_list(code))
         
         # Check if there is a global assignment
         split_exp = code.split("=")

@@ -172,22 +172,26 @@ class TestDataArray(object):
     def test_set_shape(self):
         """Test shape attribute"""
         
-        pass
+        self.data_array.shape = (10000, 100, 100)
+        
+        assert self.data_array.shape == (10000, 100, 100)
         
     def test_getstate(self):
-        """Test shape attribute"""
+        """Test pickle support"""
         
-        pass 
+        assert "dict_grid" in self.data_array.__getstate__()
 
     def test_is_slice_like(self):
         """Test shape attribute"""
         
-        pass 
+        assert self.data_array._is_slice_like(slice(None, 4, 34))
+        assert not self.data_array._is_slice_like(-2)
         
     def test_is_string_like(self):
         """Test shape attribute"""
         
-        pass 
+        assert self.data_array._is_string_like("Test")
+        assert not self.data_array._is_string_like(["Test"])
         
     def test_getitem(self):
         """Test shape attribute"""
@@ -195,9 +199,20 @@ class TestDataArray(object):
         pass 
 
     def test_setitem(self):
-        """Test shape attribute"""
+        """Single and multiple item assignment test"""
         
-        pass 
+        self.data_array[0, 0, 0] = "'Test'"
+        ##assert len(self.grid.unredo.undolist) == 1
+        self.data_array[0, 0, 0] = "'Tes'"
+        ##assert len(self.grid.unredo.undolist) == 2
+        
+        assert self.data_array[0, 0, 0] == "'Tes'"
+        for teststring in v.getstrings(number=100, maxlength=1000):
+            x, y, z = [gmpy.rand('next', maxdim) \
+                            for maxdim in self.data_array.shape]
+            self.data_array[x, y, z] = "".join(["'", teststring, "'"])
+            
+            assert self.data_array[x, y, z] == "".join(["'", teststring, "'"])
         
     def test_cell_array_generator(self):
         """"""
@@ -205,9 +220,15 @@ class TestDataArray(object):
         pass
         
     def test_insert(self):
-        """"""
+        """Tests insert operation with single cell, slice, random cells"""
         
-        pass
+        self.data_array[2, 3, 4] = 42
+        self.data_array.insert(1, 100, 0)
+        
+        assert self.data_array.shape == (200, 100, 100)
+        assert self.data_array[2, 3, 4] is None
+        
+        assert self.data_array[102, 3, 4] == 42
         
     def test_delete(self):
         """"""
