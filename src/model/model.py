@@ -318,6 +318,11 @@ class DataArray(object):
         
         return hasattr(obj, "split")
     
+    def _is_generator_like(self, obj):
+        """Returns True if obj is string like, i.e. has method next"""
+        
+        return hasattr(obj, "next")
+    
     def __getitem__(self, key):
         """Adds slicing access to cell code retrieval
         
@@ -486,7 +491,7 @@ class DataArray(object):
         deleted_cells = {} # For undo
         new_cells = {}
         
-        for key in self:
+        for key in copy(self.dict_grid):
             if deletion_point <= key[axis] < deletion_point + no_to_delete:
                 deleted_cells[key] = self.dict_grid.pop(key)
             
@@ -539,12 +544,17 @@ class CodeArray(DataArray):
         for ele in gen:
             if ele is None:
                 res.append(None)
-            elif hasattr(ele, "split"):
+                
+            elif self._is_string_like(ele):
                 # Code
                 res.append(self._eval_cell(ele))
-            else:
+                
+            elif self._is_generator_like(ele):
                 # Nested generator
                 res.append(self._make_nested_list(ele))
+                
+            else:
+                res.append(ele)
         
         return res
     
@@ -564,11 +574,11 @@ class CodeArray(DataArray):
         if code is None:
             return
             
-        elif not hasattr(code, "split"):
-            # We have multiple cells and therefore a generator object
+        elif self._is_generator_like(code):
+            # We have a generator object
             
             return numpy.array(self._make_nested_list(code))
-        
+        print repr(code)
         # Check if there is a global assignment
         split_exp = code.split("=")
         
@@ -592,12 +602,18 @@ class CodeArray(DataArray):
             expression = "=".join(split_exp[1:])
         else:
             glob_var = None
-            expression = self.dict_grid[key]
+            expression = code
+        
+        # Change cell value for cycle detection
+        self[key] = 'KeyError("Circular dependency at ' + str(key) + '")'
         
         try:
             result = eval(expression, env, {})
         except Exception, err:
             result = err
+        
+        # Change back cell value for evaluation from other cells
+        self[key] = code
         
         if glob_var is not None:
             globals().update({glob_var: result})

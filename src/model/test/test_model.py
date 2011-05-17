@@ -220,7 +220,7 @@ class TestDataArray(object):
         pass
         
     def test_insert(self):
-        """Tests insert operation with single cell, slice, random cells"""
+        """Tests insert operation"""
         
         self.data_array[2, 3, 4] = 42
         self.data_array.insert(1, 100, 0)
@@ -231,10 +231,13 @@ class TestDataArray(object):
         assert self.data_array[102, 3, 4] == 42
         
     def test_delete(self):
-        """"""
+        """Tests delete operation"""
         
-        pass
+        self.data_array[2, 3, 4] = "42"
+        print self.data_array
+        self.data_array.delete(1, 1, 0)
         
+        assert self.data_array[1, 3, 4] == "42"
 
 class TestCodeArray(object):
     """Unit test for CodeArray"""
@@ -299,3 +302,15 @@ class TestCodeArray(object):
         filled_grid[1, 0, 0] = "sum(S[0,0,0])"
         
         assert filled_grid[1, 0, 0] == sum(numpy.arange(0, 10, 0.1))
+        
+        filled_grid[0, 0, 0] = "S[5:10, 1, 0]"
+        assert filled_grid[0, 0, 0].tolist() == range(7, 12)
+
+    def test_cycle_detection(self):
+        """Tests creation of cycle detection graph"""
+        
+        self.code_array[0, 1, 0] = 'S[1, 1, 0]'
+        self.code_array[1, 1, 0] = 'S[0, 1, 0]'
+        res = self.code_array[1, 1, 0]
+        comp = KeyError("Circular dependency at (1, 1, 0)")
+        assert repr(res) == repr(comp)
