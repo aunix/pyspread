@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project pyspread -->
-<!-- Saved: 2011-05-15, 15:04:14 -->
+<!-- Saved: 2011-05-19, 23:09:28 -->
 <!-- Copyright (C) 2011 Martin Manns, mmanns@gmx.net -->
 <Project version="4.6">
   <Language>en</Language>
@@ -57,7 +57,6 @@
     <Source>src/actions/_grid_cell_actions.py</Source>
     <Source>src/lib/irange.py</Source>
     <Source>src/lib/xrect.py</Source>
-    <Source>src/model/_data_array.py</Source>
     <Source>src/gui/_grid_table.py</Source>
     <Source>src/gui/_grid_renderer.py</Source>
     <Source>src/lib/_interfaces.py</Source>

@@ -365,7 +365,7 @@ class MainWindowEventHandlers(object):
         
         # Set Window title to new filepath
         
-        title_text = "pyspread - " + filepath.split("/")[-1]
+        title_text = filepath.split("/")[-1] + " - pyspread"
         post_command_event(self.main_window, TitleMsg, text=title_text)
         
         # Display file load in status bar
@@ -417,7 +417,7 @@ class MainWindowEventHandlers(object):
             
             # Set Window title to new filepath
         
-            title_text = "pyspread - " + filepath.split("/")[-1]
+            title_text = filepath.split("/")[-1] + " - pyspread"
             post_command_event(self.main_window, TitleMsg, text=title_text)
             
             # Now jump to save
