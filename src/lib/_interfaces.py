@@ -607,14 +607,14 @@ class PysInterface(object):
         
         self._pys_file.close()
     
-    def save(self, sgrid, filename=None):
-        """Saves the pickled object sgrid to self.filename (bzipped pickle)"""
+    def save(self, dict_grid, filename=None):
+        """Saves the pickled object dict_grid to self.filename (bz2 pickle)"""
         
         if filename is None:
             filename = self.filename
         
         outfile = bz2.BZ2File(filename, "wb")
-        pickle.dump(sgrid, outfile, protocol=2)
+        pickle.dump(dict_grid, outfile, protocol=2)
         outfile.close()
     
     def get_values(self):

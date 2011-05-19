@@ -45,7 +45,6 @@ Provides:
 
 """
 
-from model._data_array import DataArray
 from gui._grid_table import GridTable
 from gui._events import *
 from lib._interfaces import sign, verify, is_pyme_present
@@ -132,7 +131,7 @@ class FileActions(object):
         
         # Get cell values
         try:
-            self.grid.data_array.sgrid = interface.get_values()
+            self.grid.data_array.dict_grid = interface.get_values()
             
         except IOError:
             statustext = "Error opening file " + filepath + "."
@@ -173,7 +172,7 @@ class FileActions(object):
         interface = event.attr["interface"]()
         filepath = event.attr["filepath"]
         
-        interface.save(self.data_array.sgrid, filepath)
+        interface.save(self.data_array.dict_grid, filepath)
         self.sign_file(filepath)
 
 
@@ -420,7 +419,7 @@ class GridActions(object):
         """Creates a new spreadsheet. Expects data_array in event."""
         
         # Grid table handles interaction to data_array
-        self.grid.data_array.sgrid = event.data_array.sgrid
+        self.grid.data_array.dict_grid = event.data_array.dict_grid
     
         _grid_table = GridTable(self.grid, self.grid.data_array)
         self.grid.SetTable(_grid_table, True)

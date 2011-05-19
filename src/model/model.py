@@ -45,7 +45,7 @@ import wx
 
 from lib.irange import slice_range
 
-from config import MAX_UNREDO
+from config import MAX_UNREDO, default_cell_attributes
 
 class KeyValueStore(dict):
     """Key-Value store in memory. Currently a dict with default value None.
@@ -79,7 +79,7 @@ class CellAttributes(list):
         
         assert not any(type(key_ele) is SliceType for key_ele in key)
         
-        result_dict = {}
+        result_dict = default_cell_attributes
         
         for selection, attr_dict in self:
             if key in selection:
@@ -267,6 +267,10 @@ class DataArray(object):
     def __init__(self, shape):
         self.dict_grid = DictGrid(shape)
     
+        # Cell attributes mask
+    
+        self.cell_attributes = self.dict_grid.cell_attributes
+    
     # Shape mask
     
     def _get_shape(self):
@@ -292,7 +296,6 @@ class DataArray(object):
         
         self.dict_grid.shape = shape
 
-    
     shape = property(_get_shape, _set_shape)
 
     # Pickle support
@@ -428,6 +431,13 @@ class DataArray(object):
                     
                 break
     
+    def _adjust_shape(self, amount, axis):
+        """Changes shape along axis by amount"""
+    
+        new_shape = list(self.shape)
+        new_shape[axis] += amount
+        self.shape = tuple(new_shape)
+    
     def insert(self, insertion_point, no_to_insert, axis):
         """Inserts no_to_insert rows/cols/tabs/... before insertion_point
         
@@ -464,13 +474,8 @@ class DataArray(object):
         
         self.dict_grid.update(new_cells)
         
-        # Adjust shape
+        self._adjust_shape(no_to_insert, axis)
         
-        new_shape = list(self.shape)
-        new_shape[axis] += no_to_insert
-        self.shape = tuple(new_shape)
-        
-
     def delete(self, deletion_point, no_to_delete, axis):
         """Deletes no_to_delete rows/cols/tabs/... starting with deletion_point
         
@@ -504,6 +509,8 @@ class DataArray(object):
                     self.dict_grid.pop(key)
         
         self.dict_grid.update(new_cells)
+
+        self._adjust_shape(-no_to_delete, axis)
 
 # End of class DataArray
 
@@ -558,6 +565,23 @@ class CodeArray(DataArray):
         
         return res
     
+    def _has_assignment(self, code):
+        """Returns True iif  code is a global assignment
+        
+        Assignment is valid iif 
+         * only one term in front of "=" and 
+         * no "==" and 
+         * no operators left and 
+         * parentheses balanced
+         
+        """
+        
+        return len(code) > 1 and \
+               len(code[0].split()) == 1 and \
+               code[1] != "" and \
+               (not max(op in code[0] for op in self.operators)) and \
+               code[0].count("(") == code[0].count(")")
+    
     def _eval_cell(self, key):
         """Evaluates one cell"""
         
@@ -578,26 +602,12 @@ class CodeArray(DataArray):
             # We have a generator object
             
             return numpy.array(self._make_nested_list(code))
-        print repr(code)
-        # Check if there is a global assignment
-        split_exp = code.split("=")
-        
-        # Assignment is valid iif 
-        #  * only one term in front of "=" and 
-        #  * no "==" and 
-        #  * no operators left and 
-        #  * parentheses balanced
-        
-        has_assignment = \
-            len(split_exp) > 1 and \
-            len(split_exp[0].split()) == 1 and \
-            split_exp[1] != "" and \
-            (not max(op in split_exp[0] for op in self.operators)) and \
-            split_exp[0].count("(") == split_exp[0].count(")")
         
         # If only 1 term in front of the "=" --> global
         
-        if has_assignment:
+        split_exp = code.split("=")
+        
+        if self._has_assignment(split_exp):
             glob_var = split_exp[0].strip()
             expression = "=".join(split_exp[1:])
         else:

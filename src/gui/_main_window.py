@@ -48,8 +48,6 @@ from _gui_interfaces import GuiInterfaces
 from _grid import Grid
 from _events import *
 
-from model._data_array import DataArray
-
 from actions._main_window_actions import AllMainWindowActions
 
 class MainWindow(wx.Frame):
@@ -281,16 +279,6 @@ class MainWindowEventHandlers(object):
     
     def OnClose(self, event):
         """Program exit event handler"""
-        
-        # Ask if the user really wants to close pyspread
-        
-        msg = "Do you want to close pyspread?"
-        short_msg = "Close pyspread"
-        style = wx.OK | wx.CANCEL | wx.NO_DEFAULT | wx.ICON_QUESTION
-        
-        if self.main_window.interfaces\
-                .get_warning_choice(msg, short_msg, style) == wx.ID_CANCEL:
-            return 
         
         # If changes have taken place save of old grid
         

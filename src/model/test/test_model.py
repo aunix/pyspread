@@ -234,10 +234,12 @@ class TestDataArray(object):
         """Tests delete operation"""
         
         self.data_array[2, 3, 4] = "42"
-        print self.data_array
         self.data_array.delete(1, 1, 0)
         
+        assert self.data_array[2, 3, 4] is None
         assert self.data_array[1, 3, 4] == "42"
+        print self.data_array.shape
+        assert self.data_array.shape == (99, 100, 100)
 
 class TestCodeArray(object):
     """Unit test for CodeArray"""

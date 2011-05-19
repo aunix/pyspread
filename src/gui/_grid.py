@@ -39,7 +39,7 @@ from _grid_table import GridTable
 from _grid_renderer import GridRenderer
 from _grid_mixins import GridCollisionMixin
 
-from model._data_array import DataArray
+from model.model import CodeArray
 
 from actions._grid_actions import AllGridActions
 
@@ -56,7 +56,7 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         wx.grid.Grid.__init__(self, parent, *args, **kwargs)
         
         # Create new grid
-        self.data_array = DataArray(dimensions)
+        self.data_array = CodeArray(dimensions)
         post_command_event(self, GridActionNewMsg, data_array=self.data_array)
 
         _grid_table = GridTable(self, self.data_array)

@@ -14,6 +14,58 @@ Program info
 VERSION = "0.1.3" 
 
 
+class Config(object):
+    """Configuration class for the application pyspread
+    
+    ## TODO: Implement wx.Python based config 
+    """
+    
+    default_config = { \
+        "default_dim": "1000 100 3",
+        "icon_theme": "Stock", # Stock icon theme is "Tango" for Windows
+        "max_undo": "5000",
+    }
+    
+    # Main configuration 
+    
+    config = default_config
+    
+    # Helper functions for parsing
+    
+    read_maps = { \
+        "default_dim": lambda s: tuple(int(num) for num in s.split),
+        "icon_theme": lambda s: s,
+        "max_undo": lambda s: int(s),
+    }
+
+    write_maps = { \
+        "default_dim": lambda s: " ".join(s),
+        "icon_theme": lambda s: s,
+        "max_undo": lambda s: repr(s),
+    }
+
+    config_filename = ".pyspreadrc"
+    
+    def __init__(self):
+        
+        self.cfg_file = wx.Config('myconfig')
+        
+        self.load()
+    
+    def load(self):
+        """Loads configuration file"""
+        
+        for key in self.default_config:
+            if self.cfg_file.Exists(key):
+                self.config[key] = self.read_maps(self.cfg_file.Read(key))
+            else:
+                self.config[key] = self.read_maps(self.default_config[key])
+                        
+    def save(self):
+        """Saves configuration file"""
+        
+        for key in self.config:
+            self.cfg_file.Write(key, self.write_maps[key](self.config[key]))
 
 
 """
@@ -191,7 +243,7 @@ Default cell font size
 
 FONT_SIZES = range(3, 14) + range(16, 32, 2) + range(36, 99, 4)
 
-selected_cell_brush = 127, 127, 255
+selected_cell_brush = wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHT)
 
 default_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
 

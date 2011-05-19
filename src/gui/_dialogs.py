@@ -722,8 +722,8 @@ class MacroDialog(wx.Frame):
         self._set_properties()
         self._do_layout()
         
-        self.sgrid = self.parent.MainGrid.pysgrid.sgrid
-        self.macros = self.parent.MainGrid.pysgrid.sgrid.macros[:]
+        self.sgrid = self.parent.MainGrid.pysgrid.dict_grid
+        self.macros = self.parent.MainGrid.pysgrid.dict_grid.macros[:]
         self.codetext_ctrl.SetText(self.macros)
         
         # Bindings

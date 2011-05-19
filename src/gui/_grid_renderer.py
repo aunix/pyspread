@@ -213,10 +213,11 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         
         row, col, tab = key
         
-        textattributes = self.data_array.get_sgrid_attr(key, "textattributes")
+        cell_attributes = self.data_array.cell_attributes[key]
         
-        textfont = get_font_from_data( \
-            self.data_array.get_sgrid_attr(key, "textfont"))
+        textattributes = cell_attributes["textattributes"]
+        
+        textfont = get_font_from_data(cell_attributes["textfont"])
         
         self.set_font(dc, textfont, textattributes, self.zoom)
         
@@ -403,8 +404,8 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
             bg_components = ["bgbrush", "borderpen_bottom", "borderpen_right"]
             
             bg_key = tuple([width, height] + \
-                [tuple(self.data_array.get_sgrid_attr(key, bgc)) \
-                                for bgc in bg_components])
+                           [tuple(self.data_array.cell_attributes[key][bgc]) \
+                                                    for bgc in bg_components])
             
             try:
                 bg = self.backgrounds[bg_key]
@@ -480,7 +481,7 @@ class Background(object):
             bgbrush = wx.Brush(selected_cell_brush)
         else:
             bgbrush = get_brush_from_data( \
-                self.data_array.get_sgrid_attr(self.key, "bgbrush"))
+                self.data_array.cell_attributes[self.key]["bgbrush"])
         
         dc.SetBrush(bgbrush)
         dc.SetPen(wx.TRANSPARENT_PEN)
@@ -501,17 +502,16 @@ class Background(object):
         
         pen_names = ["borderpen_bottom", "borderpen_right"]
         
-        borderpens = [get_pen_from_data( \
-                        self.data_array.get_sgrid_attr(key, pen)) \
-                            for pen in pen_names]
+        borderpens = \
+            [get_pen_from_data(self.data_array.cell_attributes[key][pen]) \
+                                                    for pen in pen_names]
         
         # Topmost line if in top cell
         
         if row == 0:
             lines.append((x, y, x + w, y))
             topkey = "top", col, tab
-            toppen_data = self.data_array.get_sgrid_attr(topkey, 
-                                                               pen_names[0])
+            toppen_data = self.data_array.cell_attributes[topkey][pen_names[0]]
             borderpens.append(get_pen_from_data(toppen_data))
         
         # Leftmost line if in left cell
@@ -519,7 +519,7 @@ class Background(object):
         if col == 0:
             lines.append((x, y, x, y + h))
             leftkey = row, "left", tab
-            toppen_data  = self.data_array.get_sgrid_attr(leftkey, pen_names[1])
+            toppen_data  = self.data_array.cell_attributes[leftkey][pen_names[1]]
             borderpens.append(get_pen_from_data(toppen_data))
         
         zoomed_pens = []
