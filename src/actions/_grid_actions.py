@@ -364,25 +364,7 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
     def OnShapeChange(self, event):
         """Grid shape change event handler"""
         
-#        new_rows, new_cols, new_tabs = event.shape
-#        old_rows, old_cols, old_tabs = self.pysgrid.shape
-#        
-#        if new_rows > old_rows:
-#            self.add_rows(old_rows, new_rows - old_rows)
-#        elif new_rows < old_rows:
-#            self.delete_rows(old_rows, old_rows - new_rows)
-#        
-#        if new_cols > old_cols:
-#            self.add_cols(old_cols, new_cols - old_cols)
-#        elif new_cols < old_cols:
-#            self.delete_cols(old_cols, old_cols - new_cols)
-#            
-#        if new_tabs > old_tabs:
-#            self.add_tabs(old_tabs, new_tabs - old_tabs)
-#        elif new_tabs < old_tabs:
-#            self.delete_tabs(old_tabs, old_tabs - new_tabs)
-#        
-#        self.pysgrid.shape = new_rows, new_cols, new_tabs
+        raise NotImplementedError
         
         event.Skip()
 

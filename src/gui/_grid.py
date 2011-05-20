@@ -171,11 +171,11 @@ class GridCellEventHandlers(object):
         
         code = event.GetString()
         
-        if code != "":
-            try:
-                post_entryline_text(self, code)
-            except TypeError: 
-                post_entryline_text(self, "")
+##        if code != "":
+##            try:
+##                post_entryline_text(self, code)
+##            except TypeError: 
+##                post_entryline_text(self, "")
         
         event.Skip()
 
