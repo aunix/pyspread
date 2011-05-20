@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Unit test for _layer0.py"""
+"""Unit test for model.py"""
 
 # --------------------------------------------------------------------
 # pyspread is free software: you can redistribute it and/or modify
@@ -29,7 +29,7 @@ import numpy
 
 import wx
 
-from model.model import KeyValueStore, CellAttributes, DictGrid, UnRedo
+from model.model import KeyValueStore, CellAttributes, DictGrid
 from model.model import DataArray, CodeArray
 
 from lib.selection import Selection
@@ -86,75 +86,6 @@ class TestDictGrid(object):
         
         with pytest.raises(IndexError):
             self.dict_grid[100, 0, 0]
-
-
-class TestUnRedo(object):
-    """Unit test for UnRedo"""
-    def setup_method(self, method):
-        """Setup for dummy undo steps"""
-        
-        self.unredo = UnRedo()
-        self.list = []
-        self.step = (self.list.append, ["Test"], self.list.pop, [])
-    
-    def test_mark(self):
-        """Test for marking step delimiters"""
-    
-        self.unredo.mark()
-        assert self.unredo.undolist == [] # Empty undolist needs no marking
-        
-        self.unredo.undolist = [self.step]
-        self.unredo.mark()
-        assert self.unredo.undolist[-1] == "MARK"
-
-    def test_undo(self):
-        """Test for undo operation"""
-        self.unredo.undolist = [self.step]
-        self.unredo.undo()
-        assert self.list == ["Test"]
-        assert self.unredo.redolist == [self.step]
-        
-        # Test Mark
-        self.unredo.mark()
-        self.list.pop()
-        self.unredo.append(self.step[:2], self.step[2:])
-        self.unredo.undo()
-        assert self.list == ["Test"]
-        assert "MARK" not in self.unredo.undolist
-        assert "MARK" in self.unredo.redolist
-        
-        # When Redolist != [], a MARK should appear
-        self.unredo.mark()
-        self.list.pop()
-        self.unredo.append(self.step[:2], self.step[2:])
-        self.unredo.redolist.append('foo')
-        self.unredo.undo()
-        assert self.list == ["Test"]
-        assert "MARK" not in self.unredo.undolist
-        assert "MARK" in self.unredo.redolist
-
-    def test_redo(self):
-        """Test for redo operation"""
-        self.list.append("Test")
-        self.unredo.redolist = [self.step]
-        self.unredo.redo()
-        assert self.list == []
-        
-        # Test Mark
-
-    def test_reset(self):
-        """Test for resettign undo"""
-        
-        self.unredo.reset()
-        assert self.unredo.undolist == []
-        assert self.unredo.redolist == []
-
-    def test_append(self):
-        """Tests append operation"""
-        
-        self.unredo.append(self.step[:2], self.step[2:])
-        assert len(self.unredo.undolist) == 1
-        assert self.unredo.undolist[0] == self.step
         
 class TestDataArray(object):
     """Unit test for DataArray"""
@@ -316,3 +247,15 @@ class TestCodeArray(object):
         res = self.code_array[1, 1, 0]
         comp = KeyError("Circular dependency at (1, 1, 0)")
         assert repr(res) == repr(comp)
+
+    def test_findnextmatch(self):
+        """Find method test"""
+        
+        code_array = self.code_array
+        
+        for i in xrange(100):
+            code_array[i, 0, 0] = str(i)
+        
+        assert code_array[3, 0, 0] == 3
+        assert code_array.findnextmatch((0, 0, 0), "3", "DOWN") == (3, 0, 0)
+        assert code_array.findnextmatch((0, 0, 0), "99", "DOWN") == (99, 0, 0)

@@ -28,10 +28,10 @@ Model
 The model contains the core data structures of pyspread.
 It is divided into layers.
 
-Layer 3: 
-Layer 2: 
-Layer 1: 
-Layer 0: 
+Layer 3: CodeArray
+Layer 2: DataArray
+Layer 1: DictGrid
+Layer 0: KeyValueStore
 
 """
 
@@ -43,9 +43,13 @@ import numpy
 
 import wx
 
+from lib._interfaces import sorted_keys, string_match
 from lib.irange import slice_range
+from lib.typechecks import is_slice_like, is_string_like, is_generator_like
 
-from config import MAX_UNREDO, default_cell_attributes
+from unredo import UnRedo
+
+from config import default_cell_attributes
 
 class KeyValueStore(dict):
     """Key-Value store in memory. Currently a dict with default value None.
@@ -131,122 +135,6 @@ class DictGrid(KeyValueStore):
 
 # ------------------------------------------------------------------------------
 
-
-class UnRedo(object):
-    """Undo/Redo framework class.
-    
-    For each undo-able operation, the undo/redo framework stores the
-    undo operation and the redo operation. For each step, a 4-tuple of:
-    1) the function object that has to be called for the undo operation
-    2) the undo function parameters as a list
-    3) the function object that has to be called for the redo operation
-    4) the redo function parameters as a list
-    is stored.
-    
-    One undo step in the application can comprise of multiple operations.
-    Undo steps are separated by the string "MARK".
-    
-    The attributes should only be written to by the class methods.
-
-    Attributes
-    ----------
-    undolist: List
-    \t
-    redolist: List
-    \t
-    active: Boolean
-    \tTrue while an undo or a redo step is executed.
-
-    """
-    
-    def __init__(self):
-        """[(undofunc, [undoparams, ...], redofunc, [redoparams, ...]), 
-        ..., "MARK", ...]
-        "MARK" separartes undo/redo steps
-        
-        """
-        
-        self.undolist = []
-        self.redolist = []
-        self.active = False
-        
-    def mark(self):
-        """Inserts a mark in undolist and empties redolist"""
-        
-        if self.undolist != [] and self.undolist[-1] != "MARK":
-            self.undolist.append("MARK")
-    
-    def undo(self):
-        """Undos operations until next mark and stores them in the redolist"""
-        
-        self.active = True
-        
-        while self.undolist != [] and self.undolist[-1] == "MARK":
-            self.undolist.pop()
-            
-        if self.redolist != [] and self.redolist[-1] != "MARK":
-            self.redolist.append("MARK")
-        
-        while self.undolist != []:
-            step = self.undolist.pop()
-            if step == "MARK": 
-                break
-            self.redolist.append(step)
-            step[0](*step[1])
-        
-        self.active = False
-        
-    def redo(self):
-        """Redos operations until next mark and stores them in the undolist"""
-        
-        self.active = True
-        
-        while self.redolist and self.redolist[-1] == "MARK":
-            self.redolist.pop()
-        
-        if self.undolist:
-            self.undolist.append("MARK")
-        
-        while self.redolist:
-            step = self.redolist.pop()
-            if step == "MARK": 
-                break
-            self.undolist.append(step)
-            step[2](*step[3])
-            
-        self.active = False
-
-    def reset(self):
-        """Empties both undolist and redolist"""
-        
-        self.__init__()
-
-    def append(self, undo_operation, operation):
-        """Stores an operation and its undo operation in the undolist
-        
-        undo_operation: (undo_function, [undo_function_attribute_1, ...])
-        operation: (redo_function, [redo_function_attribute_1, ...])
-        
-        """
-        
-        # If the lists grow too large they are emptied
-        if len(self.undolist) > MAX_UNREDO or \
-           len(self.redolist) > MAX_UNREDO:
-            self.reset()
-        
-        # Check attribute types
-        for unredo_operation in [undo_operation, operation]:
-            iter(unredo_operation)
-            assert len(unredo_operation) == 2
-            assert hasattr(unredo_operation[0], "__call__")
-            iter(unredo_operation[1])
-        
-        if not self.active:
-            self.undolist.append(undo_operation + operation)
-
-# End of class UnRedo
-
-
 class DataArray(object):
     """DataArray provides enhanced grid read/write access.
     
@@ -267,9 +155,40 @@ class DataArray(object):
     def __init__(self, shape):
         self.dict_grid = DictGrid(shape)
     
+        # Undo and redo management
+        self.unredo = UnRedo()
+        
         # Cell attributes mask
-    
         self.cell_attributes = self.dict_grid.cell_attributes
+    
+    def __iter__(self):
+        """returns iterator over self.dict_grid"""
+        
+        return iter(self.dict_grid)
+    
+    def keys(self):
+        """Returns keys in self.dict_grid"""
+        
+        return self.dict_grid.keys()
+    
+    def pop(key):
+        """Pops dict_grid with undo and redo support"""
+        
+        # UnRedo support
+        
+        try:
+            undo_operation = (self.__setitem__, [key, self.dict_grid[key]])
+            redo_operation = (self.pop, [key])
+
+            self.unredo.append(undo_operation, redo_operation)
+            
+        except KeyError:
+            # If key not present then unredo is not necessary
+            pass
+            
+        # End UnRedo support
+        
+        return self.dict_grid.pop(key)
     
     # Shape mask
     
@@ -290,11 +209,22 @@ class DataArray(object):
             for key in self.dict_grid:
                 if any(key_ele >= new_axis 
                        for key_ele, new_axis in zip(key, shape)):
-                    self.dict_grid.pop(key)
+                    self.pop(key)
         
         # Set dict_grid shape attribute
         
         self.dict_grid.shape = shape
+        
+        # UnRedo support
+        
+        undo_operation = (setattr, [self.dict_grid, "shape", old_shape])
+        redo_operation = (setattr, [self.dict_grid, "shape", shape])
+
+        self.unredo.append(undo_operation, redo_operation)
+            
+        self.unredo.mark()
+    
+        # End UnRedo support
 
     shape = property(_get_shape, _set_shape)
 
@@ -310,22 +240,7 @@ class DataArray(object):
         return {"dict_grid": self.dict_grid}
     
     # Slice support
-    
-    def _is_slice_like(self, obj):
-        """Returns True if obj is slice like, i.e. has attribute indices"""
-        
-        return hasattr(obj, "indices")
-        
-    def _is_string_like(self, obj):
-        """Returns True if obj is string like, i.e. has method split"""
-        
-        return hasattr(obj, "split")
-    
-    def _is_generator_like(self, obj):
-        """Returns True if obj is string like, i.e. has method next"""
-        
-        return hasattr(obj, "next")
-    
+       
     def __getitem__(self, key):
         """Adds slicing access to cell code retrieval
         
@@ -343,12 +258,12 @@ class DataArray(object):
         """
         
         for key_ele in key:
-            if self._is_slice_like(key_ele):
+            if is_slice_like(key_ele):
                 # We have something slice-like here 
                 
                 return self.cell_array_generator(key)
                 
-            elif self._is_string_like(key_ele):
+            elif is_string_like(key_ele):
                 # We have something string-like here 
                 
                 raise NotImplementedError, \
@@ -367,33 +282,55 @@ class DataArray(object):
         single_keys_per_dim = []
         
         for axis, key_ele in enumerate(key):
-            if self._is_slice_like(key_ele):
+            if is_slice_like(key_ele):
                 # We have something slice-like here 
                 
                 single_keys_per_dim.append(slice_range(key_ele, 
                                                        length = key[axis]))
                 
-            elif self._is_string_like(key_ele):
+            elif is_string_like(key_ele):
                 # We have something string-like here 
                 
                 raise NotImplementedError
             
             else:
-                # key_ele should be a single cell
+                # key_ele is a single cell
                 
                 single_keys_per_dim.append((key_ele, ))
         
         single_keys = itertools.product(*single_keys_per_dim)
         
+        self.unredo_mark = False
+        
         for single_key in single_keys:
             if value:
+                # UnRedo support
+                
+                unredo_mark = True
+                
+                try:
+                    undo_operation = (self.dict_grid.__setitem__, 
+                                      [key, self.dict_grid[key]])
+                    redo_operation = (self.dict_grid.__setitem__, [key, value])
+        
+                    self.unredo.append(undo_operation, redo_operation)
+                    
+                except KeyError:
+                    # If key not present then unredo is not necessary
+                    pass
+                    
+                # End UnRedo support
+                
                 self.dict_grid[single_key] = value
             else:
                 # Value is empty --> delete cell
                 try:
-                    self.dict_grid.pop(key)
+                    self.pop(key)
                 except KeyError:
                     pass
+                    
+        if unredo_mark:
+            self.unredo.mark()
     
     def cell_array_generator(self, key):
         """Generator traversing cells specified in key
@@ -470,11 +407,13 @@ class DataArray(object):
                 
                 new_cells[tuple(new_key)] = \
                 deleted_cells[key] = \
-                    self.dict_grid.pop(key)
+                    self.pop(key)
         
         self.dict_grid.update(new_cells)
         
         self._adjust_shape(no_to_insert, axis)
+        
+        self.unredo.mark()
         
     def delete(self, deletion_point, no_to_delete, axis):
         """Deletes no_to_delete rows/cols/tabs/... starting with deletion_point
@@ -498,7 +437,7 @@ class DataArray(object):
         
         for key in copy(self.dict_grid):
             if deletion_point <= key[axis] < deletion_point + no_to_delete:
-                deleted_cells[key] = self.dict_grid.pop(key)
+                deleted_cells[key] = self.pop(key)
             
             elif key[axis] >= deletion_point + no_to_delete:
                 new_key = list(key)
@@ -506,11 +445,13 @@ class DataArray(object):
                 
                 new_cells[tuple(new_key)] = \
                 deleted_cells[key] = \
-                    self.dict_grid.pop(key)
+                    self.pop(key)
         
         self.dict_grid.update(new_cells)
 
         self._adjust_shape(-no_to_delete, axis)
+        
+        self.unredo.mark()
 
 # End of class DataArray
 
@@ -552,11 +493,11 @@ class CodeArray(DataArray):
             if ele is None:
                 res.append(None)
                 
-            elif self._is_string_like(ele):
+            elif is_string_like(ele):
                 # Code
                 res.append(self._eval_cell(ele))
                 
-            elif self._is_generator_like(ele):
+            elif is_generator_like(ele):
                 # Nested generator
                 res.append(self._make_nested_list(ele))
                 
@@ -598,7 +539,7 @@ class CodeArray(DataArray):
         if code is None:
             return
             
-        elif self._is_generator_like(code):
+        elif is_generator_like(code):
             # We have a generator object
             
             return numpy.array(self._make_nested_list(code))
@@ -629,6 +570,35 @@ class CodeArray(DataArray):
             globals().update({glob_var: result})
         
         return result
+    
+    def findnextmatch(self, startkey, find_string, flags):
+        """ Returns a tuple with the position of the next match of find_string
+        
+        Returns None if string not found.
+        
+        Parameters:
+        -----------
+        startkey:   Start position of search
+        find_string:String to be searched for
+        flags:      List of strings, out ouf 
+                    ["UP" xor "DOWN", "WHOLE_WORD", "MATCH_CASE", "REG_EXP"]
+        
+        """
+        
+        assert "UP" in flags or "DOWN" in flags
+        assert not ("UP" in flags and "DOWN" in flags)
+        
+        # List of keys in sgrid in search order
+        
+        reverse = "UP" in flags
+        
+        for key in sorted_keys(self.keys(), startkey, reverse=reverse):
+            code = self(key)
+            res_str = unicode(self[key])
+            
+            if string_match(code, find_string, flags) is not None or \
+               string_match(res_str, find_string, flags) is not None:
+                return key
     
 # End of class CodeArray
 

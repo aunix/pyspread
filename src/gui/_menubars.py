@@ -115,6 +115,7 @@ class _filledMenu(wx.Menu):
                     style = wx.ITEM_NORMAL
                 
                 menuitem = obj(parent, item_id, shortcut, helptext, style)
+
                 parent.AppendItem(menuitem)
                 
                 if "&Approve file" == shortcut:
@@ -167,6 +168,7 @@ class MainMenu(_filledMenu):
                 "Create a new, empty spreadsheet", wx.ID_NEW]], \
             [item, [OpenMsg, "&Open", 
                 "Open spreadsheet from file", wx.ID_OPEN]], \
+            ["Separator"], \
             [item, [SaveMsg, "&Save\tCtrl+s", 
                     "Save spreadsheet", wx.ID_SAVE]], \
             [item, [SaveAsMsg, "Save &As\tShift+Ctrl+s", 
@@ -182,12 +184,12 @@ class MainMenu(_filledMenu):
             ["Separator"], \
             [item, [PageSetupMsg, "Page setup", 
                 "Setup printer page"]], \
-            [item, [PrintPreviewMsg, "Print preview", 
+            [item, [PrintPreviewMsg, "Print preview\tShift+Ctrl+p", 
                 "Print previe&w", wx.ID_PREVIEW]], \
             [item, [PrintMsg, "&Print\tCtrl+p", 
                 "Print current spreadsheet", wx.ID_PRINT]], \
             ["Separator"], \
-            [item, [CloseMsg, "E&xit\tCtrl+q", "Exit Program", wx.ID_EXIT]]] \
+            [item, [CloseMsg, "&Quit\tCtrl+q", "Exit Program", wx.ID_EXIT]]] \
         ], \
         [wx.Menu, "&Edit", [\
             [item, [UndoMsg, "&Undo\tCtrl+z", "Undo last step", wx.ID_UNDO]], \
@@ -222,6 +224,21 @@ class MainMenu(_filledMenu):
             ["Separator"], \
             [item, [ResizeGridMsg, "Resize grid", "Resize the grid. " + \
                     "The buttom right lowermost cells are deleted first."]]] \
+        ], \
+        [wx.Menu, "&View", [ \
+            ## TODO: Show / hie panels
+            
+            [item, [GotoCellMsg, "Go to cell", 
+                        "Moves the grid to a cell."]],
+            [wx.Menu, "Zoom", [ \
+                [item, [ZoomMsg, str(int(zoom)) + "%", 
+                        "Zoom " + str(int(zoom)) + "%"] \
+                ] for zoom in xrange(50, 350, 10)]
+                ], \
+            ["Separator"], \
+            [item, [RefreshSelectionMsg, "Refresh selected cells\tF5", 
+                        "Refresh selected cells even when frozen"]],
+            ], \
         ], \
         [wx.Menu, "F&ormat", [ \
             [wx.Menu, "Font", [ \
@@ -260,18 +277,6 @@ class MainMenu(_filledMenu):
                 ] for rotation in [u"0\u00B0", u"90\u00B0", 
                                    u"180\u00B0", u"270\u00B0"]]
                 ], \
-            ], \
-        ], \
-        [wx.Menu, "&View", [ \
-            [item, [RefreshSelectionMsg, "Refresh selected cells\tF5", 
-                        "Refresh selected cells even when frozen"]],
-            [item, [GotoCellMsg, "Go to cell", 
-                        "Moves the grid to a cell."]],
-            [wx.Menu, "Zoom", [ \
-                [item, [ZoomMsg, str(int(zoom)) + "%", 
-                        "Zoom " + str(int(zoom)) + "%"] \
-                ] for zoom in xrange(50, 350, 10)]
-                ] \
             ], \
         ], \
         [wx.Menu, "&Macro", [\
