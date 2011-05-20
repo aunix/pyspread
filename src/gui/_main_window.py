@@ -123,6 +123,7 @@ class MainWindow(wx.Frame):
         
     def _states(self):
         """Sets main window states"""
+        
         # Print data
         
         self.print_data = wx.PrintData()

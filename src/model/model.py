@@ -160,6 +160,9 @@ class DataArray(object):
         
         # Cell attributes mask
         self.cell_attributes = self.dict_grid.cell_attributes
+        
+        # Safe model
+        self.safe_mode = False
     
     def __iter__(self):
         """returns iterator over self.dict_grid"""
