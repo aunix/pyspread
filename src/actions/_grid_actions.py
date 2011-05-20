@@ -77,12 +77,12 @@ class FileActions(object):
     def enter_save_mode(self):
         """Enters save mode"""
         
-        self.data_array.safe_mode = True
+        self.code_array.safe_mode = True
 
     def leave_save_mode(self):
         """Leaves save mode"""
         
-        self.data_array.safe_mode = False
+        self.code_array.safe_mode = False
         
         
     def approve(self, filepath):
@@ -131,7 +131,7 @@ class FileActions(object):
         
         # Get cell values
         try:
-            self.grid.data_array.dict_grid = interface.get_values()
+            self.grid.code_array.dict_grid = interface.get_values()
             
         except IOError:
             statustext = "Error opening file " + filepath + "."
@@ -141,7 +141,7 @@ class FileActions(object):
         
         interface.close()
         
-        _grid_table = GridTable(self.grid, self.grid.data_array)
+        _grid_table = GridTable(self.grid, self.grid.code_array)
         self.grid.SetTable(_grid_table, True)
     
     def sign_file(self, filepath):
@@ -172,7 +172,7 @@ class FileActions(object):
         interface = event.attr["interface"]()
         filepath = event.attr["filepath"]
         
-        interface.save(self.data_array.dict_grid, filepath)
+        interface.save(self.code_array.dict_grid, filepath)
         self.sign_file(filepath)
 
 
@@ -304,7 +304,7 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
         
         set_cell_code_fast = self.cell_actions.set_cell_code_fast
         set_cell_code = self.cell_actions.set_cell_code
-        grid_rows, grid_cols, _ = self.grid.data_array.shape
+        grid_rows, grid_cols, _ = self.grid.code_array.shape
         
         self.need_abort = False
         
@@ -398,12 +398,12 @@ class GridActions(object):
                               self.switch_to_table)
     
     def new(self, event):
-        """Creates a new spreadsheet. Expects data_array in event."""
+        """Creates a new spreadsheet. Expects code_array in event."""
         
-        # Grid table handles interaction to data_array
-        self.grid.data_array.dict_grid = event.data_array.dict_grid
+        # Grid table handles interaction to code_array
+        self.grid.code_array.dict_grid = event.code_array.dict_grid
     
-        _grid_table = GridTable(self.grid, self.grid.data_array)
+        _grid_table = GridTable(self.grid, self.grid.code_array)
         self.grid.SetTable(_grid_table, True)
     
     def zoom(self):
@@ -456,7 +456,7 @@ class GridActions(object):
         
         newtable = event.newtable
         
-        no_tabs = self.grid.data_array.shape[2]
+        no_tabs = self.grid.code_array.shape[2]
         
         if 0 <= newtable <= no_tabs:
             self.grid.current_table = newtable
@@ -542,12 +542,12 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
                      GridActions, SelectionActions):
     """All grid actions as a bundle"""
     
-    def __init__(self, grid, data_array):
+    def __init__(self, grid, code_array):
         self.main_window = grid.parent
         self.grid = grid
-        self.data_array = data_array
+        self.code_array = code_array
         
-        self.cell_actions = CellActions(grid, data_array)
+        self.cell_actions = CellActions(grid, code_array)
         
         FileActions.__init__(self)
         TableActions.__init__(self)

@@ -41,11 +41,15 @@ from config import file_approval_warning
 from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _widgets import EntryLine, StatusBar, TableChoiceIntCtrl
+
 from lib._interfaces import PysInterface
 from lib.irange import irange
+
 from _gui_interfaces import GuiInterfaces
 
 from _grid import Grid
+from model.model import CodeArray
+
 from _events import *
 
 from actions._main_window_actions import AllMainWindowActions
@@ -233,9 +237,9 @@ class MainWindow(wx.Frame):
         self.SetIcon(_icon)
 
     def get_safe_mode(self):
-        """Returns safe_mode state from data_array"""
+        """Returns safe_mode state from code_array"""
         
-        return self.grid.data_array.safe_mode
+        return self.grid.code_array.safe_mode
 
     safe_mode = property(get_safe_mode)
 
@@ -313,7 +317,7 @@ class MainWindowEventHandlers(object):
         if dim is None:
             return
         
-        data_array = DataArray(dim)
+        code_array = CodeArray(dim)
         
         # Set new filepath and post it to the title bar
         
@@ -322,7 +326,7 @@ class MainWindowEventHandlers(object):
         
         # Create new grid
         post_command_event(self.main_window, GridActionNewMsg, 
-                           data_array=data_array)
+                           code_array=code_array)
         
         # Update TableChoiceIntCtrl
         post_command_event(self.main_window, ResizeGridMsg, 
@@ -472,10 +476,10 @@ class MainWindowEventHandlers(object):
         
         # Generator of row and column keys in correct order
         
-        data_array = self.main_window.grid.data_array
+        code_array = self.main_window.grid.code_array
         tab = self.main_window.grid.current_table
         
-        data = data_array[top:bottom+1, left:right+1, tab]
+        data = code_array[top:bottom+1, left:right+1, tab]
         
         # Get target filepath from user
         

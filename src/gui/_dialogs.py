@@ -863,6 +863,7 @@ class DimensionsEntryDialog(wx.Dialog):
         self.SetSizer(grid_sizer_1)
         grid_sizer_1.Fit(self)
         self.Layout()
+        self.X_DimensionsEntry.SetFocus()
     
     def _ondim(self, dimension, valuestring):
         """Converts valuestring to int and assigns result to self.dim
