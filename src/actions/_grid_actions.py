@@ -287,7 +287,7 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
             statustext += " Press <Esc> to abort."
         post_command_event(self.main_window, StatusBarMsg, text=statustext)
     
-    def paste(self, tl_key, data, fast=False):
+    def paste(self, tl_key, data):
         """Pastes data into grid table starting at top left cell tl_key
         
         Parameters
@@ -302,7 +302,6 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
         
         self.pasting = True
         
-        set_cell_code_fast = self.cell_actions.set_cell_code_fast
         set_cell_code = self.cell_actions.set_cell_code
         grid_rows, grid_cols, _ = self.grid.code_array.shape
         
@@ -349,10 +348,7 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
                 
                 key = target_row, target_col, tl_tab
                 
-                if fast:
-                    set_cell_code_fast(key, cell_data)
-                else:
-                    set_cell_code(key, cell_data)
+                set_cell_code(key, cell_data)
         
         if row_overflow or col_overflow:
             self._show_final_overflow_message(row_overflow, col_overflow)

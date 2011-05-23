@@ -100,7 +100,7 @@ class SafeUnpickler(object):
         'numpy': set(['ndarray', 'dtype']),
         'numpy.core.multiarray': set(['_reconstruct']),
         'lib._interfaces': set(['UserString']),
-        'model._data_array': set(['DictGrid']),
+        'model.model': set(['CellAttributes', 'DictGrid']),
         'wx._gdi': set(['Colour']),
     }
  

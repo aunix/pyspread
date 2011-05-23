@@ -434,17 +434,19 @@ class MainWindowEventHandlers(object):
         
         # Get filepath from user
         
-        wildcard = wildcard=" CSV file|*.*|Tab-delimited text file|*.*"
+        wildcard = wildcard="Csv file (*.csv)|*.csv|" \
+                            "Tab delimited text file (*.*)|*.*"
         message = "Choose file to import."
         style = wx.OPEN | wx.CHANGE_DIR
-        path, filterindex = self.interfaces.get_filepath_findex_from_user( \
+        filepath, filterindex = self.interfaces.get_filepath_findex_from_user( \
                                     wildcard, message, style)
         
-        if path is None:
+        if filepath is None:
             return
         
         # Get generator of import data
-        import_data = self.main_window.actions.import_file(path, filterindex)
+        import_data = self.main_window.actions.import_file(filepath, 
+                                                           filterindex)
         
         if import_data is None:
             return
@@ -453,7 +455,7 @@ class MainWindowEventHandlers(object):
         grid = self.main_window.grid
         tl_cell = grid.GetGridCursorRow(), grid.GetGridCursorCol()
         
-        grid.actions.paste(tl_cell, import_data, fast=True)
+        grid.actions.paste(tl_cell, import_data)
         
     def OnExport(self, event):
         """File export event handler

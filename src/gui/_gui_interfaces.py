@@ -21,8 +21,8 @@
 # --------------------------------------------------------------------
 
 """
-_main_window
-============
+_gui_interfaces
+===============
 
 Provides:
 ---------
@@ -89,12 +89,12 @@ class ModalDialogInterfaceMixin(object):
         
         Parameters
         ----------
-        wildcard: String, defaults to " PYS file|*.pys"
-        \twildcard string for file dialog
+        wildcard: String
+        \tWildcard string for file dialog
         message: String
         \tMessage in the file dialog
-        style: String in ["open", "save"]
-        \tDialog style
+        style: Integer
+        \tDialog style, e. g. wx.OPEN | wx.CHANGE_DIR
                 
         """
         
@@ -107,7 +107,7 @@ class ModalDialogInterfaceMixin(object):
         if dlg.ShowModal() == wx.ID_OK:
             filepath = dlg.GetPath()
             filter_index = dlg.GetFilterIndex()
-            
+        
         return filepath, filter_index
     
     def display_warning(self, message, short_message):

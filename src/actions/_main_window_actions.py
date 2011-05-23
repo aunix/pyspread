@@ -163,13 +163,10 @@ class ExchangeActions(object):
 
         # Get csv info
         
-        csv_info = self.main_window.interfaces.get_csv_import_info(path)
-        
-        if csv_info is None:
-            return
-        
         try:
-            dialect, digest_types, has_header = csv_info
+            dialect, has_header, digest_types = \
+                self.main_window.interfaces.get_csv_import_info(path)
+                
         except TypeError:
             return
         
