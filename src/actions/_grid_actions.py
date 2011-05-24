@@ -374,14 +374,17 @@ class MacroActions(object):
 
 
 class UnRedoActions(object):
-    """Undo and redo operations on grid level"""
+    """Undo and redo operations"""
     
     def undo(self):
-        raise NotImplementedError
+        """Calls undo in model.code_array.unredo"""
+        
+        self.code_array.unredo.undo()
         
     def redo(self):
-        raise NotImplementedError
+        """Calls redo in model.code_array.unredo"""
         
+        self.code_array.unredo.redo()
 
 
 class GridActions(object):

@@ -481,18 +481,16 @@ class GridEventHandlers(object):
     # Undo/Redo events
 
     def OnUndo(self, event):
-        """Calls the gris undo method"""
+        """Calls the grid undo method"""
         
-        raise NotImplementedError
-        
-        event.Skip()
+        self.grid.actions.undo()
+        self.grid.ForceRefresh()
         
     def OnRedo(self, event):
-        """Calls the gris redo method"""
+        """Calls the grid redo method"""
         
-        raise NotImplementedError
-        
-        event.Skip()
+        self.grid.actions.redo()
+        self.grid.ForceRefresh()
 
     
 # End of class GridEventHandlers
