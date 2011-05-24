@@ -434,7 +434,7 @@ class MainWindowEventHandlers(object):
         
         # Get filepath from user
         
-        wildcard = wildcard="Csv file (*.csv)|*.csv|" \
+        wildcard = wildcard="Csv file (*.*)|*.*|" \
                             "Tab delimited text file (*.*)|*.*"
         message = "Choose file to import."
         style = wx.OPEN | wx.CHANGE_DIR
@@ -486,7 +486,7 @@ class MainWindowEventHandlers(object):
         
         # Get target filepath from user
         
-        wildcard = wildcard=" CSV file|*.*"
+        wildcard = wildcard=" CSV file (*.*)|*.*"
         message = "Choose filename for export."
         style = wx.OPEN | wx.CHANGE_DIR
         path, filterindex = self.interfaces.get_filepath_findex_from_user( \

@@ -99,6 +99,12 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         handlers = self.handlers
         c_handlers = self.cell_handlers
         
+        # Grid events
+        
+        self.Bind(wx.EVT_SCROLLWIN, handlers.OnScroll)
+        self.Bind(wx.grid.EVT_GRID_CMD_SELECT_CELL, c_handlers.OnCellSelected)
+        self.GetGridWindow().Bind(wx.EVT_MOTION, handlers.OnMouseMotion)
+        
         # Cell code events
         
         # Cell attribute events
@@ -161,8 +167,8 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
 class GridCellEventHandlers(object):
     """Contains grid cell event handlers incl. attribute events"""
     
-    def __init__(self, parent):
-        self.main_window = parent
+    def __init__(self, grid):
+        self.grid = grid
     
     # Cell code entry events
     
@@ -307,21 +313,27 @@ class GridCellEventHandlers(object):
     def OnCellSelected(self, event):
         """Cell selection event handler"""
         
-        raise NotImplementedError
-        
         event.Skip()
     
 
 class GridEventHandlers(object):
     """Contains grid event handlers"""
     
-    def __init__(self, parent):
-        self.main_window = parent
+    def __init__(self, grid):
+        self.grid = grid
     
     def OnMouseMotion(self, event):
         """Mouse motion event handler"""
         
-        raise NotImplementedError
+        grid = self.grid
+        
+        pos_x, pos_y = grid.CalcUnscrolledPosition(event.GetPosition())
+        
+        row = grid.YToRow(pos_y)
+        col = grid.XToCol(pos_x)
+        tab = grid.current_table
+        
+        grid.actions.on_mouse_over((row, col, tab))
         
         event.Skip()
         
@@ -351,7 +363,7 @@ class GridEventHandlers(object):
     def OnScroll(self, event):
         """Event handler for grid scroll event"""
         
-        self.parent.MainGrid.view.clear()
+        self.grid.ForceRefresh()
         
         event.Skip()
     
@@ -373,7 +385,7 @@ class GridEventHandlers(object):
         
         if event.ControlDown():
             raise NotImplementedError
-            
+        
         event.Skip()
     
     # Find events

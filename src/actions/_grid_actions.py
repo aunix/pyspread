@@ -84,7 +84,6 @@ class FileActions(object):
         
         self.code_array.safe_mode = False
         
-        
     def approve(self, filepath):
         """Sets safe mode if signature missing of invalid"""
         
@@ -389,6 +388,9 @@ class GridActions(object):
     """Grid level grid actions"""
     
     def __init__(self):
+        
+        self.prev_rowcol = [] # Last mouse over cell
+        
         self.main_window.Bind(EVT_COMMAND_GRID_ACTION_NEW, self.new)
         self.main_window.Bind(EVT_COMMAND_GRID_ACTION_TABLE_SWITCH, 
                               self.switch_to_table)
@@ -402,8 +404,24 @@ class GridActions(object):
         _grid_table = GridTable(self.grid, self.grid.code_array)
         self.grid.SetTable(_grid_table, True)
     
-    def zoom(self):
+    def zoom(self, zoom):
+        """Zooms to zoom factor"""
         pass
+    
+    def on_mouse_over(self, key):
+        """Displays cell code of cell key in status bar"""
+        
+        row, col, tab = key
+        
+        if (row, col) != self.prev_rowcol and row >= 0 and col >= 0:
+            self.prev_rowcol[:] = [row, col]
+            
+            hinttext = self.grid.GetTable().GetSource(row, col, tab)
+            
+            if hinttext is None:
+                hinttext = ''
+            
+            post_command_event(self.main_window, StatusBarMsg, text=hinttext)
     
     def get_visible_area(self):
         """Returns visible area
@@ -434,11 +452,6 @@ class GridActions(object):
         
         return (top, left), (bottom, right)
     
-    def get_cursor(self):
-        """Returns current grid cursor cell"""
-        
-        return self.grid.key
-
     def switch_to_table(self, event):
         """Switches grid to table
         
@@ -462,6 +475,11 @@ class GridActions(object):
             ##self.grid.zoom_labels()
             
             ##post_entryline_text(self.grid, "")
+
+    def get_cursor(self):
+        """Returns current grid cursor cell"""
+        
+        return self.grid.key
 
     def set_cursor(self, value):
         """Changes the grid cursor cell."""
