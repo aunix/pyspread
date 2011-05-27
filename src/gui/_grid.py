@@ -101,9 +101,8 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         
         # Grid events
         
-        self.Bind(wx.EVT_SCROLLWIN, handlers.OnScroll)
-        self.Bind(wx.grid.EVT_GRID_CMD_SELECT_CELL, c_handlers.OnCellSelected)
         self.GetGridWindow().Bind(wx.EVT_MOTION, handlers.OnMouseMotion)
+        self.Bind(wx.EVT_SCROLLWIN, handlers.OnScroll)
         
         # Cell code events
         
@@ -129,6 +128,7 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         
         # Cell selection events
 
+        self.Bind(wx.grid.EVT_GRID_CMD_SELECT_CELL, c_handlers.OnCellSelected)
         
         # Grid view events
         
@@ -313,6 +313,8 @@ class GridCellEventHandlers(object):
     def OnCellSelected(self, event):
         """Cell selection event handler"""
         
+        #self.grid.Refresh()
+        
         event.Skip()
     
 
@@ -337,6 +339,11 @@ class GridEventHandlers(object):
         
         event.Skip()
         
+    def OnScroll(self, event):
+        """Event handler for grid scroll event"""
+        
+        event.Skip()
+        
     # Grid view events
 
     def OnGoToCell(self, event):
@@ -357,13 +364,6 @@ class GridEventHandlers(object):
         """Event handler for setting grid zoom via menu"""
         
         raise NotImplementedError
-        
-        event.Skip()
-        
-    def OnScroll(self, event):
-        """Event handler for grid scroll event"""
-        
-        self.grid.ForceRefresh()
         
         event.Skip()
     
@@ -416,21 +416,45 @@ class GridEventHandlers(object):
     def OnInsertRows(self, event):
         """Insert the maximum of 1 and the number of selected rows"""
         
-        raise NotImplementedError
+        bbox = self.grid.selection.get_bbox()
+        
+        if bbox is None:
+            no_rows = 1
+        else:
+            (bb_top, _), (bb_bottom, _) = bbox
+            no_rows = bb_bottom - bb_top
+            
+        cursor = self.grid.actions.cursor
+        
+        self.grid.actions.insert_rows(cursor[0], no_rows)
+        
+        self.grid.GetTable().ResetView()
         
         event.Skip()
     
     def OnInsertCols(self, event):
         """Inserts the maximum of 1 and the number of selected columns"""
         
-        raise NotImplementedError
+        bbox = self.grid.selection.get_bbox()
+        
+        if bbox is None:
+            no_cols = 1
+        else:
+            (_, bb_left), (_, bb_right) = bbox
+            no_cols = bb_right - bb_left
+            
+        cursor = self.grid.actions.cursor
+        
+        self.grid.actions.insert_rows(cursor[1], no_cols)
+        
+        self.grid.GetTable().ResetView()
         
         event.Skip()
     
     def OnInsertTabs(self, event):
         """Insert one table into grid"""
         
-        raise NotImplementedError
+        self.grid.actions.insert_tabs(self.grid.current_table, 1)
         
         event.Skip()
     
@@ -484,13 +508,13 @@ class GridEventHandlers(object):
         """Calls the grid undo method"""
         
         self.grid.actions.undo()
-        self.grid.ForceRefresh()
+        self.grid.Refresh()
         
     def OnRedo(self, event):
         """Calls the grid redo method"""
         
         self.grid.actions.redo()
-        self.grid.ForceRefresh()
+        self.grid.Refresh()
 
     
 # End of class GridEventHandlers

@@ -704,24 +704,6 @@ class Clipboard(object):
             wx.MessageBox("Can't open the clipboard", "Error")
         return error_log
 
-    def grid_paste(self, target, key=(0, 0, 0)):
-        """Inserts data into target.
-        
-        The data in the clipboard has to be a whitespace separated
-        2D matrix.
-        
-        Parameters:
-        -----------
-        target: Mutable array or list with 2 dimensions
-        \tTarget array for data
-        key: 
-        
-        """
-        
-        data_it = self._convert_clipboard()
-        
-        fill_numpyarray(target, data_it, [types.CodeType], key)
-
 # end of class Clipboard
 
 def string_match(datastring, findstring, flags=None):

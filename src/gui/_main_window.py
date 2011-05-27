@@ -42,7 +42,7 @@ from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _widgets import EntryLine, StatusBar, TableChoiceIntCtrl
 
-from lib._interfaces import PysInterface
+from lib._interfaces import PysInterface, Clipboard
 from lib.irange import irange
 
 from _gui_interfaces import GuiInterfaces
@@ -110,6 +110,9 @@ class MainWindow(wx.Frame):
         # IntCtrl for table choice
         self.table_choice = TableChoiceIntCtrl(self, DEFAULT_DIM[2])
 
+        # Clipboard
+        self.clipboard = Clipboard()
+        
         # Main window actions
         
         self.actions = AllMainWindowActions(self, self.grid)
@@ -267,7 +270,7 @@ class MainWindowEventHandlers(object):
         
         self.main_window.main_menu.enable_file_approve(True)
         
-        self.main_window.grid.ForceRefresh()
+        self.main_window.grid.Refresh()
     
     def OnSaveModeExit(self, event):
         """Save mode exit event handler"""
@@ -280,7 +283,7 @@ class MainWindowEventHandlers(object):
         
         self.main_window.main_menu.enable_file_approve(False)
         
-        self.main_window.grid.ForceRefresh()
+        self.main_window.grid.Refresh()
     
     def OnClose(self, event):
         """Program exit event handler"""
@@ -560,26 +563,65 @@ class MainWindowEventHandlers(object):
     def OnCut(self, event): 
         """Clipboard cut event handler"""
         
-        raise NotImplementedError
+        data = self.main_window.actions.cut(self.main_window.grid.selection)
+        self.clipboard.set_clipboard(data)
         
         event.Skip()
     
     def OnCopy(self, event):
         """Clipboard copy event handler"""
         
-        raise NotImplementedError
+        data = self.main_window.actions.copy(self.main_window.grid.selection)
+        self.main_window.clipboard.set_clipboard(data)
         
         event.Skip()
     
     def OnCopyResult(self, event):
         """Clipboard copy results event handler"""
         
-        raise NotImplementedError
+        data = self.main_window.actions.copy_result( \
+                            self.main_window.grid.selection)
+        self.clipboard.set_clipboard(data)
         
         event.Skip()
     
     def OnPaste(self, event):
         """Clipboard paste event handler"""
+        
+        focus = self.main_window.FindFocus()
+        
+        if isinstance(focus, wx.TextCtrl):
+            pass
+        else: # We got a grid selection
+            grid = self.main_window.grid
+            key = (grid.GetGridCursorRow(), \
+                   grid.GetGridCursorCol(), \
+                   grid.current_table)
+                   
+            data = self.main_window.clipboard.get_clipboard()
+        
+            self.main_window.actions.paste(key, data)
+        
+        event.Skip()
+    
+    # Macro events
+    
+    def OnMacroList(self, event):
+        """Macro list dialog event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnMacroListLoad(self, event): 
+        """Macro list load event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
+    def OnMacroListSave(self, event):
+        """Macro list save event handler"""
         
         raise NotImplementedError
         
@@ -607,28 +649,5 @@ class MainWindowEventHandlers(object):
         """About dialog event handler"""
         
         self.main_window.interfaces.display_about(self.main_window)
-    
-    # Macro events
-    
-    def OnMacroList(self, event):
-        """Macro list dialog event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-    
-    def OnMacroListLoad(self, event): 
-        """Macro list load event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-    
-    def OnMacroListSave(self, event):
-        """Macro list save event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
     
 # End of class MainWindowEventHandlers

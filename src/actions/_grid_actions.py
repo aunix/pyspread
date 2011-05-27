@@ -183,10 +183,10 @@ class TableRowActionsMixin(object):
         
         raise NotImplementedError
 
-    def add_rows(self, row, no_rows=1):
+    def insert_rows(self, row, no_rows=1):
         """Adds no_rows rows before row, appends if row > maxrows"""
         
-        raise NotImplementedError
+        self.code_array.insert(row, no_rows, axis=0)
 
     def delete_rows(self, row, no_rows=1):
         """Deletes no_rows rows"""
@@ -202,11 +202,11 @@ class TableColumnActionsMixin(object):
         
         raise NotImplementedError
 
-    def add_cols(self, col, no_cols=1):
+    def insert_cols(self, col, no_cols=1):
         """Adds no_cols columns before col, appends if col > maxcols"""
         
-        raise NotImplementedError
-
+        self.code_array.insert(col, no_cols, axis=1)
+        
     def delete_cols(self, col, no_cols=1):
         """Deletes no_cols column"""
         
@@ -216,10 +216,10 @@ class TableColumnActionsMixin(object):
 class TableTabActionsMixin(object):
     """Table tab controller actions"""
 
-    def add_tabs(self, tab, no_tabs=1):
+    def insert_tabs(self, tab, no_tabs=1):
         """Adds no_tabs tabs before table, appends if tab > maxtabs"""
         
-        raise NotImplementedError
+        self.code_array.insert(tab, no_tabs, axis=2)
 
     def delete_tabs(self, tab, no_tabs=1):
         """Deletes no_tabs tabs"""
@@ -482,7 +482,7 @@ class GridActions(object):
     def get_cursor(self):
         """Returns current grid cursor cell"""
         
-        return self.grid.key
+        return self.grid.GetGridCursorRow(), self.grid.GetGridCursorCol()
 
     def set_cursor(self, value):
         """Changes the grid cursor cell."""

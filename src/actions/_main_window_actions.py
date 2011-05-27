@@ -55,6 +55,7 @@ import wx.html
 from config import DEFAULT_FILENAME, HELP_SIZE, HELP_DIR
 
 from lib._interfaces import Digest
+from lib.irange import irange
 from gui._printout import PrintCanvas, Printout
 
 class CsvInterface(object):
@@ -290,17 +291,63 @@ class PrintActions(object):
 class ClipboardActions(object):
     """Actions which affect the clipboard"""
     
-    def cut(self):
-        raise NotImplementedError
+    def cut(self, selection):
+        """Cuts selected cells and returns data in a tab separated string"""
         
-    def copy(self):
-        raise NotImplementedError
+        # Copy cells
+        data = self.copy(selection)
+        
+        # Delete cells
+        
+        for key in self.grid:
+            if key in selection:
+                self.grid.pop(key)
+        
+        return data
     
-    def copy_result(self):
-        raise NotImplementedError
+    def copy(self, selection):
+        """Returns code from selection in a tab separated string"""
+        
+        tab = self.grid.current_table
+        
+        (bb_top, bb_left), (bb_bottom, bb_right) = selection.get_bbox()
+        
+        data = [[u""] * (bb_right - bb_left)] * (bb_bottom - bb_top)
+        
+        for __row, __col, __tab in self.grid.code_array:
+            if tab == __tab and \
+               bb_top <= __row <= bb_bottom and \
+               bb_left <= __col <= bb_right and \
+               (__row, __col, __tab) in selection:
+                   data[row][col] = code
+        
+        return "\n".join("\t".join(line) for line in data)
     
-    def paste(self):
-        raise NotImplementedError
+    def copy_result(self, selection):
+        """Returns result strings from selection in a tab separated string"""
+        
+        tab = self.grid.current_table
+        
+        data = []
+        
+        (bb_top, bb_left), (bb_bottom, bb_right) = selection.get_bbox()
+        
+        for row in irange(bb_top, bb_bottom):
+            data.append([])
+            for col in irange(bb_left, bb_right):
+                if (row, col) in selection:
+                    data[-1].append(self.grid.code_array[row, col, tab])
+        
+        return "\n".join("\t".join(line) for line in data)
+    
+    def paste(self, key, data):
+        data_lines = data.split("\n")
+        
+        row, col, tab = key
+        
+        for data_row, line in enumerate(data_lines):
+            for data_col, value in enumerate(line.split()):
+                self.grid.code_array[row+data_row, col+data_col, tab] = value
 
 
 class FindActions(object):

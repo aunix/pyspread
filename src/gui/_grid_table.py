@@ -88,7 +88,7 @@ class GridTable(wx.grid.PyGridTableBase):
         if table is None:
             table = self.grid.current_table
         
-        value = self.data_array[row, col, table]
+        return self.data_array[row, col, table]
         
         if value is None:
             return u""
@@ -148,7 +148,7 @@ class GridTable(wx.grid.PyGridTableBase):
         
         grid.Freeze()
         grid.AdjustScrollbars()
-        grid.ForceRefresh()
+        grid.Refresh()
         grid.Thaw()
 
 # end of class MainGridTable
