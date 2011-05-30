@@ -135,7 +135,9 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         parent.Bind(EVT_COMMAND_REFRESH_SELECTION, 
                     handlers.OnRefreshSelectedCells)
         parent.Bind(EVT_COMMAND_GOTO_CELL, handlers.OnGoToCell)
-        parent.Bind(EVT_COMMAND_ZOOM, handlers.OnZoom)
+        parent.Bind(EVT_COMMAND_ZOOM_IN, handlers.OnZoomIn)
+        parent.Bind(EVT_COMMAND_ZOOM_OUT, handlers.OnZoomOut)
+        parent.Bind(EVT_COMMAND_ZOOM_STANDARD, handlers.OnZoomStandard)
         
         # Find events
         
@@ -360,13 +362,27 @@ class GridEventHandlers(object):
         
         event.Skip()
         
-    def OnZoom(self, event):
-        """Event handler for setting grid zoom via menu"""
+    def OnZoomIn(self, event):
+        """Event handler for increasing grid zoom"""
         
         raise NotImplementedError
         
         event.Skip()
-    
+
+    def OnZoomOut(self, event):
+        """Event handler for decreasing grid zoom"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    def OnZoomStandard(self, event):
+        """Event handler for resetting grid zoom"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+
     def OnContextMenu(self, event):
         """Context menu event handler"""
         

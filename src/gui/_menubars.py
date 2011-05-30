@@ -226,15 +226,27 @@ class MainMenu(_filledMenu):
                     "The buttom right lowermost cells are deleted first."]]] \
         ], \
         [wx.Menu, "&View", [ \
-            ## TODO: Show / hie panels
-            
-            [item, [GotoCellMsg, "Go to cell", 
+            [wx.Menu, "Toolbars", [ \
+                [item, [StandardToolbarToggleMsg, "Standard toolbar", 
+                    "Shows and hides the standard toolbar."], wx.ITEM_CHECK],
+                [item, [FormatToolbarToggleMsg, "Format toolbar", 
+                    "Shows and hides the format toolbar."], wx.ITEM_CHECK],
+                [item, [SearchToolbarToggleMsg, "Search toolbar", 
+                    "Shows and hides the search toolbar."], wx.ITEM_CHECK],
+                ],
+            ],
+            [item, [EntryLineToggleMsg, "Entry line", 
+                    "Shows and hides the entry line."], wx.ITEM_CHECK],
+            ["Separator"], \
+            [item, [GotoCellMsg, "Go to cell\tCtrl+G", 
                         "Moves the grid to a cell."]],
-            [wx.Menu, "Zoom", [ \
-                [item, [ZoomMsg, str(int(zoom)) + "%", 
-                        "Zoom " + str(int(zoom)) + "%"] \
-                ] for zoom in xrange(50, 350, 10)]
-                ], \
+            ["Separator"], \
+            [item, [ZoomInMsg, "Zoom in\tCtrl++", 
+                        "Zoom in grid."]],
+            [item, [ZoomOutMsg, "Zoom out\tCtrl+-", 
+                        "Zoom out grid."]],
+            [item, [ZoomStandardMsg, "Normal size\tCtrl+0", 
+                        "Show grid in standard zoom."]],
             ["Separator"], \
             [item, [RefreshSelectionMsg, "Refresh selected cells\tF5", 
                         "Refresh selected cells even when frozen"]],

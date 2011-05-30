@@ -77,6 +77,11 @@ MacroListMsg, EVT_COMMAND_MACROLIST = new_command_event()
 MacroLoadMsg, EVT_COMMAND_MACROLOAD = new_command_event()
 MacroSaveMsg, EVT_COMMAND_MACROSAVE = new_command_event()
 
+StandardToolbarToggleMsg, EVT_COMMAND_STDTOOLBAR_TOGGLE = new_command_event()
+FormatToolbarToggleMsg, EVT_COMMAND_FORMATTOOLBAR_TOGGLE = new_command_event()
+SearchToolbarToggleMsg, EVT_COMMAND_SEARCH_TOOLBAR_TOGGLE = new_command_event()
+EntryLineToggleMsg, EVT_COMMAND_ENTRYLINE_TOGGLE = new_command_event()
+
 
 # Grid cell
 # =========
@@ -141,7 +146,9 @@ PasteMsg, EVT_COMMAND_PASTE = new_command_event()
 
 RefreshSelectionMsg , EVT_COMMAND_REFRESH_SELECTION = new_command_event()
 GotoCellMsg , EVT_COMMAND_GOTO_CELL = new_command_event()
-ZoomMsg , EVT_COMMAND_ZOOM = new_command_event()
+ZoomInMsg , EVT_COMMAND_ZOOM_IN = new_command_event()
+ZoomOutMsg , EVT_COMMAND_ZOOM_OUT = new_command_event()
+ZoomStandardMsg , EVT_COMMAND_ZOOM_STANDARD = new_command_event()
 
 # Find events
 

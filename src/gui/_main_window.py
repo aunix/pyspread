@@ -199,6 +199,17 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_CLOSE, handlers.OnClose)
         self.Bind(EVT_COMMAND_CLOSE, handlers.OnClose)
         
+        # Toolbar toggle events
+        
+        self.Bind(EVT_COMMAND_STDTOOLBAR_TOGGLE, 
+                  handlers.OnStandardToolbarToggle)
+        self.Bind(EVT_COMMAND_FORMATTOOLBAR_TOGGLE, 
+                  handlers.OnFormatToolbarToggle)
+        self.Bind(EVT_COMMAND_SEARCH_TOOLBAR_TOGGLE, 
+                  handlers.OnSearchToolbarToggle)
+        self.Bind(EVT_COMMAND_ENTRYLINE_TOGGLE, 
+                  handlers.OnEntryLineToggle)
+        
         # File events
         
         self.Bind(EVT_COMMAND_NEW, handlers.OnNew)
@@ -302,7 +313,36 @@ class MainWindowEventHandlers(object):
         
         self.main_window.Destroy()
     
+    # Toolbar events
    
+    def OnStandardToolbarToggle(self, event):
+        """Standard toolbar toggle event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+
+    def OnFormatToolbarToggle(self, event):
+        """Format toolbar toggle event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    def OnSearchToolbarToggle(self, event):
+        """Search toolbar toggle event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+        
+    def OnEntryLineToggle(self, event):
+        """Entry line toggle event handler"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+
     # File events
     
     def OnNew(self, event):
