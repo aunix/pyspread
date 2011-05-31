@@ -191,7 +191,7 @@ class TableRowActionsMixin(object):
     def delete_rows(self, row, no_rows=1):
         """Deletes no_rows rows"""
         
-        raise NotImplementedError
+        self.code_array.delete(row, no_rows, axis=0)
 
 
 class TableColumnActionsMixin(object):
@@ -210,7 +210,7 @@ class TableColumnActionsMixin(object):
     def delete_cols(self, col, no_cols=1):
         """Deletes no_cols column"""
         
-        raise NotImplementedError
+        self.code_array.delete(col, no_cols, axis=1)
 
 
 class TableTabActionsMixin(object):
@@ -224,7 +224,7 @@ class TableTabActionsMixin(object):
     def delete_tabs(self, tab, no_tabs=1):
         """Deletes no_tabs tabs"""
         
-        raise NotImplementedError
+        self.code_array.delete(tab, no_tabs, axis=2)
 
 class TableActions(TableRowActionsMixin, TableColumnActionsMixin, 
                    TableTabActionsMixin):

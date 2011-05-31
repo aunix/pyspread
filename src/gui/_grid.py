@@ -429,17 +429,30 @@ class GridEventHandlers(object):
 
     # Grid change events
     
+    def _get_no_rowscols(self, bbox):
+        """Returns tuple of number of rows and cols from bbox"""
+        
+        if bbox is None:
+            return 1, 1
+        else:
+            (bb_top, bb_left), (bb_bottom, bb_right) = bbox
+            if bb_top is None:
+                bb_top = 0
+            if bb_left is None:
+                bb_left = 0
+            if bb_bottom is None:
+                bb_bottom = self.grid.code_array.shape[0] - 1
+            if bb_right is None:
+                bb_right = self.grid.code_array.shape[1] - 1
+            
+            return bb_bottom - bb_top, bb_right - bb_left
+        
+    
     def OnInsertRows(self, event):
         """Insert the maximum of 1 and the number of selected rows"""
         
-        bbox = self.grid.selection.get_bbox()
-        
-        if bbox is None:
-            no_rows = 1
-        else:
-            (bb_top, _), (bb_bottom, _) = bbox
-            no_rows = bb_bottom - bb_top
-            
+        no_rows, _ = self._get_no_rowscols(self.grid.selection.get_bbox())
+
         cursor = self.grid.actions.cursor
         
         self.grid.actions.insert_rows(cursor[0], no_rows)
@@ -451,17 +464,11 @@ class GridEventHandlers(object):
     def OnInsertCols(self, event):
         """Inserts the maximum of 1 and the number of selected columns"""
         
-        bbox = self.grid.selection.get_bbox()
-        
-        if bbox is None:
-            no_cols = 1
-        else:
-            (_, bb_left), (_, bb_right) = bbox
-            no_cols = bb_right - bb_left
+        _, no_cols = self._get_no_rowscols(self.grid.selection.get_bbox())
             
         cursor = self.grid.actions.cursor
         
-        self.grid.actions.insert_rows(cursor[1], no_cols)
+        self.grid.actions.insert_cols(cursor[1], no_cols)
         
         self.grid.GetTable().ResetView()
         
@@ -477,21 +484,33 @@ class GridEventHandlers(object):
     def OnDeleteRows(self, event):
         """Deletes rows from all tables of the grid"""
         
-        raise NotImplementedError
+        no_rows, _ = self._get_no_rowscols(self.grid.selection.get_bbox())
+            
+        cursor = self.grid.actions.cursor
+        
+        self.grid.actions.delete_rows(cursor[0], no_rows)
+        
+        self.grid.GetTable().ResetView()
         
         event.Skip()
     
     def OnDeleteCols(self, event):
         """Deletes columnss from all tables of the grid"""
         
-        raise NotImplementedError
+        _, no_cols = self._get_no_rowscols(self.grid.selection.get_bbox())
+            
+        cursor = self.grid.actions.cursor
+        
+        self.grid.actions.delete_cols(cursor[1], no_cols)
+        
+        self.grid.GetTable().ResetView()
         
         event.Skip()
     
     def OnDeleteTabs(self, event):
         """Deletes tables"""
         
-        raise NotImplementedError
+        self.grid.actions.delete_tabs(self.grid.current_table, 1)
         
         event.Skip()
     
