@@ -560,7 +560,7 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
     """All grid actions as a bundle"""
     
     def __init__(self, grid, code_array):
-        self.main_window = grid.parent
+        self.main_window = grid.main_window
         self.grid = grid
         self.code_array = code_array
         

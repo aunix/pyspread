@@ -52,6 +52,7 @@ from wx.lib.wordwrap import wordwrap
 import wx.stc as stc
 
 from gui._widgets import PythonSTC
+from gui._events import *
 from lib._interfaces import Digest, sniff, fill_wxgrid
 from lib._interfaces import ALPHA_ONLY, DIGIT_ONLY, Validator
 from config import VERSION, PROG_DIR
@@ -920,22 +921,23 @@ class CellEntryDialog(wx.Dialog):
     
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, -1, "Cell Entry")
+        
+        self.parent = parent
 
         self.SetAutoLayout(True)
         VSPACE = 10
 
         fgs = wx.FlexGridSizer(0, 2)
 
+        
+        fgs.Add(wx.StaticText(self, -1, "Goto cell:"))
         fgs.Add((1,1))
-        fgs.Add(wx.StaticText(self, -1,
-                             "Enter a cell to be put into view."))
-
         fgs.Add((1,VSPACE)); fgs.Add((1,VSPACE))
 
         label = wx.StaticText(self, -1, "Row: ")
         fgs.Add(label, 0, wx.ALIGN_RIGHT|wx.CENTER)
         self.row_textctrl = \
-            wx.TextCtrl(self, -1, "0", validator=Validator(DIGIT_ONLY))
+            wx.TextCtrl(self, -1, "", validator=Validator(DIGIT_ONLY))
         fgs.Add(self.row_textctrl)
 
         fgs.Add((1,VSPACE)); fgs.Add((1,VSPACE))
@@ -943,14 +945,14 @@ class CellEntryDialog(wx.Dialog):
         label = wx.StaticText(self, -1, "Column: ")
         fgs.Add(label, 0, wx.ALIGN_RIGHT|wx.CENTER)
         self.col_textctrl = \
-            wx.TextCtrl(self, -1, "0", validator=Validator(DIGIT_ONLY))
+            wx.TextCtrl(self, -1, "", validator=Validator(DIGIT_ONLY))
         
         fgs.Add(self.col_textctrl)
         fgs.Add((1,VSPACE)); fgs.Add((1,VSPACE))
         label = wx.StaticText(self, -1, "Table: ")
         fgs.Add(label, 0, wx.ALIGN_RIGHT|wx.CENTER)
         self.tab_textctrl = \
-            wx.TextCtrl(self, -1, "0", validator=Validator(DIGIT_ONLY))
+            wx.TextCtrl(self, -1, "", validator=Validator(DIGIT_ONLY))
         
         fgs.Add(self.tab_textctrl)
 
@@ -967,6 +969,30 @@ class CellEntryDialog(wx.Dialog):
         self.SetSizer(border)
         border.Fit(self)
         self.Layout()
+        
+        self.Bind(wx.EVT_BUTTON, self.OnOk, id=wx.ID_OK)
+    
+    def OnOk(self, event):
+        """Posts a command event that makes the grid show the entered cell"""
+        
+        # Get key values from textctrls
+        
+        key_strings = [self.row_textctrl.GetValue(), 
+                       self.col_textctrl.GetValue(),
+                       self.tab_textctrl.GetValue()]
+        
+        key = []
+        
+        for key_string in key_strings:
+            try:
+                key.append(int(key_string))
+            except ValueError:
+                key.append(0)
+        
+        # Post event
+        
+        post_command_event(self.parent, GotoCellMsg, key=tuple(key))
+
 
 class AboutDialog(object):
     """Displays information about pyspread"""

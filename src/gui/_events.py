@@ -145,6 +145,8 @@ PasteMsg, EVT_COMMAND_PASTE = new_command_event()
 # Grid view events
 
 RefreshSelectionMsg , EVT_COMMAND_REFRESH_SELECTION = new_command_event()
+DisplayGotoCellDialogMsg , EVT_COMMAND_DISPLAY_GOTO_CELL_DIALOG = \
+                                                    new_command_event()
 GotoCellMsg , EVT_COMMAND_GOTO_CELL = new_command_event()
 ZoomInMsg , EVT_COMMAND_ZOOM_IN = new_command_event()
 ZoomOutMsg , EVT_COMMAND_ZOOM_OUT = new_command_event()

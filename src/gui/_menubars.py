@@ -238,7 +238,7 @@ class MainMenu(_filledMenu):
             [item, [EntryLineToggleMsg, "Entry line", 
                     "Shows and hides the entry line."], wx.ITEM_CHECK],
             ["Separator"], \
-            [item, [GotoCellMsg, "Go to cell\tCtrl+G", 
+            [item, [DisplayGotoCellDialogMsg, "Go to cell\tCtrl+G", 
                         "Moves the grid to a cell."]],
             ["Separator"], \
             [item, [ZoomInMsg, "Zoom in\tCtrl++", 

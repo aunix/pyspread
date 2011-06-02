@@ -38,6 +38,7 @@ from _events import *
 from _grid_table import GridTable
 from _grid_renderer import GridRenderer
 from _grid_mixins import GridCollisionMixin
+from _gui_interfaces import GuiInterfaces
 
 from model.model import CodeArray
 
@@ -46,14 +47,16 @@ from actions._grid_actions import AllGridActions
 class Grid(wx.grid.Grid, GridCollisionMixin):
     """Pyspread's main grid"""
 
-    def __init__(self, parent, *args, **kwargs):
-        self.parent = parent
+    def __init__(self, main_window, *args, **kwargs):
+        self.main_window = main_window
         
         self._states()
+        
+        self.interfaces = GuiInterfaces(self.main_window)
 
         dimensions = kwargs.pop("dimensions")
         
-        wx.grid.Grid.__init__(self, parent, *args, **kwargs)
+        wx.grid.Grid.__init__(self, main_window, *args, **kwargs)
         
         # Create new grid
         self.code_array = CodeArray(dimensions)
@@ -94,7 +97,7 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
     def _bind(self):
         """Bind events to handlers"""
         
-        parent = self.parent
+        main_window = self.main_window
         
         handlers = self.handlers
         c_handlers = self.cell_handlers
@@ -108,23 +111,23 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         
         # Cell attribute events
         
-        parent.Bind(EVT_COMMAND_FONT, c_handlers.OnCellFont)
-        parent.Bind(EVT_COMMAND_FONTSIZE, c_handlers.OnCellFontSize)
-        parent.Bind(EVT_COMMAND_FONTBOLD, c_handlers.OnCellFontBold)
-        parent.Bind(EVT_COMMAND_FONTITALICS, c_handlers.OnCellFontItalics)
-        parent.Bind(EVT_COMMAND_FONTUNDERLINE, c_handlers.OnCellFontUnderline)
-        parent.Bind(EVT_COMMAND_FONTSTRIKETHROUGH, 
+        main_window.Bind(EVT_COMMAND_FONT, c_handlers.OnCellFont)
+        main_window.Bind(EVT_COMMAND_FONTSIZE, c_handlers.OnCellFontSize)
+        main_window.Bind(EVT_COMMAND_FONTBOLD, c_handlers.OnCellFontBold)
+        main_window.Bind(EVT_COMMAND_FONTITALICS, c_handlers.OnCellFontItalics)
+        main_window.Bind(EVT_COMMAND_FONTUNDERLINE, c_handlers.OnCellFontUnderline)
+        main_window.Bind(EVT_COMMAND_FONTSTRIKETHROUGH, 
                     c_handlers.OnCellFontStrikethrough)
-        parent.Bind(EVT_COMMAND_FROZEN, c_handlers.OnCellFrozen)
-        parent.Bind(EVT_COMMAND_JUSTIFICATION, c_handlers.OnCellJustification)
-        parent.Bind(EVT_COMMAND_ALIGNMENT, c_handlers.OnCellAlignment)
-        parent.Bind(EVT_COMMAND_BORDERCHOICE, c_handlers.OnCellBorderChoice)
-        parent.Bind(EVT_COMMAND_BORDERWIDTH, c_handlers.OnCellBorderWidth)
-        parent.Bind(EVT_COMMAND_BORDERCOLOR, c_handlers.OnCellBorderColor)
-        parent.Bind(EVT_COMMAND_BACKGROUNDCOLOR, 
+        main_window.Bind(EVT_COMMAND_FROZEN, c_handlers.OnCellFrozen)
+        main_window.Bind(EVT_COMMAND_JUSTIFICATION, c_handlers.OnCellJustification)
+        main_window.Bind(EVT_COMMAND_ALIGNMENT, c_handlers.OnCellAlignment)
+        main_window.Bind(EVT_COMMAND_BORDERCHOICE, c_handlers.OnCellBorderChoice)
+        main_window.Bind(EVT_COMMAND_BORDERWIDTH, c_handlers.OnCellBorderWidth)
+        main_window.Bind(EVT_COMMAND_BORDERCOLOR, c_handlers.OnCellBorderColor)
+        main_window.Bind(EVT_COMMAND_BACKGROUNDCOLOR, 
                     c_handlers.OnCellBackgroundColor)
-        parent.Bind(EVT_COMMAND_TEXTCOLOR, c_handlers.OnCellTextColor)
-        parent.Bind(EVT_COMMAND_TEXTROTATATION, c_handlers.OnCellTextRotation)
+        main_window.Bind(EVT_COMMAND_TEXTCOLOR, c_handlers.OnCellTextColor)
+        main_window.Bind(EVT_COMMAND_TEXTROTATATION, c_handlers.OnCellTextRotation)
         
         # Cell selection events
 
@@ -132,36 +135,38 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         
         # Grid view events
         
-        parent.Bind(EVT_COMMAND_REFRESH_SELECTION, 
+        main_window.Bind(EVT_COMMAND_REFRESH_SELECTION, 
                     handlers.OnRefreshSelectedCells)
-        parent.Bind(EVT_COMMAND_GOTO_CELL, handlers.OnGoToCell)
-        parent.Bind(EVT_COMMAND_ZOOM_IN, handlers.OnZoomIn)
-        parent.Bind(EVT_COMMAND_ZOOM_OUT, handlers.OnZoomOut)
-        parent.Bind(EVT_COMMAND_ZOOM_STANDARD, handlers.OnZoomStandard)
+        main_window.Bind(EVT_COMMAND_DISPLAY_GOTO_CELL_DIALOG, 
+                    handlers.OnDisplayGoToCellDialog)
+        main_window.Bind(EVT_COMMAND_GOTO_CELL, handlers.OnGoToCell)
+        main_window.Bind(EVT_COMMAND_ZOOM_IN, handlers.OnZoomIn)
+        main_window.Bind(EVT_COMMAND_ZOOM_OUT, handlers.OnZoomOut)
+        main_window.Bind(EVT_COMMAND_ZOOM_STANDARD, handlers.OnZoomStandard)
         
         # Find events
         
-        parent.Bind(EVT_COMMAND_FIND, handlers.OnFind)
-        parent.Bind(EVT_COMMAND_REPLACE, handlers.OnShowFindReplace)
+        main_window.Bind(EVT_COMMAND_FIND, handlers.OnFind)
+        main_window.Bind(EVT_COMMAND_REPLACE, handlers.OnShowFindReplace)
         
         # Grid change events
         
-        parent.Bind(EVT_COMMAND_INSERT_ROWS, handlers.OnInsertRows)
-        parent.Bind(EVT_COMMAND_INSERT_COLS, handlers.OnInsertCols)
-        parent.Bind(EVT_COMMAND_INSERT_TABS, handlers.OnInsertTabs)
+        main_window.Bind(EVT_COMMAND_INSERT_ROWS, handlers.OnInsertRows)
+        main_window.Bind(EVT_COMMAND_INSERT_COLS, handlers.OnInsertCols)
+        main_window.Bind(EVT_COMMAND_INSERT_TABS, handlers.OnInsertTabs)
         
-        parent.Bind(EVT_COMMAND_DELETE_ROWS, handlers.OnDeleteRows)
-        parent.Bind(EVT_COMMAND_DELETE_COLS, handlers.OnDeleteCols)
-        parent.Bind(EVT_COMMAND_DELETE_TABS, handlers.OnDeleteTabs)
+        main_window.Bind(EVT_COMMAND_DELETE_ROWS, handlers.OnDeleteRows)
+        main_window.Bind(EVT_COMMAND_DELETE_COLS, handlers.OnDeleteCols)
+        main_window.Bind(EVT_COMMAND_DELETE_TABS, handlers.OnDeleteTabs)
         
-        parent.Bind(EVT_COMMAND_RESIZE_GRID, handlers.OnResizeGrid)
+        main_window.Bind(EVT_COMMAND_RESIZE_GRID, handlers.OnResizeGrid)
         
         # Grid attribute events
         
         # Undo/Redo events
 
-        parent.Bind(EVT_COMMAND_UNDO, handlers.OnUndo)
-        parent.Bind(EVT_COMMAND_REDO, handlers.OnRedo)
+        main_window.Bind(EVT_COMMAND_UNDO, handlers.OnUndo)
+        main_window.Bind(EVT_COMMAND_REDO, handlers.OnRedo)
     
     _get_selection = lambda self: self.actions.get_selection()
     selection = property(_get_selection, doc="Grid selection")
@@ -325,6 +330,7 @@ class GridEventHandlers(object):
     
     def __init__(self, grid):
         self.grid = grid
+        self.interfaces = grid.interfaces
     
     def OnMouseMotion(self, event):
         """Mouse motion event handler"""
@@ -347,11 +353,23 @@ class GridEventHandlers(object):
         event.Skip()
         
     # Grid view events
+    
+    def OnDisplayGoToCellDialog(self, event):
+        """Shift a given cell into view"""
+        
+        self.interfaces.display_gotocell()
+        
+        event.Skip()    
 
     def OnGoToCell(self, event):
         """Shift a given cell into view"""
         
-        raise NotImplementedError
+        row, col, tab = event.key
+        
+        self.grid.current_table = tab
+        
+        self.grid.SetGridCursor(row, col)
+        self.grid.MakeCellVisible(row, col)
         
         event.Skip()
 

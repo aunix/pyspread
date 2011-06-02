@@ -109,7 +109,7 @@ class CellActions(CellAttributeActions):
     """Cell controller prototype"""
 
     def __init__(self, grid, data_array):
-        self.main_window = grid.parent
+        self.main_window = grid.main_window
         self.grid = grid
         self.data_array = data_array
 

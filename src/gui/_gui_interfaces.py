@@ -38,7 +38,7 @@ import wx
 import wx.lib.agw.genericmessagedialog as GMD
 
 from _dialogs import DimensionsEntryDialog, AboutDialog
-from _dialogs import CsvImportDialog, CsvExportDialog
+from _dialogs import CsvImportDialog, CellEntryDialog, CsvExportDialog
 
 
 class ModalDialogInterfaceMixin(object):
@@ -224,6 +224,13 @@ class ModalDialogInterfaceMixin(object):
 
 class DialogInterfaceMixin(object):
     """Main window interfaces to dialogs that are not modal"""
+    
+    def display_gotocell(self):
+        """Displays goto cell dialog"""
+        
+        dlg = CellEntryDialog(self.main_window)
+        
+        dlg.Show()
     
     def display_about(self, parent):
         """Displays About dialog"""
