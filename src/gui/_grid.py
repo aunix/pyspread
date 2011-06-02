@@ -115,19 +115,23 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         main_window.Bind(EVT_COMMAND_FONTSIZE, c_handlers.OnCellFontSize)
         main_window.Bind(EVT_COMMAND_FONTBOLD, c_handlers.OnCellFontBold)
         main_window.Bind(EVT_COMMAND_FONTITALICS, c_handlers.OnCellFontItalics)
-        main_window.Bind(EVT_COMMAND_FONTUNDERLINE, c_handlers.OnCellFontUnderline)
+        main_window.Bind(EVT_COMMAND_FONTUNDERLINE, 
+                    c_handlers.OnCellFontUnderline)
         main_window.Bind(EVT_COMMAND_FONTSTRIKETHROUGH, 
                     c_handlers.OnCellFontStrikethrough)
         main_window.Bind(EVT_COMMAND_FROZEN, c_handlers.OnCellFrozen)
-        main_window.Bind(EVT_COMMAND_JUSTIFICATION, c_handlers.OnCellJustification)
+        main_window.Bind(EVT_COMMAND_JUSTIFICATION, 
+                    c_handlers.OnCellJustification)
         main_window.Bind(EVT_COMMAND_ALIGNMENT, c_handlers.OnCellAlignment)
-        main_window.Bind(EVT_COMMAND_BORDERCHOICE, c_handlers.OnCellBorderChoice)
+        main_window.Bind(EVT_COMMAND_BORDERCHOICE, 
+                    c_handlers.OnCellBorderChoice)
         main_window.Bind(EVT_COMMAND_BORDERWIDTH, c_handlers.OnCellBorderWidth)
         main_window.Bind(EVT_COMMAND_BORDERCOLOR, c_handlers.OnCellBorderColor)
         main_window.Bind(EVT_COMMAND_BACKGROUNDCOLOR, 
                     c_handlers.OnCellBackgroundColor)
         main_window.Bind(EVT_COMMAND_TEXTCOLOR, c_handlers.OnCellTextColor)
-        main_window.Bind(EVT_COMMAND_TEXTROTATATION, c_handlers.OnCellTextRotation)
+        main_window.Bind(EVT_COMMAND_TEXTROTATATION, 
+                    c_handlers.OnCellTextRotation)
         
         # Cell selection events
 
@@ -161,8 +165,6 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         
         main_window.Bind(EVT_COMMAND_SHOW_RESIZE_GRID_DIALOG, 
                                                   handlers.OnResizeGridDialog)
-        
-        # Grid attribute events
         
         # Undo/Redo events
 

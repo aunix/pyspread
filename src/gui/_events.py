@@ -63,8 +63,8 @@ new_command_event = wx.lib.newevent.NewCommandEvent
 
 TitleMsg, EVT_COMMAND_TITLE = new_command_event()
 
-SaveModeEntryMsg, EVT_COMMAND_SAFE_MODE_ENTRY = new_command_event()
-SaveModeExitMsg, EVT_COMMAND_SAFE_MODE_EXIT = new_command_event()
+SafeModeEntryMsg, EVT_COMMAND_SAFE_MODE_ENTRY = new_command_event()
+SafeModeExitMsg, EVT_COMMAND_SAFE_MODE_EXIT = new_command_event()
 
 CloseMsg, EVT_COMMAND_CLOSE = new_command_event()
 
@@ -77,10 +77,12 @@ MacroListMsg, EVT_COMMAND_MACROLIST = new_command_event()
 MacroLoadMsg, EVT_COMMAND_MACROLOAD = new_command_event()
 MacroSaveMsg, EVT_COMMAND_MACROSAVE = new_command_event()
 
-StandardToolbarToggleMsg, EVT_COMMAND_STDTOOLBAR_TOGGLE = new_command_event()
-FormatToolbarToggleMsg, EVT_COMMAND_FORMATTOOLBAR_TOGGLE = new_command_event()
-SearchToolbarToggleMsg, EVT_COMMAND_SEARCH_TOOLBAR_TOGGLE = new_command_event()
+MainToolbarToggleMsg, EVT_COMMAND_MAINTOOLBAR_TOGGLE = new_command_event()
+AttributesToolbarToggleMsg, EVT_COMMAND_ATTRIBUTESTOOLBAR_TOGGLE = \
+                                        new_command_event()
+FindToolbarToggleMsg, EVT_COMMAND_FIND_TOOLBAR_TOGGLE = new_command_event()
 EntryLineToggleMsg, EVT_COMMAND_ENTRYLINE_TOGGLE = new_command_event()
+TableChoiceToggleMsg, EVT_COMMAND_TABLECHOICE_TOGGLE = new_command_event()
 
 
 # Grid cell

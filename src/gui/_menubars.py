@@ -228,16 +228,18 @@ class MainMenu(_filledMenu):
         ], \
         [wx.Menu, "&View", [ \
             [wx.Menu, "Toolbars", [ \
-                [item, [StandardToolbarToggleMsg, "Standard toolbar", 
-                    "Shows and hides the standard toolbar."], wx.ITEM_CHECK],
-                [item, [FormatToolbarToggleMsg, "Format toolbar", 
+                [item, [MainToolbarToggleMsg, "Main toolbar", 
+                    "Shows and hides the main toolbar."], wx.ITEM_CHECK],
+                [item, [AttributesToolbarToggleMsg, "Format toolbar", 
                     "Shows and hides the format toolbar."], wx.ITEM_CHECK],
-                [item, [SearchToolbarToggleMsg, "Search toolbar", 
-                    "Shows and hides the search toolbar."], wx.ITEM_CHECK],
+                [item, [FindToolbarToggleMsg, "Find toolbar", 
+                    "Shows and hides the find toolbar."], wx.ITEM_CHECK],
                 ],
             ],
             [item, [EntryLineToggleMsg, "Entry line", 
                     "Shows and hides the entry line."], wx.ITEM_CHECK],
+            [item, [TableChoiceToggleMsg, "Table choice", 
+                    "Shows and hides the table choice."], wx.ITEM_CHECK],        
             ["Separator"], \
             [item, [DisplayGotoCellDialogMsg, "Go to cell\tCtrl+G", 
                         "Moves the grid to a cell."]],

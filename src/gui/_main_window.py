@@ -81,12 +81,12 @@ class MainWindow(wx.Frame):
         # ------------
         
         # Menu Bar
-        menubar = wx.MenuBar()
-        self.main_menu = MainMenu(parent=self, menubar=menubar)
-        self.SetMenuBar(menubar)
+        self.menubar = wx.MenuBar()
+        self.main_menu = MainMenu(parent=self, menubar=self.menubar)
+        self.SetMenuBar(self.menubar)
         
-        # Disable menu item for leaving save mode
-        post_command_event(self, SaveModeExitMsg)
+        # Disable menu item for leaving safe mode
+        post_command_event(self, SafeModeExitMsg)
         
         # Status bar
         statusbar = StatusBar(self)
@@ -146,7 +146,15 @@ class MainWindow(wx.Frame):
         self.SetMinSize((2, 2))
         
         # Leave save mode
-        post_command_event(self, SaveModeExitMsg)
+        post_command_event(self, SafeModeExitMsg)
+        
+        # Enable menu bar view item checkmarks
+        toggles = ["Main toolbar", "Format toolbar", "Find toolbar", 
+                   "Entry line", "Table choice"]
+        for toggle in toggles:
+            toggle_id = self.menubar.FindMenuItem("View", toggle)
+            toggle_item = self.menubar.FindItemById(toggle_id)
+            toggle_item.Check(True)
         
     def _do_layout(self):
         """Adds widgets to the wx.aui manager and controls the layout"""
@@ -194,21 +202,23 @@ class MainWindow(wx.Frame):
         # Program state events
         
         self.Bind(EVT_COMMAND_TITLE, handlers.OnTitle)
-        self.Bind(EVT_COMMAND_SAFE_MODE_ENTRY, handlers.OnSaveModeEntry)
-        self.Bind(EVT_COMMAND_SAFE_MODE_EXIT, handlers.OnSaveModeExit)
+        self.Bind(EVT_COMMAND_SAFE_MODE_ENTRY, handlers.OnSafeModeEntry)
+        self.Bind(EVT_COMMAND_SAFE_MODE_EXIT, handlers.OnSafeModeExit)
         self.Bind(wx.EVT_CLOSE, handlers.OnClose)
         self.Bind(EVT_COMMAND_CLOSE, handlers.OnClose)
         
         # Toolbar toggle events
         
-        self.Bind(EVT_COMMAND_STDTOOLBAR_TOGGLE, 
-                  handlers.OnStandardToolbarToggle)
-        self.Bind(EVT_COMMAND_FORMATTOOLBAR_TOGGLE, 
-                  handlers.OnFormatToolbarToggle)
-        self.Bind(EVT_COMMAND_SEARCH_TOOLBAR_TOGGLE, 
-                  handlers.OnSearchToolbarToggle)
+        self.Bind(EVT_COMMAND_MAINTOOLBAR_TOGGLE, 
+                  handlers.OnMainToolbarToggle)
+        self.Bind(EVT_COMMAND_ATTRIBUTESTOOLBAR_TOGGLE, 
+                  handlers.OnAttributesToolbarToggle)
+        self.Bind(EVT_COMMAND_FIND_TOOLBAR_TOGGLE, 
+                  handlers.OnFindToolbarToggle)
         self.Bind(EVT_COMMAND_ENTRYLINE_TOGGLE, 
                   handlers.OnEntryLineToggle)
+        self.Bind(EVT_COMMAND_TABLECHOICE_TOGGLE, 
+                  handlers.OnTableChoiceToggle)
         
         # File events
         
@@ -274,23 +284,23 @@ class MainWindowEventHandlers(object):
         
         self.main_window.SetTitle(event.text)
     
-    def OnSaveModeEntry(self, event):
-        """Save mode entry event handler"""
+    def OnSafeModeEntry(self, event):
+        """Safe mode entry event handler"""
         
-        # Enable menu item for leaving save mode
+        # Enable menu item for leaving safe mode
         
         self.main_window.main_menu.enable_file_approve(True)
         
         self.main_window.grid.Refresh()
     
-    def OnSaveModeExit(self, event):
-        """Save mode exit event handler"""
+    def OnSafeModeExit(self, event):
+        """Safe mode exit event handler"""
         
         # Run macros
         
         ##self.MainGrid.model.pysgrid.sgrid.execute_macros(safe_mode=False)
         
-        # Disable menu item for leaving save mode
+        # Disable menu item for leaving safe mode
         
         self.main_window.main_menu.enable_file_approve(False)
         
@@ -314,32 +324,67 @@ class MainWindowEventHandlers(object):
         self.main_window.Destroy()
     
     # Toolbar events
+    
+    def _toggle_pane(self, pane):
+        """Toggles visibility of given aui pane
+        
+        Parameters
+        ----------
+        
+        pane: String
+        \tPane name
+        
+        """
+        
+        if pane.IsShown():
+            pane.Hide()
+        else:
+            pane.Show()
+        
+        self.main_window._mgr.Update()
    
-    def OnStandardToolbarToggle(self, event):
+    def OnMainToolbarToggle(self, event):
         """Standard toolbar toggle event handler"""
         
-        raise NotImplementedError
+        main_toolbar = self.main_window._mgr.GetPane("main_window_toolbar")
+        
+        self._toggle_pane(main_toolbar)
         
         event.Skip()
 
-    def OnFormatToolbarToggle(self, event):
+    def OnAttributesToolbarToggle(self, event):
         """Format toolbar toggle event handler"""
         
-        raise NotImplementedError
+        attributes_toolbar = self.main_window._mgr.GetPane("attributes_toolbar")
+        
+        self._toggle_pane(attributes_toolbar)
         
         event.Skip()
         
-    def OnSearchToolbarToggle(self, event):
+    def OnFindToolbarToggle(self, event):
         """Search toolbar toggle event handler"""
         
-        raise NotImplementedError
+        find_toolbar = self.main_window._mgr.GetPane("find_toolbar")
+        
+        self._toggle_pane(find_toolbar)
         
         event.Skip()
         
     def OnEntryLineToggle(self, event):
         """Entry line toggle event handler"""
         
-        raise NotImplementedError
+        entry_line = self.main_window._mgr.GetPane("entry_line")
+        
+        self._toggle_pane(entry_line)
+        
+        event.Skip()
+
+    def OnTableChoiceToggle(self, event):
+        """Table choice toggle event handler"""
+        
+        table_choice = self.main_window._mgr.GetPane("table_choice")
+        
+        self._toggle_pane(table_choice)
         
         event.Skip()
 
