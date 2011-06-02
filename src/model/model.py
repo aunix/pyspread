@@ -68,10 +68,11 @@ class KeyValueStore(dict):
 # ------------------------------------------------------------------------------
 
 class CellAttributes(list):
-    """Stores cell formatting attributes in a list of 2 - tuples
+    """Stores cell formatting attributes in a list of 3 - tuples
     
     The first element of each tuple is a Selection.
-    The second element is a dict of attributes that are altered.
+    The second element is the table
+    The third element is a dict of attributes that are altered.
     
     The class provides attribute read access to single cells via __getitem__
     Otherwise it behaves similar to a list.
@@ -83,10 +84,12 @@ class CellAttributes(list):
         
         assert not any(type(key_ele) is SliceType for key_ele in key)
         
+        row, col, tab  = key
+        
         result_dict = default_cell_attributes
         
-        for selection, attr_dict in self:
-            if key in selection:
+        for selection, table, attr_dict in self:
+            if tab == table and (row, col) in selection:
                 result_dict.update(attr_dict)
         
         return result_dict

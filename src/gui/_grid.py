@@ -211,7 +211,34 @@ class GridCellEventHandlers(object):
     def OnCellFontBold(self, event):
         """Cell font bold event handler"""
         
-        raise NotImplementedError
+        selection = self.grid.selection
+        table = self.grid.current_table
+        
+        # Determine if the last selection action toogled selection to bold
+        
+        last_cell_attr = (None, {})
+        
+        for cell_attr in reversed(self.grid.code_array.cell_attributes):
+            last_cell_attr = cell_attr
+            break
+        
+        all_bold = last_cell_attr[0] == selection and \
+                   "font-weight" in last_cell_attr[1] and \
+                   last_cell_attr[1]["font-weight"] == "bold"
+        
+        # If yes then toggle to normal
+        
+        if all_bold:
+            target_weight = "normal"
+        else:
+            target_weight = "bold"
+            
+        style = {"font-weight": target_weight}
+        
+        # Change model
+        
+        self.grid.actions.attribute_actions.set_text_style(selection, table, 
+                                                           style)
         
         event.Skip()
         

@@ -31,82 +31,12 @@ Module for cell level main grid level actions.
 
 Provides:
 ---------
-  1. 
+  1. CellActions: Changes to cell code
   
-
 """
 
-## GETTERS!
-
-class CellTextActions(object):
-    """Cell text controller prototype"""
-    
-    def set_text_font(self, key, font):
-        """Sets text font for key cell"""
-        
-        raise NotImplementedError
-        
-    def set_text_size(self, key, size):
-        """Sets text font for key cell"""
-        
-        raise NotImplementedError
-        
-    def set_text_align(self, key, align):
-        """Sets text font for key cell"""
-        
-        raise NotImplementedError    
-    
-    def set_text_color(self, key, color):
-        """Sets text font for key cell"""
-        
-        raise NotImplementedError
-    
-    def set_text_style(self,  key, style):
-        """Sets text font for key cell"""
-        
-        raise NotImplementedError
-    
-    def set_text_frozenstate(self, key, frozenstate):
-        """Sets text font for key cell"""
-        
-        raise NotImplementedError
-    
-class CellBackgroundActions(object):
-    """Cell background controller prototype"""
-
-    def set_background_color(self, key, color):
-        """Sets text font for key cell"""
-        
-        raise NotImplementedError
-    
-    
-class CellBorderActions(object):
-    """Cell border controller prototype"""
-
-    def set_cell_border_color(self, key, color):
-        """Sets text font for key cell"""
-        
-        raise NotImplementedError
-        
-    def set_cell_right_border_width(self, key, width):
-        """Sets text font for key cell"""
-        
-        raise NotImplementedError
-
-    def set_cell_lower_border_width(self, key, width):
-        """Sets text font for key cell"""
-        
-        raise NotImplementedError
-
-
-class CellAttributeActions(CellTextActions, CellBackgroundActions, 
-                              CellBorderActions):
-    """Cell attribute controller prototype"""
-
-    pass
-
-class CellActions(CellAttributeActions):
-    """Cell controller prototype"""
+class CellActions(object):
+    """Cell code additions, changes and deletion"""
 
     def __init__(self, grid, data_array):
         self.main_window = grid.main_window

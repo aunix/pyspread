@@ -51,6 +51,7 @@ from lib._interfaces import sign, verify, is_pyme_present
 from lib.selection import Selection
 
 from actions._grid_cell_actions import CellActions
+from actions._selection_actions import AttributeActions
 
 class FileActions(object):
     """File actions on the grid"""
@@ -564,6 +565,7 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
         self.grid = grid
         self.code_array = code_array
         
+        self.attribute_actions = AttributeActions(grid, code_array)
         self.cell_actions = CellActions(grid, code_array)
         
         FileActions.__init__(self)
