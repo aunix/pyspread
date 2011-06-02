@@ -166,6 +166,8 @@ DeleteRowsMsg, EVT_COMMAND_DELETE_ROWS = new_command_event()
 DeleteColsMsg, EVT_COMMAND_DELETE_COLS = new_command_event()
 DeleteTabsMsg, EVT_COMMAND_DELETE_TABS = new_command_event()
 
+ShowResizeGridDialogMsg, EVT_COMMAND_SHOW_RESIZE_GRID_DIALOG = \
+                                                new_command_event()
 ResizeGridMsg, EVT_COMMAND_RESIZE_GRID = new_command_event()
 
 # Grid attribute events

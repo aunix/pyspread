@@ -159,7 +159,8 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         main_window.Bind(EVT_COMMAND_DELETE_COLS, handlers.OnDeleteCols)
         main_window.Bind(EVT_COMMAND_DELETE_TABS, handlers.OnDeleteTabs)
         
-        main_window.Bind(EVT_COMMAND_RESIZE_GRID, handlers.OnResizeGrid)
+        main_window.Bind(EVT_COMMAND_SHOW_RESIZE_GRID_DIALOG, 
+                                                  handlers.OnResizeGridDialog)
         
         # Grid attribute events
         
@@ -559,10 +560,22 @@ class GridEventHandlers(object):
         
         event.Skip()
     
-    def OnResizeGrid(self, event):
+    def OnResizeGridDialog(self, event):
         """Resizes current grid by appending/deleting rows, cols and tables"""
         
-        raise NotImplementedError
+        # Get grid dimensions
+        
+        new_shape = self.interfaces.get_dimensions_from_user(no_dim=3)
+        
+        if new_shape is None:
+            return
+        
+        self.grid.actions.change_grid_shape(new_shape)
+        
+        self.grid.GetTable().ResetView()
+        
+        statustext = "Grid dimensions changed to " + str(new_shape) + "."
+        post_command_event(self.grid.main_window, StatusBarMsg, text=statustext)
         
         event.Skip()
 

@@ -357,12 +357,10 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
 
         self.pasting = False
 
-    def OnShapeChange(self, event):
+    def change_grid_shape(self, shape):
         """Grid shape change event handler"""
         
-        raise NotImplementedError
-        
-        event.Skip()
+        self.grid.code_array.shape = shape
 
     
 class MacroActions(object):

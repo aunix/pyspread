@@ -222,7 +222,8 @@ class MainMenu(_filledMenu):
             [item, [DeleteTabsMsg, "Delete table", 
                 "Delete current table"]], \
             ["Separator"], \
-            [item, [ResizeGridMsg, "Resize grid", "Resize the grid. " + \
+            [item, [ShowResizeGridDialogMsg, "Resize grid", 
+                    "Resize the grid. " + \
                     "The buttom right lowermost cells are deleted first."]]] \
         ], \
         [wx.Menu, "&View", [ \
