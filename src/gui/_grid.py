@@ -44,6 +44,8 @@ from model.model import CodeArray
 
 from actions._grid_actions import AllGridActions
 
+from config import default_cell_attributes
+
 class Grid(wx.grid.Grid, GridCollisionMixin):
     """Pyspread's main grid"""
 
@@ -108,6 +110,8 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         self.Bind(wx.EVT_SCROLLWIN, handlers.OnScroll)
         
         # Cell code events
+        
+        main_window.Bind(EVT_COMMAND_CODE_ENTRY, c_handlers.OnCellText)
         
         # Cell attribute events
         
@@ -185,13 +189,10 @@ class GridCellEventHandlers(object):
     def OnCellText(self, event):
         """Text entry event handler"""
         
-        code = event.GetString()
+        row, col = self.grid.actions.cursor 
+        tab = self.grid.current_table
         
-##        if code != "":
-##            try:
-##                post_entryline_text(self, code)
-##            except TypeError: 
-##                post_entryline_text(self, "")
+        self.grid.code_array[(row, col, tab)] = event.code
         
         event.Skip()
 
@@ -217,26 +218,7 @@ class GridCellEventHandlers(object):
         selection = self.grid.selection
         table = self.grid.current_table
         
-        # Determine if the last selection action toogled selection to bold
-        
-        last_cell_attr = (None, {})
-        
-        for cell_attr in reversed(self.grid.code_array.cell_attributes):
-            last_cell_attr = cell_attr
-            break
-        
-        all_bold = last_cell_attr[0] == selection and \
-                   "font-weight" in last_cell_attr[1] and \
-                   last_cell_attr[1]["font-weight"] == "bold"
-        
-        # If yes then toggle to normal
-        
-        if all_bold:
-            target_weight = "normal"
-        else:
-            target_weight = "bold"
-            
-        style = {"font-weight": target_weight}
+        style = {"fontweight": wx.BOLD}
         
         # Change model
         
@@ -350,7 +332,11 @@ class GridCellEventHandlers(object):
     def OnCellSelected(self, event):
         """Cell selection event handler"""
         
-        #self.grid.Refresh()
+        key = event.Row, event.Col, self.grid.current_table
+        
+        # Update entry line
+        cell_code = self.grid.code_array(key)
+        post_command_event(self.grid.main_window, EntryLineMsg, text=cell_code)
         
         event.Skip()
     

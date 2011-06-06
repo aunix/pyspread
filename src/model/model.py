@@ -306,7 +306,7 @@ class DataArray(object):
         
         single_keys = itertools.product(*single_keys_per_dim)
         
-        self.unredo_mark = False
+        unredo_mark = False
         
         for single_key in single_keys:
             if value:
@@ -332,7 +332,7 @@ class DataArray(object):
                 # Value is empty --> delete cell
                 try:
                     self.pop(key)
-                except KeyError:
+                except (KeyError, TypeError):
                     pass
                     
         if unredo_mark:

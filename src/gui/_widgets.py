@@ -49,10 +49,9 @@ import wx.combo
 import wx.stc  as  stc
 from wx.lib.intctrl import IntCtrl, EVT_INT
 
-from _events import post_command_event, GridActionTableSwitchMsg 
-from _events import EVT_STATUSBAR_MSG, EVT_COMMAND_RESIZE_GRID
+from _events import *
 
-from config import faces, text_styles, fold_symbol_style
+from config import faces, fold_symbol_style
 from config import icons, icon_size, pen_styles
 
 class CollapsiblePane(wx.CollapsiblePane):
@@ -97,8 +96,59 @@ class PythonSTC(stc.StyledTextCtrl):
     
     Stolen from the wxPython demo.py
     """
+
     fold_symbols = 2
+
+    """
+    Text styles
+    -----------
     
+    The lexer defines what each style is used for, we just have to define
+    what each style looks like.  The Python style set is adapted from Scintilla
+    sample property files.
+    
+    """
+    
+    text_styles = [ \
+      (stc.STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % faces), \
+      (stc.STC_STYLE_LINENUMBER, "back:#C0C0C0,face:%(helv)s,"
+                                 "size:%(size2)d" % faces), \
+      (stc.STC_STYLE_CONTROLCHAR, "face:%(other)s" % faces), \
+      (stc.STC_STYLE_BRACELIGHT, "fore:#FFFFFF,back:#0000FF,bold"), \
+      (stc.STC_STYLE_BRACEBAD, "fore:#000000,back:#FF0000,bold"), \
+      # Python styles
+      # Default 
+      (stc.STC_P_DEFAULT, "fore:#000000,face:%(helv)s,size:%(size)d" % faces), \
+      # Comments
+      (stc.STC_P_COMMENTLINE, "fore:#007F00,face:%(other)s,"
+                              "size:%(size)d" % faces), \
+      # Number
+      (stc.STC_P_NUMBER, "fore:#007F7F,size:%(size)d" % faces), \
+      # String
+      (stc.STC_P_STRING, "fore:#7F007F,face:%(helv)s,size:%(size)d" % faces), \
+      # Single quoted string
+      (stc.STC_P_CHARACTER, "fore:#7F007F,face:%(helv)s,size:%(size)d" % faces), \
+      # Keyword
+      (stc.STC_P_WORD, "fore:#00007F,bold,size:%(size)d" % faces), \
+      # Triple quotes
+      (stc.STC_P_TRIPLE, "fore:#7F0000,size:%(size)d" % faces), \
+      # Triple double quotes
+      (stc.STC_P_TRIPLEDOUBLE, "fore:#7F0000,size:%(size)d" % faces), \
+      # Class name definition
+      (stc.STC_P_CLASSNAME, "fore:#0000FF,bold,underline,size:%(size)d" % faces), \
+      # Function or method name definition
+      (stc.STC_P_DEFNAME, "fore:#007F7F,bold,size:%(size)d" % faces), \
+      # Operators
+      (stc.STC_P_OPERATOR, "bold,size:%(size)d" % faces), \
+      # Identifiers
+      (stc.STC_P_IDENTIFIER, "fore:#000000,face:%(helv)s,size:%(size)d" % faces), \
+      # Comment-blocks
+      (stc.STC_P_COMMENTBLOCK, "fore:#7F7F7F,size:%(size)d" % faces), \
+      # End of line where string is not closed
+      (stc.STC_P_STRINGEOL, "fore:#000000,face:%(mono)s,"
+                            "back:#E0C0E0,eol,size:%(size)d" % faces), \
+    ]
+
     def __init__(self, *args, **kwargs):
         stc.StyledTextCtrl.__init__(self, *args, **kwargs)
 
@@ -137,7 +187,7 @@ class PythonSTC(stc.StyledTextCtrl):
         self.StyleClearAll()  # Reset all to be like the default
         
         # Import text style specs from config file
-        for spec in text_styles:
+        for spec in self.text_styles:
             self.StyleSetSpec(*spec)
         
         self.SetCaretForeground("BLUE")
@@ -508,7 +558,7 @@ class EntryLine(wx.TextCtrl):
         self.parent = parent
         self.ignore_changes = False
         
-        ##parent.Bind(EVT_ENTRYLINE_MSG, self.OnMessage)
+        parent.Bind(EVT_ENTRYLINE_MSG, self.OnContentChange)
         ##parent.Bind(EVT_ENTRYLINE_SELECTION_MSG, self.OnSelectionMsg)
         
         self.SetToolTip(wx.ToolTip("Enter Python expression here."))
@@ -516,10 +566,13 @@ class EntryLine(wx.TextCtrl):
         self.Bind(wx.EVT_TEXT, self.OnText)
         self.Bind(wx.EVT_CHAR, self.EvtChar)
     
-    def OnMessage(self, event):
+    def OnContentChange(self, event):
         """Event handler for updating the content"""
         
-        self.SetValue(event.text)
+        if event.text is None:
+            self.SetValue(u"")
+        else:
+            self.SetValue(event.text)
     
     def OnSelectionMsg(self, event):
         """Event handler for setting selection"""
@@ -532,8 +585,7 @@ class EntryLine(wx.TextCtrl):
         if self.ignore_changes:
             return
         
-        post_command_event(self, GridActionTableSwitchMsg, 
-                           newtable=event.GetString())
+        post_command_event(self, CodeEntryMsg, code=event.GetString())
         
         event.Skip()
         
@@ -548,14 +600,7 @@ class EntryLine(wx.TextCtrl):
         if self.ignore_changes:
             return
         
-        if event.GetKeyCode() == 13:
-            self.parent.Freeze()
-            self.parent.MainGrid.view.update()
-            self.parent.Thaw()
-            
-        elif event.GetKeyCode() == wx.WXK_INSERT and \
-             event.ControlDown():
-            self.WriteText(self.parent.MainGrid.get_selection_code())
+        ## TODO: Code for cell selection by mouse here
         
         event.Skip()
         

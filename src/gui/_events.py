@@ -90,6 +90,8 @@ TableChoiceToggleMsg, EVT_COMMAND_TABLECHOICE_TOGGLE = new_command_event()
 
 # Cell code entry events
 
+CodeEntryMsg, EVT_COMMAND_CODE_ENTRY = new_command_event()
+
 # Cell attribute events
 
 FontMsg, EVT_COMMAND_FONT = new_command_event()
@@ -196,7 +198,7 @@ GridActionTableSwitchMsg, EVT_COMMAND_GRID_ACTION_TABLE_SWITCH = \
 # EntryLine
 # =========
 
-##EntryLineMsg, EVT_ENTRYLINE_MSG = new_command_event()
+EntryLineMsg, EVT_ENTRYLINE_MSG = new_command_event()
 ##EntryLineSelectionMsg, EVT_ENTRYLINE_SELECTION_MSG = new_command_event()
 
 # Statusbar

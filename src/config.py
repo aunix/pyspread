@@ -253,13 +253,19 @@ default_cell_attributes = {
     "borderpen_right": \
         [wx.Colour(200, 200, 200).GetRGB(), 1, int(wx.SOLID)],
     "bgbrush": [int(default_color.GetRGB()), int(wx.SOLID)],
-    "textattributes": {},
-    "textfont": unicode(wx.Font(faces['size'], wx.DEFAULT, wx.NORMAL, 
-                        wx.NORMAL, False, faces['helv']).GetNativeFontInfo()),
+    "textfont": wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT).\
+                                  GetFaceName(),
+    "pointsize": 10,
+    "fontweight": wx.NORMAL,
+    "fontstyle": wx.NORMAL,
+    "textcolor": int(default_color.GetRGB()),
+    "textattributes": {}, ## TODO: Eliminate
+    "underline": False, # Present here because not stored by wx.Font
+    "rotation": 0,
     "column-width": 150,
     "row-height": 26,
 }
-
+print default_cell_attributes["textfont"]
 """
 Fold symbols
 ------------
@@ -326,55 +332,7 @@ fold_symbol_styles = { \
 
 fold_symbol_style = fold_symbol_styles["circletree"]
 
-"""
-Text styles
------------
 
-The lexer defines what each style is used for, we just have to define
-what each style looks like.  The Python style set is adapted from Scintilla
-sample property files.
-
-"""
-
-text_styles = [ \
-  (stc.STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % faces), \
-  (stc.STC_STYLE_LINENUMBER, "back:#C0C0C0,face:%(helv)s,"
-                             "size:%(size2)d" % faces), \
-  (stc.STC_STYLE_CONTROLCHAR, "face:%(other)s" % faces), \
-  (stc.STC_STYLE_BRACELIGHT, "fore:#FFFFFF,back:#0000FF,bold"), \
-  (stc.STC_STYLE_BRACEBAD, "fore:#000000,back:#FF0000,bold"), \
-  # Python styles
-  # Default 
-  (stc.STC_P_DEFAULT, "fore:#000000,face:%(helv)s,size:%(size)d" % faces), \
-  # Comments
-  (stc.STC_P_COMMENTLINE, "fore:#007F00,face:%(other)s,"
-                          "size:%(size)d" % faces), \
-  # Number
-  (stc.STC_P_NUMBER, "fore:#007F7F,size:%(size)d" % faces), \
-  # String
-  (stc.STC_P_STRING, "fore:#7F007F,face:%(helv)s,size:%(size)d" % faces), \
-  # Single quoted string
-  (stc.STC_P_CHARACTER, "fore:#7F007F,face:%(helv)s,size:%(size)d" % faces), \
-  # Keyword
-  (stc.STC_P_WORD, "fore:#00007F,bold,size:%(size)d" % faces), \
-  # Triple quotes
-  (stc.STC_P_TRIPLE, "fore:#7F0000,size:%(size)d" % faces), \
-  # Triple double quotes
-  (stc.STC_P_TRIPLEDOUBLE, "fore:#7F0000,size:%(size)d" % faces), \
-  # Class name definition
-  (stc.STC_P_CLASSNAME, "fore:#0000FF,bold,underline,size:%(size)d" % faces), \
-  # Function or method name definition
-  (stc.STC_P_DEFNAME, "fore:#007F7F,bold,size:%(size)d" % faces), \
-  # Operators
-  (stc.STC_P_OPERATOR, "bold,size:%(size)d" % faces), \
-  # Identifiers
-  (stc.STC_P_IDENTIFIER, "fore:#000000,face:%(helv)s,size:%(size)d" % faces), \
-  # Comment-blocks
-  (stc.STC_P_COMMENTBLOCK, "fore:#7F7F7F,size:%(size)d" % faces), \
-  # End of line where string is not closed
-  (stc.STC_P_STRINGEOL, "fore:#000000,face:%(mono)s,"
-                        "back:#E0C0E0,eol,size:%(size)d" % faces), \
-]
 
 """
 Icontheme
@@ -590,24 +548,12 @@ font_attributes = { \
     },
 }
 
-# brush_styles not yet implemented
+
 
 pen_styles = [wx.SOLID, wx.TRANSPARENT, wx.DOT, wx.LONG_DASH, wx.SHORT_DASH,
               wx.DOT_DASH, wx.BDIAGONAL_HATCH, wx.CROSSDIAG_HATCH, 
               wx.FDIAGONAL_HATCH, wx.CROSS_HATCH, wx.HORIZONTAL_HATCH, 
               wx.VERTICAL_HATCH]
-
-brush_styles = { \
-    "": wx.TRANSPARENT,
-    "": wx.SOLID,
-    "": wx.STIPPLE,
-    "": wx.BDIAGONAL_HATCH,
-    "": wx.CROSSDIAG_HATCH,
-    "": wx.FDIAGONAL_HATCH,
-    "": wx.CROSS_HATCH,
-    "": wx.HORIZONTAL_HATCH,
-    "": wx.VERTICAL_HATCH,
-}
 
 file_approval_warning = \
 u"""You are going to approve and trust a file that
