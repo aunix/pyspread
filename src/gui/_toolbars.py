@@ -252,7 +252,8 @@ class FindToolbar(wx.ToolBar):
         
         search_flags = self.search_options + ["FIND_NEXT"]
         
-        post_command_event(self, FindMsg, flags=search_flags)
+        post_command_event(self, FindMsg, text=search_string, 
+                                          flags=search_flags)
         
         self.search.SetFocus()
     

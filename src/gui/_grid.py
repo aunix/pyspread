@@ -189,8 +189,7 @@ class GridCellEventHandlers(object):
     def OnCellText(self, event):
         """Text entry event handler"""
         
-        row, col = self.grid.actions.cursor 
-        tab = self.grid.current_table
+        row, col, tab = self.grid.actions.cursor 
         
         self.grid.code_array[(row, col, tab)] = event.code
         
@@ -382,9 +381,7 @@ class GridEventHandlers(object):
         
         row, col, tab = event.key
         
-        self.grid.current_table = tab
-        
-        self.grid.SetGridCursor(row, col)
+        self.grid.actions.cursor = row, col, tab
         self.grid.MakeCellVisible(row, col)
         
         event.Skip()
@@ -443,8 +440,26 @@ class GridEventHandlers(object):
     def OnFind(self, event):
         """Find functionality should be in interfaces"""
         
-        raise NotImplementedError
-                
+        # Search starts in next cell after the current one
+        gridpos = list(self.grid.actions.cursor)
+        text, flags = event.text, event.flags
+        findpos = self.grid.actions.find(gridpos, text, flags)
+        
+        if findpos is None:
+            # If nothing is found mention it in the statusbar and return
+            
+            statustext = "'" + text + "' not found."
+        
+        else:
+            # Otherwise select cell with next occurrence if successful
+            self.grid.actions.cursor = findpos
+            
+            # Update statusbar
+            statustext = "Found '" + text + "' in cell " + \
+                         unicode(list(findpos)) + "."
+            
+        post_command_event(self.grid.main_window, StatusBarMsg, text=statustext)
+                               
         event.Skip()
         
     def OnFindClose(self, event):

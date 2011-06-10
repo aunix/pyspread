@@ -349,17 +349,6 @@ class ClipboardActions(object):
             for data_col, value in enumerate(line.split()):
                 self.grid.code_array[row+data_row, col+data_col, tab] = value
 
-
-class FindActions(object):
-    """Actions for finding inside the grid"""
-    
-    def find(self):
-        raise NotImplementedError
-        
-    def replace(self):
-        raise NotImplementedError
-
-
 class MacroActions(object):
     """Actions which affect macros"""
     
@@ -402,8 +391,7 @@ class HelpActions(object):
         
     
 class AllMainWindowActions(ExchangeActions, PrintActions, 
-                           ClipboardActions, FindActions, MacroActions,
-                           HelpActions):
+                           ClipboardActions, MacroActions, HelpActions):
     """All main window actions as a bundle"""
     
     def __init__(self, main_window, grid):
@@ -413,7 +401,6 @@ class AllMainWindowActions(ExchangeActions, PrintActions,
         ExchangeActions.__init__(self)
         PrintActions.__init__(self)
         ClipboardActions.__init__(self)
-        FindActions.__init__(self)
         MacroActions.__init__(self)
         HelpActions.__init__(self)
         

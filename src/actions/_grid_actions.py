@@ -479,16 +479,20 @@ class GridActions(object):
             ##post_entryline_text(self.grid, "")
 
     def get_cursor(self):
-        """Returns current grid cursor cell"""
+        """Returns current grid cursor cell (row, col, tab)"""
         
-        return self.grid.GetGridCursorRow(), self.grid.GetGridCursorCol()
+        return self.grid.GetGridCursorRow(), self.grid.GetGridCursorCol(), \
+               self.grid.current_table
 
     def set_cursor(self, value):
         """Changes the grid cursor cell."""
         
         if len(value) == 3:
             row, col, tab = value
-            self.switch_to_table(tab)
+            
+            if tab != self.cursor[2]:
+                post_command_event(self.main_window, GridActionTableSwitchMsg, 
+                                   newtable=tab)
         else:
             row, col = value
         
@@ -552,10 +556,54 @@ class SelectionActions(object):
             for row in irange(row_slc.start, row_slc.stop, row_slc.step):
                 for col in irange(col_slc.start, col_slc.stop, col_slc.step):
                     self.select_cell(row, col, add_to_selected=True)
+
+
+class FindActions(object):
+    """Actions for finding inside the grid"""
     
+    def find(self, gridpos, find_string, flags):
+        """Return next position of event_find_string in MainGrid
+        
+        Parameters:
+        -----------
+        gridpos: 3-tuple of Integer
+        \tPosition at which the search starts
+        find_string: String
+        \tString to find in grid
+        flags: Int
+        \twx.wxEVT_COMMAND_FIND flags
+        
+        """
+        
+        findfunc = self.grid.code_array.findnextmatch
+        
+        if "DOWN" in flags:
+            if gridpos[0] < self.grid.code_array.shape[0]:
+                gridpos[0] += 1
+            elif gridpos[1] < self.grid.code_array.shape[1]:
+                gridpos[1] += 1
+            elif gridpos[2] < self.grid.code_array.shape[2]:
+                gridpos[2] += 1
+            else:
+                gridpos = (0, 0, 0)
+        elif "UP" in flags:
+            if gridpos[0] > 0:
+                gridpos[0] -= 1
+            elif gridpos[1] > 0:
+                gridpos[1] -= 1
+            elif gridpos[2] > 0:
+                gridpos[2] -= 1
+            else:
+                gridpos = [dim - 1 for dim in self.grid.code_array.shape]
+        
+        return findfunc(tuple(gridpos), find_string, flags)
+        
+    def replace(self):
+        raise NotImplementedError
+
 
 class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions, 
-                     GridActions, SelectionActions):
+                     GridActions, SelectionActions, FindActions):
     """All grid actions as a bundle"""
     
     def __init__(self, grid, code_array):
@@ -572,3 +620,4 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
         UnRedoActions.__init__(self)
         GridActions.__init__(self)
         SelectionActions.__init__(self)
+        FindActions.__init__(self)
