@@ -185,6 +185,9 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         main_window.Bind(EVT_COMMAND_SHOW_RESIZE_GRID_DIALOG, 
                                                   handlers.OnResizeGridDialog)
         
+        main_window.Bind(wx.grid.EVT_GRID_ROW_SIZE, handlers.OnRowSize)
+        main_window.Bind(wx.grid.EVT_GRID_COL_SIZE, handlers.OnColSize)
+        
         # Undo/Redo events
 
         main_window.Bind(EVT_COMMAND_UNDO, handlers.OnUndo)
@@ -621,14 +624,24 @@ class GridEventHandlers(object):
     def OnRowSize(self, event):
         """Row size event handler"""
         
-        raise NotImplementedError
+        row = event.GetRowOrCol()
+        tab = self.grid.current_table
+        
+        rowsize = self.grid.GetRowSize(row) / self.grid.grid_renderer.zoom
+        
+        self.grid.code_array.row_heights[(row, tab)] = rowsize
         
         event.Skip()
         
     def OnColSize(self, event):
         """Column size event handler"""
         
-        raise NotImplementedError
+        col = event.GetRowOrCol()
+        tab = self.grid.current_table
+        
+        colsize = self.grid.GetColSize(col) / self.grid.grid_renderer.zoom
+        
+        self.grid.code_array.col_widths[(col, tab)] = colsize 
         
         event.Skip()
 
