@@ -51,6 +51,7 @@ import wx.grid
 from wx.lib.wordwrap import wordwrap
 import wx.stc as stc
 
+from _pyspread._grid import GridIndexMixin
 from _pyspread._widgets import PythonSTC
 from _pyspread._interfaces import Digest, sniff, fill_wxgrid
 from _pyspread._interfaces import ALPHA_ONLY, DIGIT_ONLY, Validator
@@ -344,7 +345,7 @@ class CsvParameterWidgets(object):
         
         return csv.get_dialect('user'), has_header
 
-class CSVPreviewGrid(wx.grid.Grid):
+class CSVPreviewGrid(wx.grid.Grid, GridIndexMixin):
     """The grid of the csv import parameter entry panel"""
     
     shape = [10, 10]
@@ -357,16 +358,6 @@ class CSVPreviewGrid(wx.grid.Grid):
         'Boolean': types.BooleanType, \
         'Object': types.ObjectType, \
     }
-    
-    # Only add date and time if dateutil is installed
-    try:
-        from dateutil.parser import parse
-        import datetime
-        digest_types['Date'] = datetime.date
-        digest_types['DateTime'] = datetime.datetime
-        digest_types['Time'] = datetime.time
-    except ImportError:
-        pass
     
     def __init__(self, *args, **kwargs):
         self.has_header = kwargs.pop('has_header')

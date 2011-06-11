@@ -31,7 +31,6 @@ Provides
 """
 
 import cStringIO
-import datetime
 import sys
 import types
 import UserDict
@@ -97,21 +96,14 @@ class PyspreadGrid(object):
         
         return self.sgrid.shape
     
-    def _set_shape(self, shape):
-        """Sets the shape of the array sgrid"""
-        
-        self.sgrid.set_shape(shape)
-    
-    shape = property(_getshape, _set_shape)
+    shape = property(_getshape)
     
     def _eval_cell(self, key):
         """Evaluates one cell"""
         
         # Set up environment for evaluation
         env = globals().copy()
-        env.update( {'X':key[0], 'Y':key[1], 'Z':key[2],
-                     'R':key[0], 'C':key[1], 'T':key[2],
-                     'S':self } )
+        env.update( {'X':key[0], 'Y':key[1], 'Z':key[2], 'S':self } )
         
         # Check if there is a global assignment
         split_exp = self.sgrid[key].split("=")
@@ -360,7 +352,7 @@ class PyspreadGrid(object):
         
         """
         
-        length = self.shape[dim]
+        length = self.sgrid.shape[dim]
         
         if slc.step is None:
             slc = slice(slc.start, slc.stop, 1)
@@ -446,9 +438,9 @@ class PyspreadGrid(object):
         for key in del_keys:
             sgrid.pop(key)
         
-        shape = list(self.shape)
+        shape = list(sgrid.shape)
         shape[axis] += notoinsert
-        self.shape = shape
+        sgrid.set_shape(shape)
         
         sgrid.update(key_update)
         
@@ -500,10 +492,10 @@ class PyspreadGrid(object):
         for key in del_keys:
             sgrid.pop(key)
         
-        shape = list(self.shape)
+        shape = list(sgrid.shape)
         shape[axis] -= min(notoremove, max(0, shape[axis] - rmp))
         shape[axis] = max(1, shape[axis])
-        self.shape = shape
+        sgrid.set_shape(shape)
         
         sgrid.update(key_update)
         
@@ -922,7 +914,7 @@ class DictGrid(UserDict.IterableUserDict):
         """This method MUST be used in order to change the grid shape"""
         
         self.shape = shape
-        self.indices = [range(size) for size in self.shape]
+        self.indices = [list(irange(size)) for size in self.shape]
 
     def execute_macros(self, safe_mode):
         """Executes all macros and returns result string if not safe_mode"""

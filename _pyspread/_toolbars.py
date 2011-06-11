@@ -38,8 +38,7 @@ import wx
 import wx.lib.colourselect as csel
 
 from _pyspread.config import odftags, border_toggles, default_cell_attributes
-from _pyspread.config import FONT_SIZES, faces
-from _pyspread.config import icons, icon_size, small_icon_size
+from _pyspread.config import FONT_SIZES, faces, icons, small_icon_size
 
 from _pyspread._interfaces import get_font_list, textfont_from_string
 from _pyspread._interfaces import get_default_font
@@ -87,13 +86,6 @@ class MainToolbar(wx.ToolBar):
         "Print current spreadsheet"], \
     ]
 
-    def __init__(self, *args, **kwargs):
-        wx.ToolBar.__init__(self, *args, **kwargs)
-        self.SetToolBitmapSize(icon_size)
-        
-        self.parent = args[0]
-        self._add_tools()
-
     def _add_tools(self):
         """Adds tools from self.toolbardata to self"""
         
@@ -115,6 +107,11 @@ class MainToolbar(wx.ToolBar):
                 self.parent.Bind(wx.EVT_TOOL, method, id=toolid)
             else:
                 raise TypeError, "Toolbar item unknown"
+
+    def __init__(self, *args, **kwargs):
+        wx.ToolBar.__init__(self, *args, **kwargs)
+        self.parent = args[0]
+        self._add_tools()
 
 
 # end of class MainToolbar
@@ -151,10 +148,7 @@ class FindToolbar(wx.ToolBar):
     def __init__(self, *args, **kwargs):
         kwargs["style"] = wx.TB_FLAT | wx.TB_NODIVIDER
         wx.ToolBar.__init__(self, *args, **kwargs)
-        self.SetToolBitmapSize(small_icon_size)
-        #if '__WXMAC__' in wx.PlatformInfo:
-        #    # Extra margin because search control is too high
-        #    self.SetMargins((0, 7)) 
+        
         self.parent = args[0]
         
         # Search entry control
@@ -165,6 +159,7 @@ class FindToolbar(wx.ToolBar):
                                 "searching in the grid cell source code"))
         self.menu = self.make_menu()
         self.search.SetMenu(self.menu)
+        self.SetToolBitmapSize(small_icon_size)
         self.AddControl(self.search)
         
         # Search direction toggle button
@@ -180,6 +175,7 @@ class FindToolbar(wx.ToolBar):
             longhelp = sfbs[name]["longhelp"]
             
             bmp = wx.Bitmap(icons[iconname], wx.BITMAP_TYPE_PNG)
+            self.SetToolBitmapSize(small_icon_size)
             self.AddCheckLabelTool(__id, name, bmp, 
                 shortHelp=shorthelp, longHelp=longhelp)
             
@@ -202,6 +198,7 @@ class FindToolbar(wx.ToolBar):
         self.search_direction_tb.SetInitialSize()
         self.search_direction_tb.SetToolTip( \
             wx.ToolTip("Search direction"))
+        self.SetToolBitmapSize(small_icon_size)
         self.AddControl(self.search_direction_tb)
         
     
@@ -281,12 +278,10 @@ class AttributesToolbar(wx.ToolBar):
     def __init__(self, *args, **kwargs):
         kwargs["style"] = wx.TB_FLAT | wx.TB_NODIVIDER
         self.parent = args[0]
-        ## Cahne to Events
         self.grid = self.parent.MainGrid
-        self.pysgrid = self.grid.model.pysgrid
+        self.pysgrid = self.grid.pysgrid
         
         wx.ToolBar.__init__(self, *args, **kwargs)
-        self.SetToolBitmapSize(small_icon_size)
         
         self._create_font_choice_combo()
         self._create_font_size_combo()
@@ -310,6 +305,7 @@ class AttributesToolbar(wx.ToolBar):
         self.font_choice_combo = _widgets.FontChoiceCombobox(self, \
                                     choices=self.fonts, style=wx.CB_READONLY,
                                     size=(125, -1))
+        self.SetToolBitmapSize(self.font_choice_combo.GetSize())
         self.AddControl(self.font_choice_combo)
         self.Bind(wx.EVT_COMBOBOX, self.OnTextFont, self.font_choice_combo)
     
@@ -321,6 +317,7 @@ class AttributesToolbar(wx.ToolBar):
         self.font_size_combo = wx.ComboBox(self, -1, value=font_size,
             size=(60, -1), choices=map(unicode, self.std_font_sizes),
             style=wx.CB_DROPDOWN | wx.TE_PROCESS_ENTER)
+        self.SetToolBitmapSize(small_icon_size)
         self.AddControl(self.font_size_combo)
         self.Bind(wx.EVT_COMBOBOX, self.OnTextSize, self.font_size_combo)
         self.Bind(wx.EVT_TEXT_ENTER, self.OnTextSize, self.font_size_combo)
@@ -341,6 +338,7 @@ class AttributesToolbar(wx.ToolBar):
             
         for name, __id, iconname, buttonname in font_face_buttons:
             bmp = wx.Bitmap(icons[iconname])
+            self.SetToolBitmapSize(small_icon_size)
             self.AddCheckLabelTool(__id, name, bmp, shortHelp=buttonname)
             self.Bind(wx.EVT_TOOL, self.OnToolClick, id=__id)
     
@@ -394,16 +392,9 @@ class AttributesToolbar(wx.ToolBar):
         button_size = (30, 30)
         button_style = wx.NO_BORDER
         
-        try:
-            self.linecolor_choice = \
-                csel.ColourSelect(self, -1, unichr(0x2500), (0, 0, 0), 
-                                  size=button_size, style=button_style)
-        except UnicodeEncodeError:
-            # ANSI wxPython installed
-            self.linecolor_choice = \
-                csel.ColourSelect(self, -1, "-", (0, 0, 0), 
-                                  size=button_size, style=button_style)
-            
+        self.linecolor_choice = \
+            csel.ColourSelect(self, -1, unichr(0x2500), (0, 0, 0), 
+                              size=button_size, style=button_style)
         self.bgcolor_choice = \
             csel.ColourSelect(self, -1, "", (255, 255, 255), 
                               size=button_size, style=button_style)
@@ -508,7 +499,7 @@ class AttributesToolbar(wx.ToolBar):
         
         # Get selected cell's key
         
-        key = self.grid.cursor
+        key = self.grid.key
         
         # Compatibility: Create frozen_cells if missing
         
@@ -656,6 +647,14 @@ class AttributesToolbar(wx.ToolBar):
     # Attributes toolbar event handlers
     # ---------------------------------
     
+    def _getkey(self):
+        """Returns the key of the currentky selected cell"""
+        
+        row, col = self.grid.get_currentcell()
+        tab = self.grid.current_table 
+        
+        return row, col, tab
+    
     def _get_key_list(self):
         """Returns a key list of selected cells
         
@@ -663,12 +662,12 @@ class AttributesToolbar(wx.ToolBar):
         
         """
         
-        selected_cells = self.grid.controller.selection()
+        selected_cells = self.grid.get_selection()
         if selected_cells:
-            tab = self.grid.controller.cursor[2]
+            tab = self.grid.current_table
             return [(row, col, tab) for row, col in selected_cells]
         else:
-            return [self.grid.controller.cursor]
+            return [self._getkey()]
     
     def OnBorderChoice(self, event):
         """Change the borders that are affected by color and width changes"""
@@ -771,7 +770,7 @@ class AttributesToolbar(wx.ToolBar):
                                    
         pysgrid.unredo.mark()
         
-        self.grid.view.force_refresh()
+        self.grid.ForceRefresh()
         
     
     def OnLineWidth(self, event):
@@ -824,7 +823,7 @@ class AttributesToolbar(wx.ToolBar):
         
         pysgrid.unredo.mark()
         
-        self.grid.view.force_refresh()
+        self.grid.ForceRefresh()
         
     def OnBGColor(self, event):
         """Background color choice event handler"""
@@ -851,7 +850,7 @@ class AttributesToolbar(wx.ToolBar):
         
         pysgrid.unredo.mark()
         
-        self.grid.view.force_refresh()
+        self.grid.ForceRefresh()
         
     def OnTextColor(self, event):
         """Text color choice event handler"""
@@ -874,7 +873,7 @@ class AttributesToolbar(wx.ToolBar):
         
         pysgrid.unredo.mark()
         
-        self.grid.view.force_refresh()
+        self.grid.ForceRefresh()
     
     def OnTextFont(self, event):
         """Text font choice event handler"""
@@ -908,7 +907,7 @@ class AttributesToolbar(wx.ToolBar):
         
         pysgrid.unredo.mark()
         
-        self.grid.view.force_refresh()
+        self.grid.ForceRefresh()
     
     def OnTextSize(self, event):
         """Text size combo text event handler"""
@@ -940,7 +939,7 @@ class AttributesToolbar(wx.ToolBar):
         
         pysgrid.unredo.mark()
         
-        self.grid.view.force_refresh()
+        self.grid.ForceRefresh()
     
     def OnToolClick(self, event):
         """Toggle the tool attribute of the current cell/selection text
@@ -1027,7 +1026,7 @@ class AttributesToolbar(wx.ToolBar):
         
         pysgrid.unredo.mark()
         
-        self.grid.view.force_refresh()
+        self.grid.ForceRefresh()
         
         event.Skip()
 
