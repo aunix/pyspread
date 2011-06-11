@@ -619,7 +619,7 @@ class GridEventHandlers(object):
         
         event.Skip()
 
-    # Grid attribute events
+    # Grid attribute events 
 
     def OnRowSize(self, event):
         """Row size event handler"""
@@ -645,7 +645,7 @@ class GridEventHandlers(object):
         
         event.Skip()
 
-    # Undo/Redo events
+    # Undo and redo events
 
     def OnUndo(self, event):
         """Calls the grid undo method"""
