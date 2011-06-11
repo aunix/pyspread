@@ -218,6 +218,7 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         textattributes = cell_attributes["textattributes"]
         
         textfont = get_font_from_data(cell_attributes["textfont"])
+        textfont.SetPointSize(cell_attributes["pointsize"])
         
         self.set_font(dc, textfont, textattributes, self.zoom)
         

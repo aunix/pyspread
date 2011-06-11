@@ -164,6 +164,9 @@ Zoom increase and decrease factor on zoom in and zoom out
 
 ZOOM_FACTOR = 0.05
 
+MINIMUM_ZOOM = 0.25
+MAXIMUM_ZOOM = 8.0
+
 """
 CSV
 ===

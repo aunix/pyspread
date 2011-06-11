@@ -76,7 +76,6 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         self.cell_handlers = GridCellEventHandlers(self)
         
         # Grid actions
-        
         self.actions = AllGridActions(self, self.code_array)
         
         # Layout and bindings
@@ -94,6 +93,17 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         """Initial layout of grid"""
         
         self.EnableGridLines(False)
+        
+        # Standard row and col sizes for zooming
+        self.std_row_size = self.GetRowSize(0)
+        self.std_col_size = self.GetColSize(0)
+        
+        # Standard row and col label sizes for zooming
+        self.col_label_size = self.GetColLabelSize()
+        self.row_label_size = self.GetRowLabelSize()
+        
+        self.SetRowMinimalAcceptableHeight(1)
+        self.SetColMinimalAcceptableWidth(1)
         
     
     def _bind(self):

@@ -45,7 +45,8 @@ Provides:
 
 """
 
-from config import ZOOM_FACTOR
+from config import ZOOM_FACTOR, MINIMUM_ZOOM, MAXIMUM_ZOOM
+from config import default_cell_attributes
 
 from gui._grid_table import GridTable
 from gui._events import *
@@ -408,10 +409,43 @@ class GridActions(object):
         _grid_table = GridTable(self.grid, self.grid.code_array)
         self.grid.SetTable(_grid_table, True)
     
+    # Zoom actions
+    
+    def _zoom_rows(self, zoom):
+        """Zooms grid rows"""
+        
+        self.grid.SetDefaultRowSize(self.grid.std_row_size * zoom, 
+                                    resizeExistingRows=True)
+        self.grid.SetRowLabelSize(self.grid.row_label_size * zoom)
+    
+    def _zoom_cols(self, zoom):
+        """Zooms grid columns"""
+        
+        self.grid.SetDefaultColSize(self.grid.std_col_size * zoom, 
+                                    resizeExistingCols=True)
+        self.grid.SetColLabelSize(self.grid.col_label_size * zoom)
+    
+    def _zoom_labels(self, zoom):
+        """Adjust grid label font to zoom factor"""
+        
+        labelfont = self.grid.GetLabelFont()
+        default_fontsize = default_cell_attributes["pointsize"]
+        labelfont.SetPointSize(max(1, int(round(default_fontsize * zoom))))
+        self.grid.SetLabelFont(labelfont)
+    
     def zoom(self, zoom):
         """Zooms to zoom factor"""
         
+        # Zoom factor for grid content
         self.grid.grid_renderer.zoom = zoom
+        
+        # Zoom grid labels
+        self._zoom_labels(zoom)
+        
+        # Zoom rows and columns
+        self._zoom_rows(zoom)
+        self._zoom_cols(zoom)
+        
         self.grid.ForceRefresh()
         
         statustext = u"Zoomed to {0:.2f}.".format(zoom)
@@ -423,14 +457,20 @@ class GridActions(object):
         
         zoom = self.grid.grid_renderer.zoom
         
-        self.zoom(zoom * (1 + ZOOM_FACTOR))
+        target_zoom = zoom * (1 + ZOOM_FACTOR)
+        
+        if target_zoom < MAXIMUM_ZOOM:
+            self.zoom(target_zoom)
         
     def zoom_out(self):
         """Zooms out by ZOOM_FACTOR"""
         
         zoom = self.grid.grid_renderer.zoom
         
-        self.zoom(zoom * (1 - ZOOM_FACTOR))
+        target_zoom = zoom * (1 - ZOOM_FACTOR)
+        
+        if target_zoom > MINIMUM_ZOOM:
+            self.zoom(target_zoom)
     
     def on_mouse_over(self, key):
         """Displays cell code of cell key in status bar"""
