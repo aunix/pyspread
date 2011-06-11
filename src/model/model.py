@@ -479,6 +479,8 @@ class CodeArray(DataArray):
     
     __call__ = DataArray.__getitem__
     
+    result_cache = {} # Stores results from __getitem calls
+    
     def __getitem__(self, key):
         """Yields to other events and returns _eval_cell
        
@@ -486,9 +488,16 @@ class CodeArray(DataArray):
         
         """
         
-        wx.Yield()
-
-        return self._eval_cell(key)
+        if key in self.result_cache:
+            return self.result_cache[key]
+            
+        else:
+            result = self._eval_cell(key)
+            
+            if result:
+                self.result_cache[key] = result
+            
+            return result
     
     def _make_nested_list(self, gen):
         """Makes nested list from generator for creating numpy.array"""
