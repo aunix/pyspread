@@ -104,6 +104,11 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         handlers = self.handlers
         c_handlers = self.cell_handlers
         
+        # Non wx.Grid events
+        
+        self.Bind(wx.EVT_MOUSEWHEEL, handlers.OnMouseWheel)
+        self.Bind(wx.EVT_KEY_DOWN, handlers.OnKey)
+        
         # Grid events
         
         self.GetGridWindow().Bind(wx.EVT_MOTION, handlers.OnMouseMotion)
@@ -361,7 +366,23 @@ class GridEventHandlers(object):
         grid.actions.on_mouse_over((row, col, tab))
         
         event.Skip()
+
+    def OnKey(self, event):
+        """Handles non-standard shortcut events"""
         
+        if event.ControlDown():
+            keycode = event.GetKeyCode()
+            
+            if keycode == 388:
+                # Ctrl + + pressed
+                post_command_event(self.grid, ZoomInMsg)
+                
+            elif keycode == 390:
+                # Ctrl + - pressed
+                post_command_event(self.grid, ZoomOutMsg)
+        
+        event.Skip()
+
     def OnScroll(self, event):
         """Event handler for grid scroll event"""
         
@@ -396,21 +417,21 @@ class GridEventHandlers(object):
     def OnZoomIn(self, event):
         """Event handler for increasing grid zoom"""
         
-        raise NotImplementedError
+        self.grid.actions.zoom_in()
         
         event.Skip()
 
     def OnZoomOut(self, event):
         """Event handler for decreasing grid zoom"""
         
-        raise NotImplementedError
+        self.grid.actions.zoom_out()
         
         event.Skip()
         
     def OnZoomStandard(self, event):
         """Event handler for resetting grid zoom"""
         
-        raise NotImplementedError
+        self.grid.actions.zoom(zoom=1.0)
         
         event.Skip()
 
@@ -431,9 +452,12 @@ class GridEventHandlers(object):
         """
         
         if event.ControlDown():
-            raise NotImplementedError
-        
-        event.Skip()
+            if event.WheelRotation > 0:
+                post_command_event(self.grid, ZoomInMsg)
+            else:
+                post_command_event(self.grid, ZoomOutMsg)
+        else:
+            event.Skip()
     
     # Find events
 

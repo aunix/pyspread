@@ -159,6 +159,12 @@ Grid lines
 GRID_LINE_PEN = wx.Pen("Gray80", 1)
 
 """
+Zoom increase and decrease factor on zoom in and zoom out
+"""
+
+ZOOM_FACTOR = 0.05
+
+"""
 CSV
 ===
 
@@ -172,25 +178,6 @@ SNIFF_SIZE = 65536
 # Maximum undo / redo size
 
 MAX_UNREDO = 10000
-
-"""
-Key press behavior
-==================
-
-Defines, what actions are mapped on which key for the main window
-
-"""
-
-KEYFUNCTIONS = {"Ctrl+A": "MainGrid.SelectAll",
-                "\x7f": "MainGrid.delete", # Del key
-                "Shift+\x7f": "MainGrid.purge", # Shift+Del key
-                } 
-
-# Not needed because of menu:
-#            "not_Shift+Ctrl+C": "OnCopy", \
-#            "Shift+Ctrl+C": "OnCopyResult",\
-#            "Ctrl+V": "OnPaste",\
-#            "Ctrl+X": "OnCut",\
 
 
 """

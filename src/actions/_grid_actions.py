@@ -45,6 +45,8 @@ Provides:
 
 """
 
+from config import ZOOM_FACTOR
+
 from gui._grid_table import GridTable
 from gui._events import *
 from lib._interfaces import sign, verify, is_pyme_present
@@ -408,7 +410,27 @@ class GridActions(object):
     
     def zoom(self, zoom):
         """Zooms to zoom factor"""
-        pass
+        
+        self.grid.grid_renderer.zoom = zoom
+        self.grid.ForceRefresh()
+        
+        statustext = u"Zoomed to {0:.2f}.".format(zoom)
+            
+        post_command_event(self.main_window, StatusBarMsg, text=statustext)
+    
+    def zoom_in(self):
+        """Zooms in by ZOOM_FACTOR"""
+        
+        zoom = self.grid.grid_renderer.zoom
+        
+        self.zoom(zoom * (1 + ZOOM_FACTOR))
+        
+    def zoom_out(self):
+        """Zooms out by ZOOM_FACTOR"""
+        
+        zoom = self.grid.grid_renderer.zoom
+        
+        self.zoom(zoom * (1 - ZOOM_FACTOR))
     
     def on_mouse_over(self, key):
         """Displays cell code of cell key in status bar"""

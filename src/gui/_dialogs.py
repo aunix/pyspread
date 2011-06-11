@@ -892,9 +892,9 @@ class DimensionsEntryDialog(wx.Dialog):
             self.dimensions[dimension] = 1
             self.textctrls[dimension].SetValue(str(1))
         
-        if any(dim > 80000000 for dim in self.dimensions):
-            self.dimensions[dimension] = 1
-            self.textctrls[dimension].SetValue(str(1))
+        #if any(dim > 80000000 for dim in self.dimensions):
+        #    self.dimensions[dimension] = 1
+        #    self.textctrls[dimension].SetValue(str(1))
         
     def OnXDim(self, event):
         """Event handler for x dimension TextCtrl"""
