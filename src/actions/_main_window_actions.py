@@ -312,14 +312,16 @@ class ClipboardActions(object):
         
         (bb_top, bb_left), (bb_bottom, bb_right) = selection.get_bbox()
         
-        data = [[u""] * (bb_right - bb_left)] * (bb_bottom - bb_top)
+        data = [[u""] * (bb_right - bb_left + 1)] * (bb_bottom - bb_top + 1)
         
         for __row, __col, __tab in self.grid.code_array:
             if tab == __tab and \
                bb_top <= __row <= bb_bottom and \
                bb_left <= __col <= bb_right and \
-               (__row, __col, __tab) in selection:
-                   data[row][col] = code
+               (__row, __col) in selection:
+                   row = __row - bb_top
+                   col = __col - bb_left
+                   data[row][col] = self.grid.code_array((__row, __col, __tab))
         
         return "\n".join("\t".join(line) for line in data)
     
