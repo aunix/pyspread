@@ -164,6 +164,10 @@ class DataArray(object):
         # Cell attributes mask
         self.cell_attributes = self.dict_grid.cell_attributes
         
+        # Row and column attributes
+        self.row_heights = {} # Keys have the format (row, table)
+        self.col_widths = {}  # Keys have the format (col, table)
+        
         # Safe model
         self.safe_mode = False
     
@@ -479,7 +483,8 @@ class CodeArray(DataArray):
     
     __call__ = DataArray.__getitem__
     
-    result_cache = {} # Stores results from __getitem calls
+    # Cache for results from __getitem calls
+    result_cache = {}
     
     def __setitem__(self, key, value):
         """Sets cell code and resets result cache"""

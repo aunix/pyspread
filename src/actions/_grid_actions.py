@@ -185,7 +185,10 @@ class TableRowActionsMixin(object):
     def set_row_height(self, row, height):
         """Sets row height"""
         
-        raise NotImplementedError
+        tab = self.grid.current_table
+        
+        self.code_array.row_heights[(row, tab)] = height
+        self.grid.SetRowSize(row, height)
 
     def insert_rows(self, row, no_rows=1):
         """Adds no_rows rows before row, appends if row > maxrows"""
@@ -417,6 +420,11 @@ class GridActions(object):
         self.grid.SetDefaultRowSize(self.grid.std_row_size * zoom, 
                                     resizeExistingRows=True)
         self.grid.SetRowLabelSize(self.grid.row_label_size * zoom)
+        
+        for row, tab in self.code_array.row_heights:
+            if tab == self.grid.current_table:
+                zoomed_row_size = self.code_array.row_heights[(row, tab)] * zoom
+                self.grid.SetRowSize(row, zoomed_row_size)
     
     def _zoom_cols(self, zoom):
         """Zooms grid columns"""
@@ -424,6 +432,11 @@ class GridActions(object):
         self.grid.SetDefaultColSize(self.grid.std_col_size * zoom, 
                                     resizeExistingCols=True)
         self.grid.SetColLabelSize(self.grid.col_label_size * zoom)
+    
+        for col, tab in self.code_array.col_widths:
+            if tab == self.grid.current_table:
+                zoomed_col_size = self.code_array.col_widths[(col, tab)] * zoom
+                self.grid.SetColSize(col, zoomed_col_size)
     
     def _zoom_labels(self, zoom):
         """Adjust grid label font to zoom factor"""
