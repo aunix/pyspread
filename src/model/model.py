@@ -481,6 +481,14 @@ class CodeArray(DataArray):
     
     result_cache = {} # Stores results from __getitem calls
     
+    def __setitem__(self, key, value):
+        """Sets cell code and resets result cache"""
+        
+        DataArray.__setitem__(self, key, value)
+        
+        # Reset result cache
+        self.result_cache = {} 
+    
     def __getitem__(self, key):
         """Yields to other events and returns _eval_cell
        

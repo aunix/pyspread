@@ -43,18 +43,15 @@ class CellActions(object):
         self.grid = grid
         self.code_array = code_array
 
-    def get_cell_code(self):
-        """Gets code for key cell"""
-        
-        pass
-
-    def set_cell_code(self,  key,  code):
-        """Sets code for key cell"""
-        
-        self.code_array[key] = code
-        
-        # Reset result cache
-        self.code_array.result_cache = {} 
+#    def get_cell_code(self):
+#        """Gets code for key cell"""
+#        
+#        pass
+#
+#    def set_cell_code(self,  key,  code):
+#        """Sets code for key cell"""
+#        
+#        self.code_array[key] = code
         
     def set_cell_code_fast(self,  key,  code):
         """Sets code for key cell"""
