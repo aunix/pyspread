@@ -37,7 +37,7 @@ import types
 import wx
 import wx.lib.agw.genericmessagedialog as GMD
 
-from _dialogs import DimensionsEntryDialog, AboutDialog
+from _dialogs import MacroDialog, DimensionsEntryDialog, AboutDialog
 from _dialogs import CsvImportDialog, CellEntryDialog, CsvExportDialog
 
 
@@ -229,6 +229,15 @@ class DialogInterfaceMixin(object):
         """Displays goto cell dialog"""
         
         dlg = CellEntryDialog(self.main_window)
+        
+        dlg.Show()
+    
+    def display_macros(self):
+        """Displays macro dialog"""
+        
+        macros = self.main_window.grid.code_array.macros
+        
+        dlg = MacroDialog(self.main_window, macros, -1)
         
         dlg.Show()
     

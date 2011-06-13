@@ -698,12 +698,15 @@ class CsvExportDialog(wx.Dialog):
 class MacroDialog(wx.Frame):
     """Macro management dialog"""
     
-    def __init__(self, *args, **kwds):
+    def __init__(self, parent, macros, *args, **kwds):
     
         # begin wxGlade: MacroDialog.__init__
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.THICK_FRAME
-        self.parent = args[0]
-        wx.Frame.__init__(self, *args, **kwds)
+        
+        self.parent = parent
+        self.macros = macros
+        
+        wx.Frame.__init__(self, parent, *args, **kwds)
         
         self.splitter = wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_BORDER)
         
@@ -723,8 +726,6 @@ class MacroDialog(wx.Frame):
         self._set_properties()
         self._do_layout()
         
-        self.sgrid = self.parent.MainGrid.pysgrid.dict_grid
-        self.macros = self.parent.MainGrid.pysgrid.dict_grid.macros[:]
         self.codetext_ctrl.SetText(self.macros)
         
         # Bindings
@@ -780,25 +781,19 @@ class MacroDialog(wx.Frame):
         
         self.OnApply(event)
         
-        self.parent.macro_dlg = None
         self.Destroy()
     
     def OnApply(self, event):
         """Event handler for Apply button"""
         
-        self.sgrid.macros = self.macros
-        safe_mode = self.parent.MainGrid.pysgrid.safe_mode
-        outstring = self.sgrid.execute_macros(safe_mode)
-        self.result_ctrl.SetValue(outstring)
-        
-        self.sgrid.macros = self.macros
+        post_command_event(self.parent, MacroReplaceMsg, macros=self.macros)
+        post_command_event(self.parent, MacroExecuteMsg)
         
         event.Skip()
     
     def OnCancel(self, event):
         """Event handler for Cancel button"""
         
-        self.parent.macro_dlg = None
         self.Destroy()
 
 

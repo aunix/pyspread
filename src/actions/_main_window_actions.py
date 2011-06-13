@@ -354,14 +354,47 @@ class ClipboardActions(object):
 class MacroActions(object):
     """Actions which affect macros"""
     
-    def show(self):
-        raise NotImplementedError
-    
-    def open(self):
-        raise NotImplementedError
+    def replace_macros(self, macros):
+        """Replaces macros"""
         
-    def save(self):
-        raise NotImplementedError
+        self.grid.code_array.macros = macros
+        
+    def execute_macros(self):
+        """Executes macros"""
+        
+        self.grid.code_array.execute_macros()
+    
+    def open_macros(self, filepath):
+        """Loads macros from file
+        
+        Parameters
+        ----------
+        filepath: String
+        \tPath to macro file
+        
+        """
+        
+        macro_infile = open(filepath, "r")
+        macrocode = macro_infile.read()
+        macro_infile.close()
+        
+        self.grid.code_array.macros += "\n" + macrocode.strip("\n")
+        
+    def save_macros(self, filepath, macros):
+        """Saves macros to file
+        
+        Parameters
+        ----------
+        filepath: String
+        \tPath to macro file
+        macros: String
+        \tMacro code
+        
+        """
+        
+        macro_outfile = open(filepath, "w")
+        macro_outfile.write(macros)
+        macro_outfile.close()
 
 
 class HelpActions(object):

@@ -36,7 +36,9 @@ Layer 0: KeyValueStore
 """
 
 from copy import copy
+import cStringIO
 import itertools
+import sys
 from types import SliceType
 
 import numpy
@@ -168,7 +170,7 @@ class DataArray(object):
         self.row_heights = {} # Keys have the format (row, table)
         self.col_widths = {}  # Keys have the format (col, table)
         
-        # Safe model
+        # Safe mode
         self.safe_mode = False
     
     def __iter__(self):
@@ -176,6 +178,14 @@ class DataArray(object):
         
         return iter(self.dict_grid)
     
+    def _get_macros(self):
+        return self.dict_grid.macros
+
+    def _set_macros(self, macros):
+        self.dict_grid.macros = macros
+        
+    macros = property(_get_macros, _set_macros)
+
     def keys(self):
         """Returns keys in self.dict_grid"""
         
@@ -598,6 +608,39 @@ class CodeArray(DataArray):
             globals().update({glob_var: result})
         
         return result
+    
+    def execute_macros(self):
+        """Executes all macros and returns result string if not safe_mode"""
+        
+        if self.safe_mode:
+            return "Safe mode activated. Code not executed."
+        
+        # Windows exec does not like Windows newline
+        self.macros = self.macros.replace('\r\n', '\n')
+        
+        # Create file-like string to capture output
+        code_out = cStringIO.StringIO()
+        code_err = cStringIO.StringIO()
+
+        # Capture output and errors
+        sys.stdout = code_out
+        sys.stderr = code_err
+
+        try:
+            exec(self.macros, globals())
+        except Exception, err:
+            print err
+
+        # Restore stdout and stderr
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+        outstring = code_out.getvalue() + code_err.getvalue()
+
+        code_out.close()
+        code_err.close()
+
+        return outstring
     
     def findnextmatch(self, startkey, find_string, flags):
         """ Returns a tuple with the position of the next match of find_string

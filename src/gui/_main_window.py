@@ -251,6 +251,8 @@ class MainWindow(wx.Frame):
         self.Bind(EVT_COMMAND_ABOUT, handlers.OnAbout)
         
         self.Bind(EVT_COMMAND_MACROLIST, handlers.OnMacroList)
+        self.Bind(EVT_COMMAND_MACROREPLACE, handlers.OnMacroReplace)
+        self.Bind(EVT_COMMAND_MACROEXECUTE, handlers.OnMacroExecute)
         self.Bind(EVT_COMMAND_MACROLOAD, handlers.OnMacroListLoad)
         self.Bind(EVT_COMMAND_MACROSAVE, handlers.OnMacroListSave)
     
@@ -694,21 +696,60 @@ class MainWindowEventHandlers(object):
     def OnMacroList(self, event):
         """Macro list dialog event handler"""
         
-        raise NotImplementedError
+        self.main_window.interfaces.display_macros()
         
         event.Skip()
+    
+    def OnMacroReplace(self, event):
+        """Macro change event handler"""
+        
+        self.main_window.actions.replace_macros(event.macros)
+    
+    def OnMacroExecute(self, event):
+        """Macro execution event handler"""
+        
+        self.main_window.actions.execute_macros()
     
     def OnMacroListLoad(self, event): 
         """Macro list load event handler"""
         
-        raise NotImplementedError
+        # Get filepath from user
+        
+        wildcard = "Macro file (*.py)|*.py|" \
+                   "All files (*.*)|*.*"
+        message = "Choose macro file."
+        
+        style = wx.OPEN | wx.CHANGE_DIR
+        filepath, filterindex = self.interfaces.get_filepath_findex_from_user( \
+                                    wildcard, message, style)
+        
+        # Enter safe mode because macro file could be harmful
+        
+        post_command_event(self.main_window, SafeModeEntryMsg)
+        
+        # Load macros from file
+        
+        self.main_window.actions.open_macros(filepath)
         
         event.Skip()
     
     def OnMacroListSave(self, event):
         """Macro list save event handler"""
         
-        raise NotImplementedError
+        # Get filepath from user
+        
+        wildcard = "Macro file (*.py)|*.py|" \
+                   "All files (*.*)|*.*"
+        message = "Choose macro file."
+        
+        style = wx.SAVE | wx.CHANGE_DIR
+        filepath, filterindex = self.interfaces.get_filepath_findex_from_user( \
+                                    wildcard, message, style)
+        
+        # Save macros to file
+        
+        macros = self.main_window.grid.code_array.macros
+        self.main_window.actions.save_macros(filepath, macros)
         
         event.Skip()
     

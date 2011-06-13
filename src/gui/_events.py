@@ -74,6 +74,8 @@ FaqMsg, EVT_COMMAND_FAQ = new_command_event()
 AboutMsg, EVT_COMMAND_ABOUT = new_command_event()
 
 MacroListMsg, EVT_COMMAND_MACROLIST = new_command_event()
+MacroReplaceMsg, EVT_COMMAND_MACROREPLACE = new_command_event()
+MacroExecuteMsg, EVT_COMMAND_MACROEXECUTE = new_command_event()
 MacroLoadMsg, EVT_COMMAND_MACROLOAD = new_command_event()
 MacroSaveMsg, EVT_COMMAND_MACROSAVE = new_command_event()
 
