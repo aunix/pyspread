@@ -204,7 +204,7 @@ class MainMenu(_filledMenu):
             [item, [PasteMsg, "&Paste\tCtrl+v", 
                 "Paste cells from clipboard", wx.ID_PASTE]], \
             ["Separator"], \
-            [item, [FindMsg, "&Find\tCtrl+f", "Find cell by content"]], \
+            [item, [FindFocusMsg, "&Find\tCtrl+f", "Find cell by content"]], \
             [item, [ReplaceMsg, "Replace\tCtrl+Shift+f", 
                 "Replace strings in cells"]], \
             ["Separator"], \

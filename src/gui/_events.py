@@ -161,6 +161,7 @@ ZoomStandardMsg , EVT_COMMAND_ZOOM_STANDARD = new_command_event()
 # Find events
 
 FindMsg, EVT_COMMAND_FIND = new_command_event()
+FindFocusMsg, EVT_COMMAND_FOCUSFIND = new_command_event()
 ReplaceMsg, EVT_COMMAND_REPLACE = new_command_event()
 
 # Grid change events

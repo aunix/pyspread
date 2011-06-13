@@ -36,10 +36,9 @@ Provides:
   1. ExchangeActions: Actions for foreign format import and export
   2. PrintActions: Actions for printing
   3. ClipboardActions: Actions which affect the clipboard
-  4. FindActions: Actions for finding and replacing
-  5. MacroActions: Actions which affect macros  
-  6. HelpActions: Actions for getting help
-  7. AllMainWindowActions: All main window actions as a bundle
+  4. MacroActions: Actions which affect macros  
+  5. HelpActions: Actions for getting help
+  6. AllMainWindowActions: All main window actions as a bundle
 
 """
 

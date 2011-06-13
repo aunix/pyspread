@@ -230,6 +230,9 @@ class MainWindow(wx.Frame):
         self.Bind(EVT_COMMAND_EXPORT, handlers.OnExport)
         self.Bind(EVT_COMMAND_APPROVE, handlers.OnApprove)
         
+        # Find events
+        self.Bind(EVT_COMMAND_FOCUSFIND, handlers.OnFocusFind)
+        
         # Print events
         
         self.Bind(EVT_COMMAND_PAGE_SETUP, handlers.OnPageSetup)
@@ -690,6 +693,13 @@ class MainWindowEventHandlers(object):
             self.main_window.actions.paste(key, data)
         
         event.Skip()
+    
+    # View events
+    
+    def OnFocusFind(self, event):
+        """Event handler for focusing find toolbar text widget"""
+        
+        self.main_window.find_toolbar.search.SetFocus()
     
     # Macro events
     

@@ -40,7 +40,8 @@ Provides:
   7. UnRedoActions: Actions on the undo redo system
   8. GridActions: Actions on the grid as a whole
   9. SelectionActions: Actions on the grid selection
-  10. AllGridActions: All grid actions as a bundle
+  10. FindActions: Actions for finding and replacing
+  11. AllGridActions: All grid actions as a bundle
   
 
 """

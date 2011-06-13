@@ -168,7 +168,6 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         main_window.Bind(EVT_COMMAND_ZOOM_STANDARD, handlers.OnZoomStandard)
         
         # Find events
-        
         main_window.Bind(EVT_COMMAND_FIND, handlers.OnFind)
         main_window.Bind(EVT_COMMAND_REPLACE, handlers.OnShowFindReplace)
         
@@ -496,13 +495,6 @@ class GridEventHandlers(object):
                          unicode(list(findpos)) + "."
             
         post_command_event(self.grid.main_window, StatusBarMsg, text=statustext)
-                               
-        event.Skip()
-        
-    def OnFindClose(self, event):
-        """Refreshes the grid after closing the find dialog"""
-        
-        raise NotImplementedError
         
         event.Skip()
 
