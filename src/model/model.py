@@ -191,7 +191,7 @@ class DataArray(object):
         
         return self.dict_grid.keys()
     
-    def pop(key):
+    def pop(self, key):
         """Pops dict_grid with undo and redo support"""
         
         # UnRedo support

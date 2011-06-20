@@ -633,6 +633,15 @@ class SelectionActions(object):
                 for col in irange(col_slc.start, col_slc.stop, col_slc.step):
                     self.select_cell(row, col, add_to_selected=True)
 
+    def delete_selection(self):
+        """Deletes selected cells"""\
+        
+        selection = self.get_selection()
+        
+        del_keys = [key for key in self.grid.code_array if key[:2] in selection]
+        
+        for key in del_keys:
+            self.grid.actions.cell_actions.delete_cell(key)
 
 class FindActions(object):
     """Actions for finding inside the grid"""

@@ -382,9 +382,9 @@ class GridEventHandlers(object):
     def OnKey(self, event):
         """Handles non-standard shortcut events"""
         
+        keycode = event.GetKeyCode()
+        
         if event.ControlDown():
-            keycode = event.GetKeyCode()
-            
             if keycode == 388:
                 # Ctrl + + pressed
                 post_command_event(self.grid, ZoomInMsg)
@@ -392,6 +392,26 @@ class GridEventHandlers(object):
             elif keycode == 390:
                 # Ctrl + - pressed
                 post_command_event(self.grid, ZoomOutMsg)
+                
+        else:
+            # No Ctrl pressed
+            
+            if keycode == 127:
+                # Del pressed
+                
+                # Delete cell at cursor
+                cursor = self.grid.actions.cursor
+                self.grid.actions.cell_actions.delete_cell(cursor)
+                
+                # Delete selection
+                self.grid.actions.delete_selection()
+                
+                # Update grid
+                
+                self.grid.ForceRefresh()
+                
+                # Do not enter cell
+                return
         
         event.Skip()
 

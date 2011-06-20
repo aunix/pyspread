@@ -42,16 +42,6 @@ class CellActions(object):
         self.main_window = grid.main_window
         self.grid = grid
         self.code_array = code_array
-
-#    def get_cell_code(self):
-#        """Gets code for key cell"""
-#        
-#        pass
-#
-#    def set_cell_code(self,  key,  code):
-#        """Sets code for key cell"""
-#        
-#        self.code_array[key] = code
         
     def set_cell_code_fast(self,  key,  code):
         """Sets code for key cell"""
@@ -61,5 +51,8 @@ class CellActions(object):
     def delete_cell(self,  key):
         """Deletes key cell"""
         
-        raise NotImplementedError
+        try:
+            self.code_array.pop(key)
+        except KeyError:
+            pass
     
