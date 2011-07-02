@@ -105,6 +105,7 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         self.SetRowMinimalAcceptableHeight(1)
         self.SetColMinimalAcceptableWidth(1)
         
+        self.SetCellHighlightPenWidth(0) 
     
     def _bind(self):
         """Bind events to handlers"""
@@ -349,6 +350,9 @@ class GridCellEventHandlers(object):
         """Cell selection event handler"""
         
         key = event.Row, event.Col, self.grid.current_table
+        
+        # Redraw cursor
+        self.grid.ForceRefresh()
         
         # Update entry line
         cell_code = self.grid.code_array(key)

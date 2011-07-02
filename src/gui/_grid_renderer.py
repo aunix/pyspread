@@ -58,6 +58,9 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         
         # Zoom of grid
         self.zoom = 1.0
+        
+        # Old curso position 
+        self.old_cursor_row_col = 0, 0
     
     def get_textbox_edges(self, text_pos, text_extent):
         """Returns upper left, lower left, lower right, upper right of text"""
@@ -389,6 +392,33 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
     
         return string_x, string_y, angle
         
+
+    def _draw_cursor(self, dc, grid, row, col, 
+                    pen=wx.BLACK_PEN, brush=wx.BLACK_BRUSH):
+        """Draws cursor as Reckangle in lower right corner"""
+        
+        rect = grid.CellToRect(row, col)
+        
+        size = max(1, int(3 * self.zoom))
+        
+        points = [(rect.x + rect.width - 2, rect.y + rect.height - 2), 
+                  (rect.x + rect.width - 2 - size, rect.y + rect.height - 2), 
+                  (rect.x + rect.width - 2, rect.y + rect.height - 2 - size)]
+        
+        dc.DrawPolygonList([points], pens=pen, brushes=brush)
+        
+        self.old_cursor_row_col = row, col
+    
+    def update_cursor(self, dc, grid, row, col):
+        """Whites out the old cursor and draws the new one"""
+        
+        ## TODO: Use background color for deletion
+        old_row, old_col = self.old_cursor_row_col
+        
+        self._draw_cursor(dc, grid, old_row, old_col, 
+                         pen=wx.WHITE_PEN, brush=wx.WHITE_BRUSH)
+        self._draw_cursor(dc, grid, row, col)
+    
     def Draw(self, grid, attr, dc, rect, row, col, isSelected, printing=False):
         """Draws the cell border and content"""
         
@@ -443,6 +473,9 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         
         elif res is not None:
             self.draw_text_label(dc, res, rect, grid, key)
+        
+        if grid.actions.cursor[:2] == (row, col):
+            self.update_cursor(dc, grid, row, col)
         
 # end of class TextRenderer
 
