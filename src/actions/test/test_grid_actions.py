@@ -163,24 +163,53 @@ class TestFileActions(object):
     def test_save(self):
         """Tests save functionality"""
         
+        class Event(object):
+            attr = {"interface": PysInterface}
+        event = Event()
+        
         # Test normal save
+        
+        filename_save = "test_save.pys"
+
+        event.attr["filepath"] = filename_save
+        
+        self.grid.actions.save(event)
+        
+        savefile = open(filename_save)
+        assert savefile
+        savefile.close()
         
         # Test double filename
         
+        self.grid.actions.save(event)
+        
         # Test io error
+        
+        os.chmod(filename_save, 0200)
+        try:
+            self.grid.actions.save(event)
+            raise IOError, "No error raised even though target not writable"
+        except IOError:
+            pass
+        os.chmod(filename_save, 0644)
         
         # Test invalid file name
         
+        event.attr["filepath"] = None
+        try:
+            self.grid.actions.save(event)
+            raise TypeError, "None accepted as filename"
+        except TypeError:
+            pass
+        
         # Test sig creation is happening
         
-        pass    
-    
-    def test_open_save(self):
-        """Tests open save round trip"""
+        sigfile = open(filename_save + ".sig")
+        assert sigfile
+        sigfile.close()
         
-        # Test normal save open round trip
-        
-        pass
+        os.remove(filename_save)
+        os.remove(filename_save + ".sig")
 
     def test_sign_file(self):
         """Tests signing functionality"""
