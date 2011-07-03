@@ -12,7 +12,7 @@ from gui._grid import Grid
 import actions._grid_actions
 import lib.vartypes as vartypes
 from lib._interfaces import PysInterface
-from model._data_array import DataArray
+from model.model import CodeArray
 
 from gui._events import *
 
@@ -37,6 +37,20 @@ class TestFileActions(object):
         # Test invalid sig file
         filename_invalid_sig = "test3.pys"
         assert not self.grid.actions.validate_signature(filename_invalid_sig)
+        
+    def test_enter_safe_mode(self):
+        """Tests safe mode entry"""
+        
+        self.grid.actions.leave_safe_mode()
+        self.grid.actions.enter_safe_mode()
+        assert self.grid.code_array.safe_mode
+
+    def test_leave_safe_mode(self):
+        """Tests save mode exit"""
+        
+        self.grid.actions.enter_safe_mode()
+        self.grid.actions.leave_safe_mode()
+        assert not self.grid.code_array.safe_mode
 
     def test_approve(self):
         
@@ -45,7 +59,7 @@ class TestFileActions(object):
         
         self.grid.actions.approve(filename_invalid_sig)
         
-        assert self.grid.data_array.safe_mode
+        assert self.grid.GetTable().data_array.safe_mode
         
         # Test if safe_mode is correctly set for valid sig
         
@@ -53,14 +67,14 @@ class TestFileActions(object):
         
         self.grid.actions.approve(filename_valid_sig)
             
-        assert not self.grid.data_array.safe_mode
+        assert not self.grid.GetTable().data_array.safe_mode
         
         # Test if safe_mode is correctly set for missing sig
         filename_no_sig = "test2.pys"
         
         self.grid.actions.approve(filename_no_sig)
         
-        assert self.grid.data_array.safe_mode
+        assert self.grid.GetTable().data_array.safe_mode
         
         # Test if safe_mode is correctly set for io-error sig
         
@@ -71,7 +85,7 @@ class TestFileActions(object):
         
         self.grid.actions.approve(filename_not_permitted)
         
-        assert self.grid.data_array.safe_mode
+        assert self.grid.GetTable().data_array.safe_mode
         
         os.chmod(filename_not_permitted, 0644)
         os.chmod(filename_not_permitted + ".sig", 0644)
@@ -107,7 +121,7 @@ class TestFileActions(object):
         event.attr["filepath"] = filename_empty
         assert not self.grid.actions.open(event)
         
-        assert self.grid.data_array.safe_mode # sig is also empty
+        assert self.grid.GetTable().data_array.safe_mode # sig is also empty
         
         # Test invalid sig files
         filename_invalid_sig = "test3.pys"
@@ -115,7 +129,7 @@ class TestFileActions(object):
         event.attr["filepath"] = filename_invalid_sig
         self.grid.actions.open(event)
         
-        assert self.grid.data_array.safe_mode
+        assert self.grid.GetTable().data_array.safe_mode
         
         # Test file with sig
         filename_valid_sig = "test1.pys"
@@ -123,7 +137,7 @@ class TestFileActions(object):
         event.attr["filepath"] = filename_valid_sig
         self.grid.actions.open(event)
             
-        assert not self.grid.data_array.safe_mode
+        assert not self.grid.GetTable().data_array.safe_mode
         
         # Test file without sig
         filename_no_sig = "test2.pys"
@@ -131,7 +145,7 @@ class TestFileActions(object):
         event.attr["filepath"] = filename_no_sig
         self.grid.actions.open(event)
         
-        assert self.grid.data_array.safe_mode
+        assert self.grid.GetTable().data_array.safe_mode
         
         # Test grid size for valid file
         filename_gridsize = "test4.pys"
@@ -139,12 +153,12 @@ class TestFileActions(object):
         event.attr["filepath"] = filename_gridsize
         self.grid.actions.open(event)
         
-        assert not self.grid.data_array.safe_mode
-        assert self.grid.data_array.shape == (1111, 2222, 3333)
+        assert not self.grid.GetTable().data_array.safe_mode
+        assert self.grid.GetTable().data_array.shape == (1111, 2222, 3333)
         
         # Test grid content for valid file
         
-        assert self.grid.data_array[0, 0, 0] == "test4"
+        assert self.grid.GetTable().data_array[0, 0, 0] == "test4"
     
     def test_save(self):
         """Tests save functionality"""
@@ -212,14 +226,11 @@ class TestGridActions(object):
         dims = zip(dims[::3], dims[1::3], dims[2::3])
         
         for dim in dims:
-            print dim, self.grid.GetTable().data_array.shape
-            data_array = DataArray(dim)
-            self.event.data_array = data_array
+            code_array = CodeArray(dim)
+            self.event.code_array = code_array
             self.grid.actions.new(self.event)
             assert self.grid.GetTable().data_array.shape == dim
     
-
-
 class TestSelection(object):
     """Selection class test class"""
     
@@ -281,11 +292,11 @@ class TestTableActions(object):
         
         self.grid.actions.paste(tl_cell, data)
         
-        assert self.grid.data_array[tl_cell] == 1
-        assert self.grid.data_array.sgrid[tl_cell] == '1'
-        assert self.grid.data_array[0, 1, 0] == 2
-        assert self.grid.data_array[0, 2, 0] == 3
-        assert self.grid.data_array[0, 3, 0] == 4
+        assert self.grid.code_array[tl_cell] == 1
+        assert self.grid.code_array(tl_cell) == '1'
+        assert self.grid.code_array[0, 1, 0] == 2
+        assert self.grid.code_array[0, 2, 0] == 3
+        assert self.grid.code_array[0, 3, 0] == 4
         
         # Test row overflow
         ##TODO

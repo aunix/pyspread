@@ -79,12 +79,12 @@ class FileActions(object):
         # Check if the sig is valid for the sigfile
         return verify(sigfilename, filename)
 
-    def enter_save_mode(self):
-        """Enters save mode"""
+    def enter_safe_mode(self):
+        """Enters safe mode"""
         
         self.code_array.safe_mode = True
 
-    def leave_save_mode(self):
+    def leave_safe_mode(self):
         """Leaves save mode"""
         
         self.code_array.safe_mode = False
@@ -93,15 +93,15 @@ class FileActions(object):
         """Sets safe mode if signature missing of invalid"""
         
         if self.validate_signature(filepath):
-            self.leave_save_mode()
-            post_command_event(self.main_window, SaveModeExitMsg)
+            self.leave_safe_mode()
+            post_command_event(self.main_window, SafeModeExitMsg)
             
             statustext = "Valid signature found. File is trusted."
             post_command_event(self.main_window, StatusBarMsg, text=statustext)
             
         else:
-            self.enter_save_mode()
-            post_command_event(self.main_window, SaveModeEntryMsg)
+            self.enter_safe_mode()
+            post_command_event(self.main_window, SafeModeEntryMsg)
             
             statustext = "File is not properly signed. Safe mode " + \
                          "activated. Select File -> Approve to leave safe mode."
@@ -309,7 +309,6 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
         
         self.pasting = True
         
-        set_cell_code = self.cell_actions.set_cell_code
         grid_rows, grid_cols, _ = self.grid.code_array.shape
         
         self.need_abort = False
@@ -355,7 +354,7 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
                 
                 key = target_row, target_col, tl_tab
                 
-                set_cell_code(key, cell_data)
+                self.grid.code_array[key] = cell_data
         
         if row_overflow or col_overflow:
             self._show_final_overflow_message(row_overflow, col_overflow)

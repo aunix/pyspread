@@ -999,7 +999,7 @@ class AboutDialog(object):
         info = wx.AboutDialogInfo()
         info.Name = "pyspread"
         info.Version = VERSION
-        info.Copyright = "(C) Martin Manns 2008-2010"
+        info.Copyright = "(C) Martin Manns 2008-2011"
         info.Description = wordwrap( 
             "A cross-platform Python spreadsheet application.\nPyspread is "
             "based on and written in the programming language Python.",
@@ -1024,7 +1024,7 @@ class AboutDialog(object):
         self.SetTitle("About pyspread")
         
         self.about_label.SetLabel("pyspread " + VERSION + \
-                                  "\nCopyright Martin Manns 2008-2009")
+                                  "\nCopyright Martin Manns 2008-2011")
     
     def _do_layout(self):
         """Layout sizers"""
