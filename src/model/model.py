@@ -124,6 +124,9 @@ class DictGrid(KeyValueStore):
         
         self.cell_attributes = CellAttributes()
         self.macros = u""
+        
+        self.row_heights = {} # Keys have the format (row, table)
+        self.col_widths = {}  # Keys have the format (col, table)
     
     def __getitem__(self, key):
         
@@ -166,9 +169,9 @@ class DataArray(object):
         # Cell attributes mask
         self.cell_attributes = self.dict_grid.cell_attributes
         
-        # Row and column attributes
-        self.row_heights = {} # Keys have the format (row, table)
-        self.col_widths = {}  # Keys have the format (col, table)
+        # Row and column attributes, keys have the format (row, table)
+        self.row_heights = self.dict_grid.row_heights 
+        self.col_widths = self.dict_grid.col_widths  
         
         # Safe mode
         self.safe_mode = False
@@ -511,14 +514,14 @@ class CodeArray(DataArray):
         
         """
         
-        if key in self.result_cache:
-            return self.result_cache[key]
+        if repr(key) in self.result_cache:
+            return self.result_cache[repr(key)]
             
         else:
             result = self._eval_cell(key)
             
-            if result:
-                self.result_cache[key] = result
+            if result is not None:
+                self.result_cache[repr(key)] = result
             
             return result
     
@@ -532,8 +535,8 @@ class CodeArray(DataArray):
                 res.append(None)
                 
             elif is_string_like(ele):
-                # Code
-                res.append(self._eval_cell(ele))
+                # String
+                res.append(ele)
                 
             elif is_generator_like(ele):
                 # Nested generator

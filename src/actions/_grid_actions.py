@@ -147,6 +147,22 @@ class FileActions(object):
         
         _grid_table = GridTable(self.grid, self.grid.code_array)
         self.grid.SetTable(_grid_table, True)
+        
+        ## TODO: Reset row and col sizes and then adjust anew 
+        ## --> best made in change table
+#        # Adjust rows 
+#        print self.grid.code_array.row_heights
+#        for key in self.grid.code_array.row_heights:
+#            if key[1] == self.grid.current_table:
+#                row = key[0]
+#                self.grid.SetRowSize(row, self.grid.code_array.row_heights[key])
+#            
+#        # Adjust columns
+#        for key in self.grid.code_array.col_widths:
+#            if key[1] == self.grid.current_table:
+#                col = key[0]
+#            self.grid.SetColSize(col, self.grid.code_array.col_widths[key])
+
     
     def sign_file(self, filepath):
         """Signs file if possible"""
