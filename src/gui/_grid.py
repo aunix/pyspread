@@ -233,6 +233,9 @@ class GridCellEventHandlers(object):
         """Cell font bold event handler"""
         
         selection = self.grid.selection
+        if not selection:
+            selection.cells.append(self.grid.actions.cursor[:2])
+        
         table = self.grid.current_table
         
         style = {"fontweight": wx.BOLD}

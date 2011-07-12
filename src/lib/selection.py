@@ -54,15 +54,24 @@ class Selection(object):
         self.cols = cols
         self.cells = cells
     
+    def __nonzero__(self):
+        """Returns True iif any atttribute is non-empty"""
+        
+        return any((self.block_tl, 
+                    self.block_br, 
+                    self.rows,
+                    self.cols, 
+                    self.cells))
+    
     def __repr__(self):
         """String output for printing selection"""
         
         return "Selection" + repr( \
-            (self.block_tl, 
-             self.block_br, 
-             self.rows,
-             self.cols, 
-             self.cells))
+                   (self.block_tl, 
+                    self.block_br, 
+                    self.rows,
+                    self.cols, 
+                    self.cells))
     
     def __contains__(self, cell):
         """Returns True iif cell is in selection
