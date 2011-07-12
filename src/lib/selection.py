@@ -54,10 +54,10 @@ class Selection(object):
         self.cols = cols
         self.cells = cells
     
-    def __str__(self):
+    def __repr__(self):
         """String output for printing selection"""
         
-        return "Selection" + str( \
+        return "Selection" + repr( \
             (self.block_tl, 
              self.block_br, 
              self.rows,

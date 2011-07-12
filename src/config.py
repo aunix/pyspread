@@ -255,7 +255,8 @@ default_cell_attributes = {
     "column-width": 150,
     "row-height": 26,
 }
-print default_cell_attributes["textfont"]
+##print default_cell_attributes["textfont"]
+
 """
 Fold symbols
 ------------

@@ -36,12 +36,7 @@ Provides:
 """
 
 class CellActions(object):
-    """Cell code additions, changes and deletion"""
-
-    def __init__(self, grid, code_array):
-        self.main_window = grid.main_window
-        self.grid = grid
-        self.code_array = code_array
+    """Mixin class that supplies Cell code additions, changes and deletion"""
         
     def set_cell_code_fast(self,  key,  code):
         """Sets code for key cell"""

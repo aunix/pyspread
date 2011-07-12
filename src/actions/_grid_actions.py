@@ -656,7 +656,7 @@ class SelectionActions(object):
         del_keys = [key for key in self.grid.code_array if key[:2] in selection]
         
         for key in del_keys:
-            self.grid.actions.cell_actions.delete_cell(key)
+            self.grid.actions.delete_cell(key)
 
 class FindActions(object):
     """Actions for finding inside the grid"""
@@ -703,16 +703,14 @@ class FindActions(object):
 
 
 class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions, 
-                     GridActions, SelectionActions, FindActions):
+                     GridActions, SelectionActions, FindActions, 
+                     AttributeActions, CellActions):
     """All grid actions as a bundle"""
     
     def __init__(self, grid, code_array):
         self.main_window = grid.main_window
         self.grid = grid
         self.code_array = code_array
-        
-        self.attribute_actions = AttributeActions(grid, code_array)
-        self.cell_actions = CellActions(grid, code_array)
         
         FileActions.__init__(self)
         TableActions.__init__(self)
@@ -721,3 +719,5 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
         GridActions.__init__(self)
         SelectionActions.__init__(self)
         FindActions.__init__(self)
+        AttributeActions.__init__(self)
+        CellActions.__init__(self)

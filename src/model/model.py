@@ -602,7 +602,7 @@ class CodeArray(DataArray):
         try:
             result = eval(expression, env, {})
         except Exception, err:
-            result = err
+            result = Exception(err)
         
         # Change back cell value for evaluation from other cells
         self[key] = code

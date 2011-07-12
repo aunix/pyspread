@@ -66,6 +66,7 @@ class TextActions(object):
         
         if selection is not None:
             self.code_array.cell_attributes.append((selection, table, style))
+            print self.code_array.cell_attributes
     
     def set_text_frozenstate(self, key, frozenstate):
         """Sets text font for key cell"""
@@ -101,9 +102,6 @@ class BorderActions(object):
 
 
 class AttributeActions(TextActions, BackgroundActions, BorderActions):
-    """Cell attribute controller prototype"""
+    """Mixin class Cell attribute controller prototype"""
 
-    def __init__(self, grid, code_array):
-        self.main_window = grid.main_window
-        self.grid = grid
-        self.code_array = code_array
+    pass

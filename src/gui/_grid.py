@@ -239,8 +239,7 @@ class GridCellEventHandlers(object):
         
         # Change model
         
-        self.grid.actions.attribute_actions.set_text_style(selection, table, 
-                                                           style)
+        self.grid.actions.set_text_style(selection, table, style)
         
         event.Skip()
         
@@ -405,7 +404,7 @@ class GridEventHandlers(object):
                 
                 # Delete cell at cursor
                 cursor = self.grid.actions.cursor
-                self.grid.actions.cell_actions.delete_cell(cursor)
+                self.grid.actions.delete_cell(cursor)
                 
                 # Delete selection
                 self.grid.actions.delete_selection()
