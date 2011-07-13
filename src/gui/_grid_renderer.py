@@ -218,21 +218,43 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         
         cell_attributes = self.data_array.cell_attributes[key]
         
-        textattributes = cell_attributes["textattributes"]
+        # Text font attributes
+        textfont = cell_attributes["textfont"]
+        pointsize = cell_attributes["pointsize"]
+        fontweight = cell_attributes["fontweight"]
+        fontstyle = cell_attributes["fontstyle"]
+        underline = cell_attributes["underline"]
         
-        textfont = get_font_from_data(cell_attributes["textfont"])
-        textfont.SetPointSize(cell_attributes["pointsize"])
+        strikethrough = cell_attributes["strikethrough"]
         
-        self.set_font(dc, textfont, textattributes, self.zoom)
+        # Text placement attributes
+        vertical_align = "middle" ## TODO
+        justification = "left" ## TODO
+        angle = 0.0 ## TODO
         
-        text_pos = self.get_text_position(dc, rect, res_text, 
-                                          textattributes)
+        # Text color attributes
+        
+        textcolor = wx.Color().SetRGB(cell_attributes["textcolor"])
+        
+        # Get font from font attribute strings
+        
+        font = self.get_font(textfont, pointsize, fontweight, fontstyle)
+        
+        dc.SetFont(font)
+        
+        text_x, text_y = self.get_text_position(dc, rect, res_text, angle,
+                                                vertical_align, justification)
         
         __rect = xrect.Rect(rect.x, rect.y, rect.width, rect.height)
         
         text_extent = dc.GetTextExtent(res_text)
         
+        dc.SetBackgroundMode(wx.TRANSPARENT)
+        dc.SetTextForeground(textcolor)
+        
         # If cell rect stays inside cell, we simply draw
+        
+        text_pos = text_x, text_y, angle
         
         if all(__rect.is_point_in_rect(*textedge) \
           for textedge in self.get_textbox_edges(text_pos, text_extent)):
@@ -247,30 +269,22 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
                 dc.SetClippingRect(clip_rect)
                 dc.DrawRotatedText(res_text, *text_pos)
                 text_extent = dc.GetTextExtent(res_text)
-                self._draw_strikethrough_line(grid, dc, rect, text_pos, 
-                        text_extent, textattributes)
+                if strikethrough:
+                    self._draw_strikethrough_line(grid, dc, rect, 
+                            text_x, text_y, angle, text_extent)
                 dc.DestroyClippingRegion()
         else:
             dc.DrawRotatedText(res_text, *text_pos)
             text_extent = dc.GetTextExtent(res_text)
-            self._draw_strikethrough_line(grid, dc, rect, text_pos, 
-                        text_extent, textattributes)
+            if strikethrough:
+                self._draw_strikethrough_line(grid, dc, rect, 
+                        text_x, text_y, angle, text_extent)
         
         
     def _draw_strikethrough_line(self, grid, dc, rect, 
-                                 text_pos, text_extent, textattributes):
-        """Draws a strikethrough line if needed"""
-        
-        try:
-            strikethrough_tag = odftags["strikethrough"]
-            strikethrough = textattributes[strikethrough_tag]
-            if strikethrough == "transparent":
-                return
-        except KeyError:
-            return
+                    string_x, string_y, angle, text_extent):
+        """Draws a strikethrough line"""
             
-        string_x, string_y, angle = text_pos
-        
         strikethroughwidth = max(1, int(round(1.5 * self.zoom)))
         dc.SetPen(wx.Pen(wx.BLACK, strikethroughwidth, wx.SOLID))
 
@@ -302,49 +316,52 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
 
         dc.DrawLine(x1, y1, x2, y2)
 
-    def set_font(self, dc, textfont, textattributes, zoom):
-        """Sets font, text color and style"""
-        try:
-            fontcolortag = odftags["fontcolor"]
-            textcolor = textattributes[fontcolortag]
-        except KeyError:
-            textcolor = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT)
+    def get_font(self, textfont, pointsize, fontweight, fontstyle):
+        """Returns font for given attribute strings
         
-        try:
-            underline_mode = textattributes[odftags["underline"]]
-        except KeyError:
-            underline_mode = None
+        Parameters
+        ----------
         
-        dc.SetBackgroundMode(wx.TRANSPARENT)
-        dc.SetTextForeground(textcolor)
+        textfont: String
+        \tString that describes the type of font
+        pointsize: Integer
+        \tFont size in points
+        fontweight: Integer in (wx.NORMAL, wx.BOLD)
+        \tFontsize integer 
+        fontstyle: Integer in (wx.NORMAL, wx.ITALICS)
+        \tString that describes the font style
         
-        # Adjust font size to zoom
+        """
         
-        font_size = textfont.GetPointSize()
+        # Get a real font from textfont string
         
-        zoomed_fontsize = max(1, int(round(font_size * zoom)))
+        font = get_font_from_data(textfont)
+        font.SetPointSize(self.get_zoomed_fontsize(pointsize))
+        font.SetWeight(fontweight)
+        font.SetStyle(fontstyle)
         
-        zoomed_font = wx.Font(zoomed_fontsize, textfont.GetFamily(),
-            textfont.GetStyle(), textfont.GetWeight(), 
-            underline_mode == "continuous", textfont.GetFaceName())
-        dc.SetFont(zoomed_font)
+        return font
     
-    def get_text_position(self, dc, rect, res_text, textattributes):
-        """Returns text x, y, angle position in cell"""
+    def get_zoomed_fontsize(self, font_size):
+        """Returns zoomed font size as Integer
+        
+        Parameters
+        ----------
+        
+        font_size: Integer
+        \tOriginal font size
+        
+        """
+        
+        return max(1, int(round(font_size * self.zoom)))
+    
+    def get_text_position(self, dc, rect, res_text, angle, 
+                          vertical_align, justification):
+        """Returns text x, y position in cell"""
         
         text_extent = dc.GetTextExtent(res_text)
         
-        try: 
-            text_align_tag = odftags["textalign"]
-            horizontal_align = textattributes[text_align_tag]
-        except KeyError: 
-            pass
-        
-        try:
-            vert_align_tag = odftags["verticalalign"]
-            vertical_align = textattributes[vert_align_tag]
-        except KeyError:
-            vertical_align = "top"
+        # Vertical alignment
         
         if vertical_align == "middle":
             string_y = rect.y + rect.height / 2 - text_extent[1] / 2 + 1
@@ -352,20 +369,14 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         elif vertical_align == "bottom":
             string_y = rect.y + rect.height - text_extent[1]
         
-        else:
+        elif vertical_align == "top":
             string_y = rect.y + 2
+            
+        else:
+            raise ValueError, "Vertical alignment " + vertical_align + \
+                              "not in (top, middle, bottom)"
         
-        try:
-            rot_angle_tag = odftags["rotationangle"]
-            angle = float(textattributes[rot_angle_tag])
-        except KeyError:
-            angle = 0.0
-        
-        try:
-            justification_tag = odftags["justification"]
-            justification = textattributes[justification_tag]
-        except KeyError:
-            justification = "left"
+        # Justification
         
         if justification == "left":
             string_x = rect.x + 2
@@ -388,9 +399,10 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
             string_x = string_x - text_extent[0] * cos(rot_angle)
             string_y = string_y + text_extent[0] * sin(rot_angle)
         else:
-            raise ValueError, "Cell justification must be left, center or right"
+            raise ValueError, "Cell justification " + justification + \
+                              "not in (left, center, right)"
     
-        return string_x, string_y, angle
+        return string_x, string_y
         
 
     def _draw_cursor(self, dc, grid, row, col, 

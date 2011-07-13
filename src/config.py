@@ -248,9 +248,9 @@ default_cell_attributes = {
     "pointsize": 10,
     "fontweight": wx.NORMAL,
     "fontstyle": wx.NORMAL,
-    "textcolor": int(default_color.GetRGB()),
-    "textattributes": {}, ## TODO: Eliminate
-    "underline": False, # Present here because not stored by wx.Font
+    "textcolor": default_color.GetRGB(),
+    "underline": False,
+    "strikethrough": False,
     "rotation": 0,
     "column-width": 150,
     "row-height": 26,
