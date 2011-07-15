@@ -82,10 +82,10 @@ class MainApplication(App):
         
         # Create GPG key if not present
         
-        from _pyspread._interfaces import is_pyme_present
+        from lib._interfaces import is_pyme_present
         
         if is_pyme_present():
-            from _pyspread._interfaces import genkey
+            from lib._interfaces import genkey
             genkey()
             
         # Show application window
@@ -119,7 +119,7 @@ class MainApplication(App):
 
         """
 
-        from _pyspread._interfaces import Commandlineparser
+        from lib._interfaces import Commandlineparser
 
         cmdp = Commandlineparser()
         self.options, self.filename = cmdp.parse()

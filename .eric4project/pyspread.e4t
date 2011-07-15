@@ -1,17 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Tasks SYSTEM "Tasks-4.2.dtd">
 <!-- eric4 tasks file for project pyspread -->
-<!-- Saved: 2011-07-14, 22:29:17 -->
+<!-- Saved: 2011-07-16, 00:14:52 -->
 <Tasks version="4.2">
-  <Task priority="1" completed="False" bugfix="False">
-    <Summary>TODO</Summary>
-    <Description></Description>
-    <Created>2011-04-26, 00:28:22</Created>
-    <Resource>
-      <Filename>src/pyspread.py</Filename>
-      <Linenumber>100</Linenumber>
-    </Resource>
-  </Task>
   <Task priority="1" completed="False" bugfix="False">
     <Summary>TODO: Code for cell selection by mouse here</Summary>
     <Description></Description>
@@ -40,18 +31,9 @@
     </Resource>
   </Task>
   <Task priority="1" completed="False" bugfix="False">
-    <Summary>TODO: Reset row and col sizes and then adjust anew</Summary>
-    <Description></Description>
-    <Created>2011-07-12, 18:04:26</Created>
-    <Resource>
-      <Filename>src/actions/_grid_actions.py</Filename>
-      <Linenumber>151</Linenumber>
-    </Resource>
-  </Task>
-  <Task priority="1" completed="False" bugfix="False">
     <Summary>TODO: Use background color for deletion</Summary>
     <Description></Description>
-    <Created>2011-07-14, 22:25:17</Created>
+    <Created>2011-07-15, 15:24:26</Created>
     <Resource>
       <Filename>src/gui/_grid_renderer.py</Filename>
       <Linenumber>427</Linenumber>
@@ -60,10 +42,28 @@
   <Task priority="1" completed="False" bugfix="False">
     <Summary>TODO: Implement wx.Python based config</Summary>
     <Description></Description>
-    <Created>2011-07-14, 22:25:38</Created>
+    <Created>2011-07-15, 15:51:17</Created>
     <Resource>
       <Filename>src/config.py</Filename>
       <Linenumber>20</Linenumber>
+    </Resource>
+  </Task>
+  <Task priority="1" completed="False" bugfix="False">
+    <Summary>TODO: Reset row and col sizes and then adjust anew</Summary>
+    <Description></Description>
+    <Created>2011-07-15, 23:44:25</Created>
+    <Resource>
+      <Filename>src/actions/_grid_actions.py</Filename>
+      <Linenumber>150</Linenumber>
+    </Resource>
+  </Task>
+  <Task priority="1" completed="False" bugfix="False">
+    <Summary>TODO</Summary>
+    <Description></Description>
+    <Created>2011-07-15, 23:57:34</Created>
+    <Resource>
+      <Filename>src/pyspread.py</Filename>
+      <Linenumber>100</Linenumber>
     </Resource>
   </Task>
 </Tasks>

@@ -241,8 +241,9 @@ class GridCellEventHandlers(object):
             # We have a selection 
             # --> Make bold iif selection not previously toggled
             
-            selection_attrs = [attr for attr in cell_attributes 
-                                                  if attr[0] == selection]
+            selection_attrs = \
+                (attr for attr in cell_attributes if attr[0] == selection)
+                        
             attrs = {}
             for selection_attr in selection_attrs:
                 attrs.update(selection_attr[2])

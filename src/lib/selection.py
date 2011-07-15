@@ -73,6 +73,15 @@ class Selection(object):
                     self.cols, 
                     self.cells))
     
+    def __eq__(self, other):
+        assert type(other) is type(self)
+        
+        if (self.block_tl, self.block_br, self.rows, self.cols, self.cells) == \
+          (other.block_tl, other.block_br, other.rows, other.cols, other.cells):
+            return True
+        else:
+            return False
+    
     def __contains__(self, cell):
         """Returns True iif cell is in selection
         
