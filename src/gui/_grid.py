@@ -232,17 +232,51 @@ class GridCellEventHandlers(object):
     def OnCellFontBold(self, event):
         """Cell font bold event handler"""
         
+        # Get grid selection
+        
         selection = self.grid.selection
-        if not selection:
-            selection.cells.append(self.grid.actions.cursor[:2])
+        cell_attributes = self.grid.code_array.cell_attributes
+        
+        if selection:
+            # We have a selection 
+            # --> Make bold iif selection not previously toggled
+            
+            selection_attrs = [attr for attr in cell_attributes 
+                                                  if attr[0] == selection]
+            attrs = {}
+            for selection_attr in selection_attrs:
+                attrs.update(selection_attr[2])
+                
+            if "fontweight" in attrs and attrs["fontweight"] == wx.BOLD:
+                new_fontweight = wx.NORMAL
+            else:
+                new_fontweight = wx.BOLD
+            
+        else:
+            # We have no selection --> toggle current cell's bold state
+            
+            key = self.grid.actions.cursor
+            
+            if cell_attributes[key]["fontweight"] == wx.NORMAL:
+                # Cell is normal --> make bold
+                new_fontweight = wx.BOLD
+            else:
+                # Cell is bold --> make normal
+                new_fontweight = wx.NORMAL
+            
+            # Add current cell to selection so that it gets changed
+            selection.cells.append(key[:2])
         
         table = self.grid.current_table
         
-        style = {"fontweight": wx.BOLD}
+        attr = {"fontweight": new_fontweight}
         
         # Change model
         
-        self.grid.actions.set_text_style(selection, table, style)
+        self.grid.actions.set_cell_attr(selection, table, attr )
+        
+        # Refresh grid
+        self.grid.ForceRefresh()
         
         event.Skip()
         

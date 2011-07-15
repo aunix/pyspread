@@ -55,7 +55,7 @@ class Selection(object):
         self.cells = cells
     
     def __nonzero__(self):
-        """Returns True iif any atttribute is non-empty"""
+        """Returns True iif any attribute is non-empty"""
         
         return any((self.block_tl, 
                     self.block_br, 
@@ -102,7 +102,6 @@ class Selection(object):
             return True
         
         # Cell selections
-        
         if cell in self.cells:
             return True
         

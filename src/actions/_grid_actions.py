@@ -55,7 +55,6 @@ from lib._interfaces import sign, verify, is_pyme_present
 from lib.selection import Selection
 
 from actions._grid_cell_actions import CellActions
-from actions._selection_actions import AttributeActions
 
 class FileActions(object):
     """File actions on the grid"""
@@ -703,8 +702,7 @@ class FindActions(object):
 
 
 class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions, 
-                     GridActions, SelectionActions, FindActions, 
-                     AttributeActions, CellActions):
+                     GridActions, SelectionActions, FindActions, CellActions):
     """All grid actions as a bundle"""
     
     def __init__(self, grid, code_array):
@@ -719,5 +717,4 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
         GridActions.__init__(self)
         SelectionActions.__init__(self)
         FindActions.__init__(self)
-        AttributeActions.__init__(self)
         CellActions.__init__(self)

@@ -228,9 +228,9 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         strikethrough = cell_attributes["strikethrough"]
         
         # Text placement attributes
-        vertical_align = "middle" ## TODO
-        justification = "left" ## TODO
-        angle = 0.0 ## TODO
+        vertical_align = cell_attributes["vertical_align"]
+        justification = cell_attributes["justification"]
+        angle = cell_attributes["angle"]
         
         # Text color attributes
         

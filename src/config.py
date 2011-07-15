@@ -251,11 +251,14 @@ default_cell_attributes = {
     "textcolor": default_color.GetRGB(),
     "underline": False,
     "strikethrough": False,
-    "rotation": 0,
+    "angle": 0.0,
     "column-width": 150,
     "row-height": 26,
+    "vertical_align": "middle",
+    "justification": "left",
+    
 }
-##print default_cell_attributes["textfont"]
+
 
 """
 Fold symbols

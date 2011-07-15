@@ -51,3 +51,21 @@ class CellActions(object):
         except KeyError:
             pass
     
+    def set_cell_attr(self, selection, table, attr):
+        """Sets cell attr for key cell
+        
+        Parameters
+        ----------
+        
+        attr: dict
+        \tContains cell attribute keys
+        \tkeys in ["borderpen_bottom", "borderpen_right", "bgbrush", "textfont",
+        \t"pointsize", "fontweight", "fontstyle", "textcolor", "underline",
+        \t"strikethrough", "angle", "column-width", "row-height", 
+        \t"vertical_align", "justification", "fozen"]
+        
+        """
+        
+        if selection is not None:
+            self.code_array.cell_attributes.append((selection, table, attr))
+            ##print self.code_array.cell_attributes
