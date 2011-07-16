@@ -44,7 +44,7 @@ from model.model import CodeArray
 
 from actions._grid_actions import AllGridActions
 
-from config import default_cell_attributes, attr_toggle_values
+from config import default_cell_attributes
 
 class Grid(wx.grid.Grid, GridCollisionMixin):
     """Pyspread's main grid"""
@@ -232,45 +232,8 @@ class GridCellEventHandlers(object):
     def OnCellFontBold(self, event):
         """Cell font bold event handler"""
         
-        key = self.grid.actions.cursor
-        selection = self.grid.selection
-        cell_attributes = self.grid.code_array.cell_attributes
+        self.grid.actions.toggle_attr("fontweight")
         
-        # Map attr_value to next attr_value
-        attr_values = attr_toggle_values["fontweight"]
-        attr_map = dict(zip(attr_values, attr_values[1:] + attr_values[:1]))
-        
-        if selection:
-            # We have a selection 
-            # --> Make bold iif selection not previously toggled
-            
-            selection_attrs = \
-                (attr for attr in cell_attributes if attr[0] == selection)
-                        
-            attrs = {}
-            for selection_attr in selection_attrs:
-                attrs.update(selection_attr[2])
-                
-            if "fontweight" in attrs:
-                attr = {"fontweight": attr_map[attrs["fontweight"]]}
-                
-            else:
-                attr = {"fontweight": wx.BOLD}
-            
-        else:
-            attr = {"fontweight": \
-                self.grid.actions.get_new_cell_attr_state(key, "fontweight")}
-            
-            # Add current cell to selection so that it gets changed
-            selection.cells.append(key[:2])
-        
-        table = self.grid.current_table
-        
-        # Change model
-        
-        self.grid.actions.set_cell_attr(selection, table, attr )
-        
-        # Refresh grid
         self.grid.ForceRefresh()
         
         event.Skip()
@@ -278,28 +241,36 @@ class GridCellEventHandlers(object):
     def OnCellFontItalics(self, event):
         """Cell font italics event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.toggle_attr("fontstyle")
+        
+        self.grid.ForceRefresh()
         
         event.Skip()
         
     def OnCellFontUnderline(self, event):
         """Cell font underline event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.toggle_attr("underline")
+        
+        self.grid.ForceRefresh()
         
         event.Skip()
         
     def OnCellFontStrikethrough(self, event):
         """Cell font strike through event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.toggle_attr("strikethrough")
+        
+        self.grid.ForceRefresh()
         
         event.Skip()
     
     def OnCellFrozen(self, event):
         """Cell frozen event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.toggle_attr("frozen")
+        
+        self.grid.ForceRefresh()
         
         event.Skip()
     

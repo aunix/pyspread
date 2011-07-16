@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project pyspread -->
-<!-- Saved: 2011-07-16, 01:33:59 -->
+<!-- Saved: 2011-07-16, 02:46:59 -->
 <!-- Copyright (C) 2011 Martin Manns, mmanns@gmx.net -->
 <Project version="4.6">
   <Language>en</Language>
@@ -61,7 +61,7 @@
   </Interfaces>
   <Others>
   </Others>
-  <MainScript>_pyspread/pyspread</MainScript>
+  <MainScript>src/pyspread.py</MainScript>
   <Vcs>
     <VcsType>None</VcsType>
   </Vcs>

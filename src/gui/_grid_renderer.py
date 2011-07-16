@@ -238,7 +238,8 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         
         # Get font from font attribute strings
         
-        font = self.get_font(textfont, pointsize, fontweight, fontstyle)
+        font = self.get_font(textfont, pointsize, fontweight, fontstyle, 
+                             underline)
         
         dc.SetFont(font)
         
@@ -316,7 +317,7 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
 
         dc.DrawLine(x1, y1, x2, y2)
 
-    def get_font(self, textfont, pointsize, fontweight, fontstyle):
+    def get_font(self, textfont, pointsize, fontweight, fontstyle, underline):
         """Returns font for given attribute strings
         
         Parameters
@@ -330,6 +331,8 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         \tFontsize integer 
         fontstyle: Integer in (wx.NORMAL, wx.ITALICS)
         \tString that describes the font style
+        underlined: Bool
+        \tFont is underlined if True
         
         """
         
@@ -339,6 +342,7 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         font.SetPointSize(self.get_zoomed_fontsize(pointsize))
         font.SetWeight(fontweight)
         font.SetStyle(fontstyle)
+        font.SetUnderlined(underline)
         
         return font
     

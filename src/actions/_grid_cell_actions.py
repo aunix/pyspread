@@ -22,6 +22,7 @@
 # along with pyspread.  If not, see <http://www.gnu.org/licenses/>.
 # --------------------------------------------------------------------
 
+import wx
 
 """
 _grid_cell_actions.py
@@ -34,8 +35,6 @@ Provides:
   1. CellActions: Changes to cell code
   
 """
-
-from config import attr_toggle_values
 
 class CellActions(object):
     """Mixin class that supplies Cell code additions, changes and deletion"""
@@ -71,23 +70,54 @@ class CellActions(object):
         if selection is not None:
             self.code_array.cell_attributes.append((selection, table, attr))
     
+    
+    def toggle_attr(self, attr):
+        """Toggles an attribute attr"""
+        
+        selection = self.grid.selection
+        cell_attributes = self.grid.code_array.cell_attributes
+        
+        if selection:
+            attrs = {attr: self.get_new_selection_attr_state(selection, attr)}
+            
+        else:
+            attrs = {attr: self.get_new_cell_attr_state(self.cursor, attr)}
+            
+            # Add current cell to selection so that it gets changed
+            selection.cells.append(self.cursor[:2])
+        
+        table = self.grid.current_table
+        
+        # Change model
+        
+        self.grid.actions.set_cell_attr(selection, table, attrs)
+    
     # Only cell attributes that can be toogled are contained
     
+    attr_toggle_values = { \
+        "fontweight": [wx.NORMAL, wx.BOLD],
+        "fontstyle": [wx.NORMAL, wx.ITALIC],
+        "underline": [True, False],
+        "strikethrough": [True, False],
+        "vertical_align": ["top", "middle", "bottom"],
+        "justification": ["left", "center", "right"],
+        "frozen": [True, False],
+        }
     
     def get_new_cell_attr_state(self, key, attr_key):
-        """Returns new attr state for toggles
+        """Returns new attr cell state for toggles
         
         Parameters
         ----------
+        key: 3-Tuple
+        \tCell for which attr toggle shall be returned
         attr_key: Hashable
         \tAttribute key
-        attr_values: Iterable
-        \tContains attribute values in order
         
         """
         
         cell_attributes = self.grid.code_array.cell_attributes
-        attr_values = attr_toggle_values[attr_key]
+        attr_values = self.attr_toggle_values[attr_key]
         
         # Map attr_value to next attr_value
         attr_map = dict(zip(attr_values, attr_values[1:] + attr_values[:1]))
@@ -95,4 +125,35 @@ class CellActions(object):
         # Return next value from attr_toggle_values value list
         
         return attr_map[cell_attributes[key][attr_key]]
+    
+    def get_new_selection_attr_state(self, selection, attr_key):
+        """Returns new attr selection state for toggles
         
+        Parameters
+        ----------
+        selection: Selection object
+        \tSeelction for which attr toggle shall be returned
+        attr_key: Hashable
+        \tAttribute key
+        
+        """
+        
+        cell_attributes = self.grid.code_array.cell_attributes
+        attr_values = self.attr_toggle_values[attr_key]
+        
+        # Map attr_value to next attr_value
+        attr_map = dict(zip(attr_values, attr_values[1:] + attr_values[:1]))
+        
+        selection_attrs = \
+            (attr for attr in cell_attributes if attr[0] == selection)
+                    
+        attrs = {}
+        for selection_attr in selection_attrs:
+            attrs.update(selection_attr[2])
+            
+        if attr_key in attrs:
+            return attr_map[attrs[attr_key]]
+            
+        else:
+            # Default next value
+            return self.attr_toggle_values[attr_key][1]
