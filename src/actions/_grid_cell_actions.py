@@ -35,6 +35,8 @@ Provides:
   
 """
 
+from config import attr_toggle_values
+
 class CellActions(object):
     """Mixin class that supplies Cell code additions, changes and deletion"""
         
@@ -62,10 +64,35 @@ class CellActions(object):
         \tkeys in ["borderpen_bottom", "borderpen_right", "bgbrush", "textfont",
         \t"pointsize", "fontweight", "fontstyle", "textcolor", "underline",
         \t"strikethrough", "angle", "column-width", "row-height", 
-        \t"vertical_align", "justification", "fozen"]
+        \t"vertical_align", "justification", "frozen"]
         
         """
         
         if selection is not None:
             self.code_array.cell_attributes.append((selection, table, attr))
-            ##print self.code_array.cell_attributes
+    
+    # Only cell attributes that can be toogled are contained
+    
+    
+    def get_new_cell_attr_state(self, key, attr_key):
+        """Returns new attr state for toggles
+        
+        Parameters
+        ----------
+        attr_key: Hashable
+        \tAttribute key
+        attr_values: Iterable
+        \tContains attribute values in order
+        
+        """
+        
+        cell_attributes = self.grid.code_array.cell_attributes
+        attr_values = attr_toggle_values[attr_key]
+        
+        # Map attr_value to next attr_value
+        attr_map = dict(zip(attr_values, attr_values[1:] + attr_values[:1]))
+        
+        # Return next value from attr_toggle_values value list
+        
+        return attr_map[cell_attributes[key][attr_key]]
+        

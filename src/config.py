@@ -233,9 +233,21 @@ Default cell font size
 
 FONT_SIZES = range(3, 14) + range(16, 32, 2) + range(36, 99, 4)
 
+
+attr_toggle_values = { \
+    "fontweight": [wx.NORMAL, wx.BOLD],
+    "fontstyle": [wx.NORMAL, wx.ITALIC],
+    "underline": [True, False],
+    "strikethrough": [True, False],
+    "vertical_align": ["top", "middle", "bottom"],
+    "justification": ["left", "center", "right"],
+    "frozen": [True, False],
+    }
+
 selected_cell_brush = wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHT)
 
 default_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
+
 
 default_cell_attributes = {
     "borderpen_bottom": \

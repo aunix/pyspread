@@ -44,7 +44,7 @@ from model.model import CodeArray
 
 from actions._grid_actions import AllGridActions
 
-from config import default_cell_attributes
+from config import default_cell_attributes, attr_toggle_values
 
 class Grid(wx.grid.Grid, GridCollisionMixin):
     """Pyspread's main grid"""
@@ -232,10 +232,13 @@ class GridCellEventHandlers(object):
     def OnCellFontBold(self, event):
         """Cell font bold event handler"""
         
-        # Get grid selection
-        
+        key = self.grid.actions.cursor
         selection = self.grid.selection
         cell_attributes = self.grid.code_array.cell_attributes
+        
+        # Map attr_value to next attr_value
+        attr_values = attr_toggle_values["fontweight"]
+        attr_map = dict(zip(attr_values, attr_values[1:] + attr_values[:1]))
         
         if selection:
             # We have a selection 
@@ -248,29 +251,20 @@ class GridCellEventHandlers(object):
             for selection_attr in selection_attrs:
                 attrs.update(selection_attr[2])
                 
-            if "fontweight" in attrs and attrs["fontweight"] == wx.BOLD:
-                new_fontweight = wx.NORMAL
+            if "fontweight" in attrs:
+                attr = {"fontweight": attr_map[attrs["fontweight"]]}
+                
             else:
-                new_fontweight = wx.BOLD
+                attr = {"fontweight": wx.BOLD}
             
         else:
-            # We have no selection --> toggle current cell's bold state
-            
-            key = self.grid.actions.cursor
-            
-            if cell_attributes[key]["fontweight"] == wx.NORMAL:
-                # Cell is normal --> make bold
-                new_fontweight = wx.BOLD
-            else:
-                # Cell is bold --> make normal
-                new_fontweight = wx.NORMAL
+            attr = {"fontweight": \
+                self.grid.actions.get_new_cell_attr_state(key, "fontweight")}
             
             # Add current cell to selection so that it gets changed
             selection.cells.append(key[:2])
         
         table = self.grid.current_table
-        
-        attr = {"fontweight": new_fontweight}
         
         # Change model
         
