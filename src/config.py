@@ -256,7 +256,7 @@ default_cell_attributes = {
     "angle": 0.0,
     "column-width": 150,
     "row-height": 26,
-    "vertical_align": "middle",
+    "vertical_align": "top",
     "justification": "left",
     "frozen": False,
 }

@@ -32,6 +32,7 @@ Provides
 
 """
 
+from math import pi, sin, cos
 import types
 
 import wx.grid

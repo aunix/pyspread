@@ -277,14 +277,18 @@ class GridCellEventHandlers(object):
     def OnCellJustification(self, event):
         """Horizontal cell justification event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.toggle_attr("justification")
+        
+        self.grid.ForceRefresh()
         
         event.Skip()
     
     def OnCellAlignment(self, event):
         """Vertical cell alignment event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.toggle_attr("vertical_align")
+        
+        self.grid.ForceRefresh()
         
         event.Skip()
     
