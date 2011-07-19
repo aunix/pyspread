@@ -234,9 +234,10 @@ Default cell font size
 FONT_SIZES = range(3, 14) + range(16, 32, 2) + range(36, 99, 4)
 
 
-selected_cell_brush = wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHT)
+selected_cell_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_HIGHLIGHT)
 
 default_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
+default_text_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT)
 
 
 default_cell_attributes = {
@@ -250,7 +251,7 @@ default_cell_attributes = {
     "pointsize": 10,
     "fontweight": wx.NORMAL,
     "fontstyle": wx.NORMAL,
-    "textcolor": default_color.GetRGB(),
+    "textcolor": default_text_color.GetRGB(),
     "underline": False,
     "strikethrough": False,
     "angle": 0.0,

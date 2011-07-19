@@ -218,14 +218,18 @@ class GridCellEventHandlers(object):
     def OnCellFont(self, event):
         """Cell font event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.set_attr("textfont", event.font)
+        
+        self.grid.ForceRefresh()
         
         event.Skip()
         
     def OnCellFontSize(self, event):
         """Cell font size event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.set_attr("pointsize", event.size)
+        
+        self.grid.ForceRefresh()
         
         event.Skip()
         
@@ -316,21 +320,27 @@ class GridCellEventHandlers(object):
     def OnCellBackgroundColor(self, event):
         """Cell background color event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.set_attr("bgbrush", [event.color, wx.SOLID])
+        
+        self.grid.ForceRefresh()
         
         event.Skip()
 
     def OnCellTextColor(self, event):
         """Cell text color event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.set_attr("textcolor", event.color)
+        
+        self.grid.ForceRefresh()
         
         event.Skip()
 
     def OnCellTextRotation(self, event):
         """Cell text rotation event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.set_attr("angle", event.angle)
+        
+        self.grid.ForceRefresh()
         
         event.Skip()
         

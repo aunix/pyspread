@@ -39,10 +39,10 @@ import wx.grid
 
 import lib.xrect as xrect
 
-from lib._interfaces import get_brush_from_data, get_pen_from_data, \
+from lib._interfaces import get_pen_from_data, \
                             get_font_from_data, hex_to_rgb
 
-from config import odftags, selected_cell_brush
+from config import odftags, selected_cell_color
 
 class GridRenderer(wx.grid.PyGridCellRenderer):
     """This renderer draws borders and text at specified font, size, color"""
@@ -235,7 +235,8 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         
         # Text color attributes
         
-        textcolor = wx.Color().SetRGB(cell_attributes["textcolor"])
+        textcolor = wx.Color()
+        textcolor.SetRGB(cell_attributes["textcolor"])
         
         # Get font from font attribute strings
         
@@ -529,10 +530,12 @@ class Background(object):
         """Draws the background of the background"""
         
         if self.selection:
-            bgbrush = wx.Brush(selected_cell_brush)
+            bgbrush = wx.Brush(selected_cell_color, wx.SOLID)
         else:
-            bgbrush = get_brush_from_data( \
-                self.data_array.cell_attributes[self.key]["bgbrush"])
+            rgb, style = self.data_array.cell_attributes[self.key]["bgbrush"]
+            color = wx.Colour()
+            color.SetRGB(rgb)
+            bgbrush = wx.Brush(color, style)
         
         dc.SetBrush(bgbrush)
         dc.SetPen(wx.TRANSPARENT_PEN)

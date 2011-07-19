@@ -88,7 +88,7 @@ class CellAttributes(list):
         
         row, col, tab  = key
         
-        result_dict = default_cell_attributes
+        result_dict = copy(default_cell_attributes)
         
         for selection, table, attr_dict in self:
             if tab == table and (row, col) in selection:

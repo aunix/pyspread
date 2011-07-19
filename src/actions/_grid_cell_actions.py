@@ -52,7 +52,7 @@ class CellActions(object):
         except KeyError:
             pass
     
-    def set_cell_attr(self, selection, table, attr):
+    def _set_cell_attr(self, selection, table, attr):
         """Sets cell attr for key cell
         
         Parameters
@@ -60,7 +60,7 @@ class CellActions(object):
         
         attr: dict
         \tContains cell attribute keys
-        \tkeys in ["borderpen_bottom", "borderpen_right", "bgbrush", "textfont",
+        \tkeys in ["borderpen_bottom", "borderpen_right", "bgcolor", "textfont",
         \t"pointsize", "fontweight", "fontstyle", "textcolor", "underline",
         \t"strikethrough", "angle", "column-width", "row-height", 
         \t"vertical_align", "justification", "frozen"]
@@ -68,29 +68,37 @@ class CellActions(object):
         """
         
         if selection is not None:
-            self.code_array.cell_attributes.append((selection, table, attr))
+            self.code_array.cell_attributes.append((selection, table, attr))    
     
-    
-    def toggle_attr(self, attr):
-        """Toggles an attribute attr"""
+    def set_attr(self, attr, value):
+        """Sets attr of current selection to value"""
         
         selection = self.grid.selection
-        cell_attributes = self.grid.code_array.cell_attributes
         
-        if selection:
-            attrs = {attr: self.get_new_selection_attr_state(selection, attr)}
-            
-        else:
-            attrs = {attr: self.get_new_cell_attr_state(self.cursor, attr)}
-            
+        if not selection:
             # Add current cell to selection so that it gets changed
             selection.cells.append(self.cursor[:2])
+        
+        attrs = {attr: value}
         
         table = self.grid.current_table
         
         # Change model
         
-        self.grid.actions.set_cell_attr(selection, table, attrs)
+        self.grid.actions._set_cell_attr(selection, table, attrs)
+    
+    def toggle_attr(self, attr):
+        """Toggles an attribute attr for current selection"""
+        
+        selection = self.grid.selection
+        
+        if selection:
+            value = self.get_new_selection_attr_state(selection, attr)
+            
+        else:
+            value = self.get_new_cell_attr_state(self.cursor, attr)
+            
+        self.set_attr(attr, value)
     
     # Only cell attributes that can be toogled are contained
     

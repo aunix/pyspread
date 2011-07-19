@@ -725,14 +725,14 @@ class AttributesToolbar(wx.ToolBar):
     def OnBGColor(self, event):
         """Background color choice event handler"""
 
-        color = event.GetValue()
+        color = event.GetValue().GetRGB()
         
         post_command_event(self, BackgroundColorMsg, color=color)
         
     def OnTextColor(self, event):
         """Text color choice event handler"""
         
-        color = event.GetValue()
+        color = event.GetValue().GetRGB()
         
         post_command_event(self, TextColorMsg, color=color)
     
