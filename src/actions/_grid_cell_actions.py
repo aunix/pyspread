@@ -92,12 +92,24 @@ class CellActions(object):
         
         selection = self.grid.selection
         
+        # Selection or single cell access?
+        
         if selection:
             value = self.get_new_selection_attr_state(selection, attr)
             
         else:
             value = self.get_new_cell_attr_state(self.cursor, attr)
-            
+        
+        # Special handling for frozen cells 
+        
+        if attr == "frozen" and not value:
+            for key_repr in self.grid.code_array.frozen_keys.keys():
+                if (selection and eval(key_repr)[:2] in selection) or \
+                   eval(key_repr) == self.cursor:
+                    self.grid.code_array.frozen_keys.pop(key_repr)
+        
+        # Set the toggled value
+        
         self.set_attr(attr, value)
     
     # Only cell attributes that can be toogled are contained

@@ -499,6 +499,9 @@ class CodeArray(DataArray):
     # Cache for results from __getitem calls
     result_cache = {}
     
+    # Storage for frozen keys
+    frozen_keys = {}
+    
     def __setitem__(self, key, value):
         """Sets cell code and resets result cache"""
         
@@ -508,13 +511,21 @@ class CodeArray(DataArray):
         self.result_cache = {} 
     
     def __getitem__(self, key):
-        """Yields to other events and returns _eval_cell
-       
-        This allows GUI to unlock on deep iterations through the grid
+        """Returns _eval_cell"""
         
-        """
+        # Frozen cell handling
         
-        if repr(key) in self.result_cache:
+        if self.cell_attributes[key]["frozen"]:
+            try:
+                res = self.frozen_keys[repr(key)]
+            except KeyError:
+                res = self.frozen_keys[repr(key)] = self._eval_cell(key)
+            
+            return res
+        
+        # Normal cell handling
+        
+        elif repr(key) in self.result_cache:
             return self.result_cache[repr(key)]
             
         else:
