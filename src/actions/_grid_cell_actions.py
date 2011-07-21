@@ -60,7 +60,9 @@ class CellActions(object):
         
         attr: dict
         \tContains cell attribute keys
-        \tkeys in ["borderpen_bottom", "borderpen_right", "bgcolor", "textfont",
+        \tkeys in ["borderwidth_bottom", "borderwidth_right", 
+        \t"bordercolor_bottom", "bordercolor_right", 
+        \t"bgcolor", "textfont",
         \t"pointsize", "fontweight", "fontstyle", "textcolor", "underline",
         \t"strikethrough", "angle", "column-width", "row-height", 
         \t"vertical_align", "justification", "frozen"]
@@ -70,10 +72,11 @@ class CellActions(object):
         if selection is not None:
             self.code_array.cell_attributes.append((selection, table, attr))    
     
-    def set_attr(self, attr, value):
+    def set_attr(self, attr, value, selection=None):
         """Sets attr of current selection to value"""
         
-        selection = self.grid.selection
+        if selection is None:
+            selection = self.grid.selection
         
         if not selection:
             # Add current cell to selection so that it gets changed
@@ -86,6 +89,25 @@ class CellActions(object):
         # Change model
         
         self.grid.actions._set_cell_attr(selection, table, attrs)
+    
+    def set_border_attr(self, attr, value, borders):
+        """Sets border attribute by adjusting selection to borders"""
+        
+        selection = self.grid.selection
+        
+        if "top" in borders:
+            adj_selection = selection + (-1, 0)
+            self.set_attr(attr + "_bottom", value, adj_selection)
+        
+        if "bottom" in borders:
+            self.set_attr(attr + "_bottom", value)
+            
+        if "left" in borders:
+            adj_selection = selection + (0, -1)
+            self.set_attr(attr + "_right", value, adj_selection)
+        
+        if "right" in borders:
+            self.set_attr(attr + "_right", value)
     
     def toggle_attr(self, attr):
         """Toggles an attribute attr for current selection"""

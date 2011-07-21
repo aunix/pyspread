@@ -241,11 +241,11 @@ default_text_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT)
 
 
 default_cell_attributes = {
-    "borderpen_bottom": \
-        [wx.Colour(200, 200, 200).GetRGB(), 1, int(wx.SOLID)],
-    "borderpen_right": \
-        [wx.Colour(200, 200, 200).GetRGB(), 1, int(wx.SOLID)],
-    "bgbrush": [int(default_color.GetRGB()), int(wx.SOLID)],
+    "borderwidth_bottom": 1,
+    "borderwidth_right": 1,
+    "bordercolor_bottom": wx.Colour(200, 200, 200).GetRGB(),
+    "bordercolor_right": wx.Colour(200, 200, 200).GetRGB(),
+    "bgcolor": default_color.GetRGB(),
     "textfont": wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT).\
                                   GetFaceName(),
     "pointsize": 10,
@@ -433,6 +433,17 @@ border_toggles = [ \
     ("OutsideBorders",   (1, 1, 1, 1, 0, 1)),
     ("TopBottomBorders", (1, 1, 0, 0, 0, 1)),
 ]
+
+bordermap = { \
+    "AllBorders":      ("top", "bottom", "left", "right"),
+    "LeftBorders":     ("left"),
+    "RightBorders":    ("right"),
+    "TopBorders":      ("top"),
+    "BottomBorders":   ("bottom"),
+    "InsideBorders":   (""),
+    "OutsideBorders":  (""),
+    "TopBottomBorders":("top", "bottom"),
+}
 
 """
 ODF tags

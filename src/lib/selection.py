@@ -28,6 +28,8 @@ Grid selection representation
 
 """
 
+from copy import copy
+
 class Selection(object):
     """Represents grid selection
     
@@ -115,6 +117,36 @@ class Selection(object):
             return True
         
         return False
+        
+    def __add__(self, value):
+        """Shifts selection down and / or right
+        
+        Parameters
+        ----------
+        
+        value: 2-tuple
+        \tRows and cols to be shifted up
+        
+        """
+        
+        delta_row, delta_col = value
+        
+        selection = copy(self)
+        
+        selection.block_tl = [(t + delta_row, l + delta_col) 
+                                    for t, l in selection.block_tl]
+        
+        selection.block_br = [(t + delta_row, l + delta_col) 
+                                    for t, l in selection.block_br]
+        
+        selection.rows = [row + delta_row for row in selection.rows]
+        
+        selection.cols = [col + delta_col for col in selection.cols]
+        
+        selection.cells = [(r + delta_row, c + delta_col) 
+                                    for r, c in selection.cells]
+        
+        return selection
 
     def get_bbox(self):
         """Returns top left and bottom right of bounding box

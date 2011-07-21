@@ -143,8 +143,6 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
         main_window.Bind(EVT_COMMAND_JUSTIFICATION, 
                     c_handlers.OnCellJustification)
         main_window.Bind(EVT_COMMAND_ALIGNMENT, c_handlers.OnCellAlignment)
-        main_window.Bind(EVT_COMMAND_BORDERCHOICE, 
-                    c_handlers.OnCellBorderChoice)
         main_window.Bind(EVT_COMMAND_BORDERWIDTH, c_handlers.OnCellBorderWidth)
         main_window.Bind(EVT_COMMAND_BORDERCOLOR, c_handlers.OnCellBorderColor)
         main_window.Bind(EVT_COMMAND_BACKGROUNDCOLOR, 
@@ -296,31 +294,26 @@ class GridCellEventHandlers(object):
         
         event.Skip()
     
-    def OnCellBorderChoice(self, event):
-        """Cell border choice event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-    
     def OnCellBorderWidth(self, event):
         """Cell border width event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.set_border_attr("borderwidth", event.width, 
+                                                         event.borders)
         
         event.Skip()
         
     def OnCellBorderColor(self, event):
         """Cell border color event handler"""
         
-        raise NotImplementedError
+        self.grid.actions.set_border_attr("bordercolor", event.color, 
+                                                         event.borders)
         
         event.Skip()
         
     def OnCellBackgroundColor(self, event):
         """Cell background color event handler"""
         
-        self.grid.actions.set_attr("bgbrush", [event.color, wx.SOLID])
+        self.grid.actions.set_attr("bgcolor", event.color)
         
         self.grid.ForceRefresh()
         

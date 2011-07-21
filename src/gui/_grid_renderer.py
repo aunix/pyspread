@@ -54,7 +54,8 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         self.data_array = data_array
         
         # Background key is (width, height, bgbrush, 
-        # borderpen_bottom, borderpen_right)
+        # borderwidth_bottom, borderwidth_right, 
+        # bordercolor_bottom, bordercolor_right)
         self.backgrounds = {} 
         
         # Zoom of grid
@@ -450,11 +451,13 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         else:
             _, _, width, height = grid.CellToRect(row, col)
             
-            bg_components = ["bgbrush", "borderpen_bottom", "borderpen_right"]
+            bg_components = ["bgcolor", 
+                             "borderwidth_bottom", "borderwidth_right", 
+                             "bordercolor_bottom", "bordercolor_right"]
             
             bg_key = tuple([width, height] + \
-                           [tuple(self.data_array.cell_attributes[key][bgc]) \
-                                                    for bgc in bg_components])
+                           [self.data_array.cell_attributes[key][bgc] \
+                                            for bgc in bg_components])
             
             try:
                 bg = self.backgrounds[bg_key]
@@ -532,10 +535,10 @@ class Background(object):
         if self.selection:
             bgbrush = wx.Brush(selected_cell_color, wx.SOLID)
         else:
-            rgb, style = self.data_array.cell_attributes[self.key]["bgbrush"]
+            rgb = self.data_array.cell_attributes[self.key]["bgcolor"]
             color = wx.Colour()
             color.SetRGB(rgb)
-            bgbrush = wx.Brush(color, style)
+            bgbrush = wx.Brush(color, wx.SOLID)
         
         dc.SetBrush(bgbrush)
         dc.SetPen(wx.TRANSPARENT_PEN)
@@ -554,27 +557,35 @@ class Background(object):
         rightline = x + w, y, x + w, y + h
         lines = [bottomline, rightline]
         
-        pen_names = ["borderpen_bottom", "borderpen_right"]
+        # Bottom line pen
         
-        borderpens = \
-            [get_pen_from_data(self.data_array.cell_attributes[key][pen]) \
-                                                    for pen in pen_names]
+        color = self.data_array.cell_attributes[key]["bordercolor_bottom"]
+        width = self.data_array.cell_attributes[key]["borderwidth_bottom"]
+        bottom_pen = get_pen_from_data((color, width, int(wx.SOLID)))
         
-        # Topmost line if in top cell
+        # Right line pen
         
-        if row == 0:
-            lines.append((x, y, x + w, y))
-            topkey = "top", col, tab
-            toppen_data = self.data_array.cell_attributes[topkey][pen_names[0]]
-            borderpens.append(get_pen_from_data(toppen_data))
+        color = self.data_array.cell_attributes[key]["bordercolor_right"]
+        width = self.data_array.cell_attributes[key]["borderwidth_right"]
+        right_pen = get_pen_from_data((color, width, int(wx.SOLID)))
         
-        # Leftmost line if in left cell
+        borderpens = bottom_pen, right_pen
         
-        if col == 0:
-            lines.append((x, y, x, y + h))
-            leftkey = row, "left", tab
-            toppen_data  = self.data_array.cell_attributes[leftkey][pen_names[1]]
-            borderpens.append(get_pen_from_data(toppen_data))
+#        # Topmost line if in top cell
+#        
+#        if row == 0:
+#            lines.append((x, y, x + w, y))
+#            topkey = "top", col, tab
+#            toppen_data = self.data_array.cell_attributes[topkey][pen_names[0]]
+#            borderpens.append(get_pen_from_data(toppen_data))
+#        
+#        # Leftmost line if in left cell
+#        
+#        if col == 0:
+#            lines.append((x, y, x, y + h))
+#            leftkey = row, "left", tab
+#            toppen_data  = self.data_array.cell_attributes[leftkey][pen_names[1]]
+#            borderpens.append(get_pen_from_data(toppen_data))
         
         zoomed_pens = []
         

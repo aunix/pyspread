@@ -40,7 +40,7 @@ import wx.lib.colourselect as csel
 from _events import *
 
 from config import odftags, border_toggles, default_cell_attributes
-from config import FONT_SIZES, faces
+from config import FONT_SIZES, faces, bordermap
 from config import icons, icon_size, small_icon_size
 
 from lib._interfaces import get_font_list, textfont_from_string
@@ -648,79 +648,24 @@ class AttributesToolbar(wx.ToolBar):
         
         choicelist = event.GetEventObject().GetItems()
         self.borderstate = choicelist[event.GetInt()]
-    
-    def get_chosen_borders(self, keys):
-        """Returns 2-tuple of bottom and right borderlines to be changed
-        
-        {"borderpen_bottom": [keys], "borderpen_right":[keys]}
-        
-        where [keys] are lists of cell keys with border line adjustments
-        
-        """
-        
-        bottom_keys = []
-        right_keys = []
-        
-        # top, bottom, left, right, inner, outer
-        for borderstate, toggles in border_toggles:
-            if self.borderstate == borderstate:
-                btoggles = toggles
-                break
-        
-        min_x = min(x for x, y, z in keys)
-        max_x = max(x for x, y, z in keys)
-        min_y = min(y for x, y, z in keys)
-        max_y = max(y for x, y, z in keys)
-        
-        # Returns True if a right key is outer key
-        is_inner_r = lambda key: min_x <= key[0] <= max_x and \
-                                 min_y <= key[1] < max_y
-        is_inner_b = lambda key: min_x <= key[0] < max_x and \
-                                 min_y <= key[1] <= max_y
-        
-        for key in keys:
-            if btoggles[0] and key[0] > 0:
-                # Top border
-                bottom_keys.append((key[0] - 1, key[1], key[2]))
-            elif btoggles[0] and key[0] == 0:
-                bottom_keys.append(("top", key[1], key[2]))
-            if btoggles[1]:
-                # Bottom border
-                bottom_keys.append(key)
-            if btoggles[2] and key[1] > 0:
-                # Left border
-                right_keys.append((key[0], key[1] - 1, key[2]))
-            elif btoggles[2] and key[1] == 0:
-                right_keys.append((key[0], "left", key[2]))
-            if btoggles[3]:
-                # Right border
-                right_keys.append(key)
-            if not btoggles[4]:
-                # Inner borders
-                right_keys = [key for key in right_keys if not is_inner_r(key)]
-                bottom_keys= [key for key in bottom_keys if not is_inner_b(key)]
-            if not btoggles[5]:
-                # Outer borders
-                right_keys = [key for key in right_keys if is_inner_r(key)]
-                bottom_keys = [key for key in bottom_keys if is_inner_b(key)]
-        
-        return (bottom_keys, right_keys)
-    
+
     def OnLineColor(self, event):
         """Line color choice event handler"""
         
-        color = event.GetValue()
+        color = event.GetValue().GetRGB()
+        borders = bordermap[self.borderstate]
         
-        post_command_event(self, BorderColorMsg, color=color)
+        post_command_event(self, BorderColorMsg, color=color, borders=borders)
     
     def OnLineWidth(self, event):
         """Line width choice event handler"""
         
         linewidth_combobox = event.GetEventObject()
         idx = event.GetInt()
-        linewidth  = int(linewidth_combobox.GetString(idx))
+        width  = int(linewidth_combobox.GetString(idx))
+        borders = bordermap[self.borderstate]
         
-        post_command_event(self, BorderWidthMsg, width=linewidth)
+        post_command_event(self, BorderWidthMsg, width=width, borders=borders)
         
     def OnBGColor(self, event):
         """Background color choice event handler"""
