@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project pyspread -->
-<!-- Saved: 2011-07-16, 02:46:59 -->
+<!-- Saved: 2011-07-24, 21:51:32 -->
 <!-- Copyright (C) 2011 Martin Manns, mmanns@gmx.net -->
 <Project version="4.6">
   <Language>en</Language>
@@ -50,6 +50,7 @@
     <Source>src/model/unredo.py</Source>
     <Source>src/lib/typechecks.py</Source>
     <Source>src/model/test/test_unredo.py</Source>
+    <Source>src/lib/xrect.py</Source>
   </Sources>
   <Forms>
   </Forms>
