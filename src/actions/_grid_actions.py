@@ -561,6 +561,7 @@ class GridActions(object):
         
         if 0 <= newtable <= no_tabs:
             self.grid.current_table = newtable
+            self.grid.ForceRefresh()
             
             ##self.grid.zoom_rows()
             ##self.grid.zoom_cols()

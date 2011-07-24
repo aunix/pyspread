@@ -122,19 +122,37 @@ class CellActions(object):
         else:
             value = self.get_new_cell_attr_state(self.cursor, attr)
         
-        # Special handling for frozen cells 
-        
-        if attr == "frozen" and not value:
-            for key_repr in self.grid.code_array.frozen_keys.keys():
-                if (selection and eval(key_repr)[:2] in selection) or \
-                   eval(key_repr) == self.cursor:
-                    self.grid.code_array.frozen_keys.pop(key_repr)
-        
         # Set the toggled value
         
         self.set_attr(attr, value)
     
     # Only cell attributes that can be toogled are contained
+    
+    def change_frozen_attr(self):
+        """Changes frozen state of cell if there is no selection"""
+        
+        # Selections are not supported
+        
+        if self.grid.selection:
+            return
+        
+        value = self.grid.code_array.cell_attributes[self.cursor]["frozen"]
+        
+        if value:
+            value = False
+            
+        else:
+            res = self.grid.code_array._eval_cell(self.cursor)
+            
+            if res is None:
+                value = " "
+            
+            else:
+                value = str(res)
+            
+        # Set the new frozen state / code
+        
+        self.set_attr("frozen", value)
     
     attr_toggle_values = { \
         "fontweight": [wx.NORMAL, wx.BOLD],

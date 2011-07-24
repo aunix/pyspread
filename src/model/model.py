@@ -499,9 +499,6 @@ class CodeArray(DataArray):
     # Cache for results from __getitem calls
     result_cache = {}
     
-    # Storage for frozen keys
-    frozen_keys = {}
-    
     def __setitem__(self, key, value):
         """Sets cell code and resets result cache"""
         
@@ -515,13 +512,9 @@ class CodeArray(DataArray):
         
         # Frozen cell handling
         
-        if self.cell_attributes[key]["frozen"]:
-            try:
-                res = self.frozen_keys[repr(key)]
-            except KeyError:
-                res = self.frozen_keys[repr(key)] = self._eval_cell(key)
-            
-            return res
+        frozen_res = self.cell_attributes[key]["frozen"]
+        if frozen_res:
+            return frozen_res
         
         # Normal cell handling
         

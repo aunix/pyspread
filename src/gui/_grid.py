@@ -386,7 +386,7 @@ class GridCellEventHandlers(object):
     def OnCellFrozen(self, event):
         """Cell frozen event handler"""
         
-        self.grid.actions.toggle_attr("frozen")
+        self.grid.actions.change_frozen_attr()
         
         self.grid.ForceRefresh()
         
