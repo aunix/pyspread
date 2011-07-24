@@ -37,16 +37,17 @@ from _events import *
 
 from _grid_table import GridTable
 from _grid_renderer import GridRenderer
-from _grid_mixins import GridCollisionMixin
 from _gui_interfaces import GuiInterfaces
 
+from lib.irange import irange
+import lib.xrect as xrect
 from model.model import CodeArray
 
 from actions._grid_actions import AllGridActions
 
 from config import default_cell_attributes
 
-class Grid(wx.grid.Grid, GridCollisionMixin):
+class Grid(wx.grid.Grid):
     """Pyspread's main grid"""
 
     def __init__(self, main_window, *args, **kwargs):
@@ -193,6 +194,121 @@ class Grid(wx.grid.Grid, GridCollisionMixin):
     
     _get_selection = lambda self: self.actions.get_selection()
     selection = property(_get_selection, doc="Grid selection")
+    
+    # Collison helper functions for grid drawing
+    # ------------------------------------------
+    
+    def get_visiblecell_slice(self):
+        """Returns a tuple of 3 slices that contanins the visible cells"""
+        
+        topleft_x = self.YToRow(self.GetViewStart()[1] * self.ScrollLineX)
+        topleft_y = self.XToCol(self.GetViewStart()[0] * self.ScrollLineY)
+        topleft = (topleft_x, topleft_y)
+        row, col = topleft_x + 1, topleft_y + 1 # Ensures visibility
+        
+        while self.IsVisible(row, topleft[1], wholeCellVisible=False):
+            row += 1
+        while self.IsVisible(topleft[0], col, wholeCellVisible=False):
+            col += 1
+        lowerright = (row, col) # This cell is *not* visible
+        return (slice(topleft[0], lowerright[0]), \
+                slice(topleft[1], lowerright[1]),
+                slice(self.current_table, self.current_table+1))
+    
+    def colliding_cells(self, row, col, textbox):
+        """Generates distance, row, col tuples of colliding cells
+        
+        Parameters
+        ----------
+        row: Integer
+        \tRow of cell that is tested for collision
+        col: Integer
+        \tColumn of cell that is tested for collision   
+        """
+        
+        def l1_radius_cells(dist):
+            """Generator of cell index tuples with distance dist to o"""
+            
+            if not dist:
+                yield 0, 0
+                
+            else:
+                for pos in xrange(-dist, dist+1):
+                    yield pos, dist
+                    yield pos, -dist
+                    yield dist, pos
+                    yield -dist, pos
+        
+        def get_max_visible_distance(row, col):
+            """Returns maximum distance between current and any visible cell"""
+
+            vis_cell_slice = self.get_visiblecell_slice()
+            vis_row_min = vis_cell_slice[0].start
+            vis_row_max = vis_cell_slice[0].stop
+            vis_col_min = vis_cell_slice[1].start
+            vis_col_max = vis_cell_slice[1].stop
+
+            return max(vis_row_max - row, vis_col_max - col,
+                       row - vis_row_min, col - vis_col_min)
+        
+        for dist in irange(get_max_visible_distance(row, col)):
+            all_empty = True
+            
+            for radius_cell in l1_radius_cells(dist + 1):
+                __row = radius_cell[0] + row
+                __col = radius_cell[1] + col
+                
+                if self.IsVisible(__row, __col, wholeCellVisible=False):
+                    cell_rect = self.CellToRect(__row, __col)
+                    cell_rect = xrect.Rect(cell_rect.x, cell_rect.y,
+                                           cell_rect.width, cell_rect.height)
+                    if textbox.collides_axisaligned_rect(cell_rect):
+                        all_empty = False
+                        yield dist + 1, __row, __col
+
+            # If there are no collisions in a circle, we break
+            
+            if all_empty:
+                break
+
+    def get_block_direction(self, rect_row, rect_col, block_row, block_col):
+        """Returns a blocking direction string from UP DOWN RIGHT LEFT"""
+
+        diff_row = rect_row - block_row
+        diff_col = rect_col - block_col
+
+        assert not diff_row == diff_col == 0
+
+        if abs(diff_row) <= abs(diff_col):
+            # Columns are dominant
+            if rect_col < block_col:
+                return "RIGHT"
+            else:
+                return "LEFT"
+        else:
+            # Rows are dominant
+            if rect_row < block_row:
+                return "DOWN"
+            else:
+                return "UP"
+
+    def get_background(self, key):
+        """Returns the background"""
+        
+        row, col, _ = key
+
+        _, _, width, height = self.CellToRect(row, col)
+
+        bg_components = ["bgbrush", "borderpen_bottom", "borderpen_right"]
+
+        bg_key = tuple([width, height] + \
+                       [tuple(self.pysgrid.get_sgrid_attr(key, bgc)) \
+                            for bgc in bg_components])
+
+        bg = Background(self, *key)
+        
+        return bg
+    
 
 class GridCellEventHandlers(object):
     """Contains grid cell event handlers incl. attribute events"""
@@ -686,5 +802,4 @@ class GridEventHandlers(object):
 
     
 # End of class GridEventHandlers
-
 
