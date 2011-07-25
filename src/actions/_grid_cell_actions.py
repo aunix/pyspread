@@ -217,3 +217,28 @@ class CellActions(object):
         else:
             # Default next value
             return self.attr_toggle_values[attr_key][1]
+
+    def refresh_selected_frozen_cells(self):
+        """Refreshes content of frozen cells that are currently selected
+        
+        If there is no selection, the cell at the cursor is updated.
+        
+        """
+        
+        selection = self.grid.selection
+        
+        # Add cursor to empty selction
+        
+        if not selection:
+            selection.cells.append(self.cursor[:2])
+        
+        cell_attributes = self.grid.code_array.cell_attributes
+        
+        for attr_selection, tab, attr_dict in cell_attributes:
+            if tab == self.cursor[2] and attr_dict["frozen"]:
+                # Only single cells are allowed for freezing
+                skey = attr_selection.cells[0]
+                if skey in selection:
+                    key = tuple(list(skey) + [tab])
+                    attr_dict["frozen"] = self.grid.code_array._eval_cell(key)
+        

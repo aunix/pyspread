@@ -292,24 +292,6 @@ class Grid(wx.grid.Grid):
             else:
                 return "UP"
 
-    def get_background(self, key):
-        """Returns the background"""
-        
-        row, col, _ = key
-
-        _, _, width, height = self.CellToRect(row, col)
-
-        bg_components = ["bgbrush", "borderpen_bottom", "borderpen_right"]
-
-        bg_key = tuple([width, height] + \
-                       [tuple(self.pysgrid.get_sgrid_attr(key, bgc)) \
-                            for bgc in bg_components])
-
-        bg = Background(self, *key)
-        
-        return bg
-    
-
 class GridCellEventHandlers(object):
     """Contains grid cell event handlers incl. attribute events"""
     
@@ -571,7 +553,8 @@ class GridEventHandlers(object):
     def OnRefreshSelectedCells(self, event):
         """Event handler for refreshing the selected cells via menu"""
         
-        raise NotImplementedError
+        self.grid.actions.refresh_selected_frozen_cells()
+        self.grid.ForceRefresh()
         
         event.Skip()
         
