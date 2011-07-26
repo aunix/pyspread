@@ -256,20 +256,8 @@ class MainMenu(_filledMenu):
             ], \
         ], \
         [wx.Menu, "F&ormat", [ \
-            [wx.Menu, "Font", [ \
-                [item, [FontMsg, str(font), 
-                        "Font " + str(font)] \
-                ] for font in get_font_list()]
-                ], \
-            [wx.Menu, "Font size", [ \
-                [item, [FontSizeMsg, str(size), 
-                        "Font size " + str(size) + "pt"] \
-                ] for size in FONT_SIZES]
-                ], \
-            [item, [FontBoldMsg, "Bold", 
-                        "Toggles bold font.", wx.ID_BOLD]],
-            [item, [FontItalicsMsg, "Italics", 
-                        "Toggles italics font.", wx.ID_ITALIC]],
+            [item, [FontDialogMsg, "Font...", 
+                        "Launch font dialog."]],
             [item, [FontUnderlineMsg, "Underline", 
                         "Toggles underline.", wx.ID_UNDERLINE]],
             [item, [FontStrikethroughMsg, "Strikethrough", 

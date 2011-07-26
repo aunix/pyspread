@@ -96,6 +96,7 @@ CodeEntryMsg, EVT_COMMAND_CODE_ENTRY = new_command_event()
 
 # Cell attribute events
 
+FontDialogMsg, EVT_COMMAND_FONTDIALOG = new_command_event()
 FontMsg, EVT_COMMAND_FONT = new_command_event()
 FontSizeMsg, EVT_COMMAND_FONTSIZE = new_command_event()
 FontBoldMsg, EVT_COMMAND_FONTBOLD = new_command_event()
