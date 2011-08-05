@@ -115,7 +115,7 @@ class DictGrid(KeyValueStore):
     \tShape of the grid
     
     """
-    
+       
     def __init__(self, shape):
         KeyValueStore.__init__(self)
         
@@ -174,6 +174,7 @@ class DataArray(object):
         
         # Safe mode
         self.safe_mode = False
+            
     
     def __iter__(self):
         """returns iterator over self.dict_grid"""
@@ -328,20 +329,21 @@ class DataArray(object):
             if value:
                 # UnRedo support
                 
-                unredo_mark = True
+                old_value = self(key)
                 
-                try:
-                    undo_operation = (self.dict_grid.__setitem__, 
-                                      [key, self.dict_grid[key]])
-                    redo_operation = (self.dict_grid.__setitem__, [key, value])
+                # We seem to have double calls on __setitem__
+                # This hack catches them
+                
+                if old_value != value:
+                
+                    unredo_mark = True
+                
+                    undo_operation = (self.__setitem__, [key, old_value])
+                    redo_operation = (self.__setitem__, [key, value])
         
                     self.unredo.append(undo_operation, redo_operation)
                     
-                except KeyError:
-                    # If key not present then unredo is not necessary
-                    pass
-                    
-                # End UnRedo support
+                    # End UnRedo support
                 
                 self.dict_grid[single_key] = value
             else:
@@ -475,6 +477,11 @@ class DataArray(object):
         
         self.unredo.mark()
 
+
+    # Element access via call
+    
+    __call__ = __getitem__
+
 # End of class DataArray
 
 # ------------------------------------------------------------------------------
@@ -492,8 +499,6 @@ class CodeArray(DataArray):
              "%", "<<", ">>", "&", "|", "^", "~",
              "<", ">", "<=", ">=", "==", "!=", "<>",
             ]
-    
-    __call__ = DataArray.__getitem__
     
     # Cache for results from __getitem calls
     result_cache = {}
@@ -600,11 +605,13 @@ class CodeArray(DataArray):
             glob_var = None
             expression = code
         
-        # Change cell value for cycle detection
-        self[key] = 'KeyError("Circular dependency at ' + str(key) + '")'
-        
         try:
             result = eval(expression, env, {})
+            
+        except AttributeError, err:
+            # Attribute Error includes RunTimeError
+            result = 'KeyError("Circular dependency at ' + str(key) + '")'
+            
         except Exception, err:
             result = Exception(err)
         

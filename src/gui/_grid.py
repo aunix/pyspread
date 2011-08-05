@@ -125,11 +125,7 @@ class Grid(wx.grid.Grid):
         
         self.GetGridWindow().Bind(wx.EVT_MOTION, handlers.OnMouseMotion)
         self.Bind(wx.EVT_SCROLLWIN, handlers.OnScroll)
-        
-        # Cell code events
-        
-        main_window.Bind(EVT_COMMAND_CODE_ENTRY, c_handlers.OnCellText)
-        
+                
         # Cell attribute events
         
         main_window.Bind(EVT_COMMAND_FONT, c_handlers.OnCellFont)
@@ -298,17 +294,6 @@ class GridCellEventHandlers(object):
     def __init__(self, grid):
         self.grid = grid
     
-    # Cell code entry events
-    
-    def OnCellText(self, event):
-        """Text entry event handler"""
-        
-        row, col, tab = self.grid.actions.cursor 
-        
-        self.grid.code_array[(row, col, tab)] = event.code
-        
-        event.Skip()
-
     # Cell attribute events
 
     def OnCellFont(self, event):
