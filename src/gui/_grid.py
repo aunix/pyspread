@@ -125,7 +125,11 @@ class Grid(wx.grid.Grid):
         
         self.GetGridWindow().Bind(wx.EVT_MOTION, handlers.OnMouseMotion)
         self.Bind(wx.EVT_SCROLLWIN, handlers.OnScroll)
-                
+        
+        # Cell code events
+        
+        main_window.Bind(EVT_COMMAND_CODE_ENTRY, c_handlers.OnCellText)
+        
         # Cell attribute events
         
         main_window.Bind(EVT_COMMAND_FONT, c_handlers.OnCellFont)
@@ -293,6 +297,17 @@ class GridCellEventHandlers(object):
     
     def __init__(self, grid):
         self.grid = grid
+    
+    # Cell code entry events
+    
+    def OnCellText(self, event):
+        """Text entry event handler"""
+        
+        row, col, tab = self.grid.actions.cursor
+        
+        self.grid.code_array[(row, col, tab)] = event.code
+        
+        event.Skip()
     
     # Cell attribute events
 
@@ -674,6 +689,9 @@ class GridEventHandlers(object):
         
         self.grid.actions.insert_tabs(self.grid.current_table, 1)
         
+        post_command_event(self.grid.main_window, ResizeGridMsg, 
+                           dim=self.grid.code_array.shape)
+        
         event.Skip()
     
     def OnDeleteRows(self, event):
@@ -706,6 +724,9 @@ class GridEventHandlers(object):
         """Deletes tables"""
         
         self.grid.actions.delete_tabs(self.grid.current_table, 1)
+        
+        post_command_event(self.grid.main_window, ResizeGridMsg, 
+                           dim=self.grid.code_array.shape)
         
         event.Skip()
     
