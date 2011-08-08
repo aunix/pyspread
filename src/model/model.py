@@ -231,7 +231,7 @@ class DataArray(object):
         
         if any(new_axis < old_axis 
                for new_axis, old_axis in zip(shape, old_shape)):
-            for key in self.dict_grid:
+            for key in self.dict_grid.keys():
                 if any(key_ele >= new_axis 
                        for key_ele, new_axis in zip(key, shape)):
                     self.pop(key)
@@ -396,9 +396,10 @@ class DataArray(object):
     
     def _adjust_shape(self, amount, axis):
         """Changes shape along axis by amount"""
-    
+
         new_shape = list(self.shape)
         new_shape[axis] += amount
+        
         self.shape = tuple(new_shape)
     
     def insert(self, insertion_point, no_to_insert, axis):
@@ -423,23 +424,19 @@ class DataArray(object):
            insertion_point <= -self.shape[axis]:
             raise IndexError, "Insertion point not in grid"
         
-        deleted_cells = {} # For undo
-        new_cells = {}
+        new_keys = {}
         
         for key in copy(self.dict_grid):
             if key[axis] >= insertion_point:
                 new_key = list(key)
                 new_key[axis] += no_to_insert
                 
-                new_cells[tuple(new_key)] = \
-                deleted_cells[key] = \
-                    self.pop(key)
-        
-        self.dict_grid.update(new_cells)
+                new_keys[tuple(new_key)] = self.pop(key)
         
         self._adjust_shape(no_to_insert, axis)
         
-        self.unredo.mark()
+        for key in new_keys:
+            self[key] = new_keys[key]
         
     def delete(self, deletion_point, no_to_delete, axis):
         """Deletes no_to_delete rows/cols/tabs/... starting with deletion_point
@@ -458,27 +455,18 @@ class DataArray(object):
            deletion_point <= -self.shape[axis]:
             raise IndexError, "Deletion point not in grid"
         
-        deleted_cells = {} # For undo
-        new_cells = {}
         
         for key in copy(self.dict_grid):
             if deletion_point <= key[axis] < deletion_point + no_to_delete:
-                deleted_cells[key] = self.pop(key)
+                self[key] = self.pop(key)
             
             elif key[axis] >= deletion_point + no_to_delete:
                 new_key = list(key)
                 new_key[axis] -= no_to_delete
                 
-                new_cells[tuple(new_key)] = \
-                deleted_cells[key] = \
-                    self.pop(key)
-        
-        self.dict_grid.update(new_cells)
+                self[tuple(new_key)] = self.pop(key)
 
         self._adjust_shape(-no_to_delete, axis)
-        
-        self.unredo.mark()
-
 
     # Element access via call
     

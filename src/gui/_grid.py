@@ -640,7 +640,7 @@ class GridEventHandlers(object):
             if bb_right is None:
                 bb_right = self.grid.code_array.shape[1] - 1
             
-            return bb_bottom - bb_top, bb_right - bb_left
+            return bb_bottom - bb_top + 1, bb_right - bb_left + 1
         
     
     def OnInsertRows(self, event):
@@ -760,12 +760,14 @@ class GridEventHandlers(object):
         """Calls the grid undo method"""
         
         self.grid.actions.undo()
+        self.grid.GetTable().ResetView()
         self.grid.Refresh()
         
     def OnRedo(self, event):
         """Calls the grid redo method"""
         
         self.grid.actions.redo()
+        self.grid.GetTable().ResetView()
         self.grid.Refresh()
 
     
