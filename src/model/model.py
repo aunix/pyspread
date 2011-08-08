@@ -205,6 +205,8 @@ class DataArray(object):
 
             self.unredo.append(undo_operation, redo_operation)
             
+            self.unredo.mark()
+            
         except KeyError:
             # If key not present then unredo is not necessary
             pass

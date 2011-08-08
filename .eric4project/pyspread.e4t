@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Tasks SYSTEM "Tasks-4.2.dtd">
 <!-- eric4 tasks file for project pyspread -->
-<!-- Saved: 2011-07-27, 23:56:11 -->
+<!-- Saved: 2011-08-05, 17:40:58 -->
 <Tasks version="4.2">
   <Task priority="1" completed="False" bugfix="False">
     <Summary>TODO</Summary>
@@ -60,7 +60,7 @@
   <Task priority="1" completed="False" bugfix="False">
     <Summary>TODO</Summary>
     <Description></Description>
-    <Created>2011-07-27, 22:13:31</Created>
+    <Created>2011-08-05, 16:52:14</Created>
     <Resource>
       <Filename>src/pyspread.py</Filename>
       <Linenumber>100</Linenumber>
