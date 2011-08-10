@@ -111,6 +111,7 @@ BorderWidthMsg, EVT_COMMAND_BORDERWIDTH = new_command_event()
 BorderColorMsg, EVT_COMMAND_BORDERCOLOR = new_command_event()
 BackgroundColorMsg, EVT_COMMAND_BACKGROUNDCOLOR = new_command_event()
 TextColorMsg, EVT_COMMAND_TEXTCOLOR = new_command_event()
+RotationDialogMsg,  EVT_COMMAND_ROTATIONDIALOG = new_command_event()
 TextRotationMsg, EVT_COMMAND_TEXTROTATATION = new_command_event()
 
 # Cell edit events
