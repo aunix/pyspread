@@ -275,12 +275,9 @@ class MainMenu(_filledMenu):
                 [item, [AlignmentMsg, alignment, alignment] \
                 ] for alignment in ["Top", "Center", "Bottom"]]
                 ], \
-            [wx.Menu, "Rotation", [ \
-                [item, [TextRotationMsg, rotation, rotation] \
-                ] for rotation in [u"0\u00B0", u"90\u00B0", 
-                                   u"180\u00B0", u"270\u00B0"]]
+            [item, [RotationDialogMsg, "Rotation..." , 
+                    "Set text rotation."]]
                 ], \
-            ], \
         ], \
         [wx.Menu, "&Macro", [\
             [item, [MacroListMsg, "&Macro list\tCtrl+m", 

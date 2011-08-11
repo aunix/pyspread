@@ -149,6 +149,8 @@ class Grid(wx.grid.Grid):
         main_window.Bind(EVT_COMMAND_BACKGROUNDCOLOR, 
                     c_handlers.OnCellBackgroundColor)
         main_window.Bind(EVT_COMMAND_TEXTCOLOR, c_handlers.OnCellTextColor)
+        main_window.Bind(EVT_COMMAND_ROTATIONDIALOG, 
+                    c_handlers.OnTextRotationDialog)
         main_window.Bind(EVT_COMMAND_TEXTROTATATION, 
                     c_handlers.OnCellTextRotation)
         
@@ -425,6 +427,17 @@ class GridCellEventHandlers(object):
         self.grid.ForceRefresh()
         
         event.Skip()
+
+    def OnTextRotationDialog(self, event):
+        """Text rotation dialog event handler"""
+        
+        cond_func = lambda i: 0 <= i <= 359
+        angle = self.grid.interfaces.get_int_from_user( \
+            "Enter text angle in degrees.", cond_func)
+        
+        if angle is not None:
+            post_command_event(self.grid.main_window, TextRotationMsg, 
+                                angle=angle)
 
     def OnCellTextRotation(self, event):
         """Cell text rotation event handler"""

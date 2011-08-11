@@ -221,6 +221,41 @@ class ModalDialogInterfaceMixin(object):
         
         return dialect, has_header, digest_types
 
+    def get_int_from_user(self, title="Enter integer value", cond_func=lambda i: i is not None):
+        """Opens an integer entry dialog and returns integer
+        
+        Parameters
+        ----------
+        title: String
+        \tDialog title
+        cond_func: Function
+        \tIf cond_func of int(<entry_value> then result is returned.
+        \tOtherwise the dialog pops up again.
+                
+        """
+        
+        is_integer = False
+        
+        while not is_integer :
+            dlg = wx.TextEntryDialog(None, title, title)
+            
+            if dlg.ShowModal() == wx.ID_OK:
+                result = dlg.GetValue()
+            else:
+                return None
+                
+            dlg.Destroy()
+            
+            try:
+                integer = int(result)
+                
+                if cond_func(integer):
+                    is_integer = True
+            
+            except ValueError:
+                pass
+        
+        return integer
 
 class DialogInterfaceMixin(object):
     """Main window interfaces to dialogs that are not modal"""
