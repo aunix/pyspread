@@ -689,9 +689,6 @@ class GridEventHandlers(object):
         
         self.grid.actions.insert_tabs(self.grid.current_table, 1)
         
-        post_command_event(self.grid.main_window, ResizeGridMsg, 
-                           dim=self.grid.code_array.shape)
-        
         event.Skip()
     
     def OnDeleteRows(self, event):
@@ -724,9 +721,6 @@ class GridEventHandlers(object):
         """Deletes tables"""
         
         self.grid.actions.delete_tabs(self.grid.current_table, 1)
-        
-        post_command_event(self.grid.main_window, ResizeGridMsg, 
-                           dim=self.grid.code_array.shape)
         
         event.Skip()
     
