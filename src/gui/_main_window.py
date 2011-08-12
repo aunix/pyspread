@@ -43,7 +43,6 @@ from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _widgets import EntryLine, StatusBar, TableChoiceIntCtrl
 
 from lib._interfaces import PysInterface, Clipboard
-from lib.irange import irange
 
 from _gui_interfaces import GuiInterfaces
 

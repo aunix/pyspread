@@ -54,7 +54,6 @@ import wx.html
 from config import DEFAULT_FILENAME, HELP_SIZE, HELP_DIR
 
 from lib._interfaces import Digest
-from lib.irange import irange
 from gui._printout import PrintCanvas, Printout
 
 class CsvInterface(object):
@@ -333,9 +332,9 @@ class ClipboardActions(object):
         
         (bb_top, bb_left), (bb_bottom, bb_right) = selection.get_bbox()
         
-        for row in irange(bb_top, bb_bottom):
+        for row in xrange(bb_top, bb_bottom):
             data.append([])
-            for col in irange(bb_left, bb_right):
+            for col in xrange(bb_left, bb_right):
                 if (row, col) in selection:
                     data[-1].append(self.grid.code_array[row, col, tab])
         

@@ -19,7 +19,7 @@
 # along with pyspread.  If not, see <http://www.gnu.org/licenses/>.
 # --------------------------------------------------------------------
 
-"""Unit-tests for irange.irange class.
+"""Unit-tests for xrange.irange class.
 
 Usage:
 
@@ -47,7 +47,7 @@ except NameError: # Python 3.x
 
 import nose
 
-from lib.irange import irange
+from lib.xrange import xrange
 
 if hasattr(sys, "maxint"):
     MAXINT = sys.maxint
@@ -101,7 +101,7 @@ def eq_range(a, start, stop, step):
 def eq_irange(a, b):
     """Assert that `a` equals `b`.
 
-Where `a`, `b` are `irange` objects
+Where `a`, `b` are `xrange` objects
 """
     nose.tools.eq_(a._start, b._start)
     nose.tools.eq_(a._stop, b._stop)
@@ -151,21 +151,21 @@ def _get_iranges_args():
 
 
 def _get_short_iranges():
-    return [irange(*args) for args in _get_short_iranges_args()]
+    return [xrange(*args) for args in _get_short_iranges_args()]
 
 
 def _get_iranges():
     return (_get_short_iranges() +
-            [irange(*args) for args in _get_iranges_args()])
+            [xrange(*args) for args in _get_iranges_args()])
 
 
 @nose.tools.raises(TypeError)
 def test_kwarg():
-    irange(stop=10)
+    xrange(stop=10)
 
 def test_len_overflow24():
     # __len__() should return 0 <= outcome < 2**31 on py2.4
-    try: len(irange(MAXINT))
+    try: len(xrange(MAXINT))
     except OverflowError:
         if sys.version_info[:2] == (2,4):
             pass
@@ -174,13 +174,13 @@ def test_len_overflow24():
 
 @nose.tools.raises(OverflowError)
 def test_len_overflow():
-    len(irange(MAXINT+1))
+    len(xrange(MAXINT+1))
 
 def test_float_arg():
     def _test(args):
-        irange(*map(int, args)) # args work as ints
+        xrange(*map(int, args)) # args work as ints
         # args raise TypeError as floats
-        nose.tools.assert_raises(TypeError, irange, *args)
+        nose.tools.assert_raises(TypeError, xrange, *args)
 
     for args in [(1.0,), (1e10, 1e10), (1e1, 1e1), (-1, 2, 1.0), (1.0, 2),
                  (1, 2, 1.0), (1e100, 1e101, 1e101)]:
@@ -199,18 +199,18 @@ def test_int_subclass_args():
                   (True,),]:
         n = len(args)
         if n == 1:
-            yield irange, args[0]
+            yield xrange, args[0]
         elif n == 2:
-            yield irange, args[0], args[1]
+            yield xrange, args[0], args[1]
         elif n == 3:
-            yield irange, args[0], args[1], args[2]
+            yield xrange, args[0], args[1], args[2]
         else:
             assert 0
 
 
 @nose.tools.raises(TypeError)
 def test_empty_args():
-    irange()
+    xrange()
 
 
 def test_empty_range():
@@ -224,7 +224,7 @@ def test_empty_range():
         "-3 -3 -1",
         "-3 -3",
         ):
-        r = irange(*[int(a) for a in args.split()])
+        r = xrange(*[int(a) for a in args.split()])
         yield nose.tools.eq_, len(r), 0
         L = list(r)
         yield nose.tools.eq_, len(L), 0
@@ -232,13 +232,13 @@ def test_empty_range():
 
 def test_small_ints():
     for args in _get_short_iranges_args():
-        ir, r = irange(*args), xrange(*args)
+        ir, r = xrange(*args), xrange(*args)
         yield nose.tools.eq_, len(ir), len(r)
         yield nose.tools.eq_, list(ir), list(r)
 
 
 def test_len_type():
-    ir = irange(10)
+    ir = xrange(10)
     yield nose.tools.eq_, type(len(ir)), int
     yield nose.tools.eq_, type(len(xrange(10))), int
     yield nose.tools.eq_, type(len(range(10))), int
@@ -251,7 +251,7 @@ def test_big_ints():
         [(N, N+10), 10],
         [(N, N-10, -2), 5],
         ]:
-        ir = irange(*args)
+        ir = xrange(*args)
         #
         ir[ir.length-1]
         #
@@ -263,8 +263,8 @@ def test_big_ints():
 
 
 def test_negative_index():
-    yield nose.tools.eq_, irange(10)[-1], 9
-    yield nose.tools.eq_, irange(2**100+1)[-1], 2**100
+    yield nose.tools.eq_, xrange(10)[-1], 9
+    yield nose.tools.eq_, xrange(2**100+1)[-1], 2**100
 
 
 def test_reversed():
@@ -296,7 +296,7 @@ def _test_pickle(proto):
 
 def test_equility():
     for args in _get_iranges_args():
-        a, b = irange(*args), irange(*args)
+        a, b = xrange(*args), xrange(*args)
         yield nose.tools.ok_, a is not b
         yield nose.tools.assert_not_equals, a, b
         yield nose.tools.eq_, a.length, b.length
@@ -309,7 +309,7 @@ def test_contains():
     class IntSubclass(int):
         pass
 
-    for r in [irange(10), irange(9,-1,-1)]:
+    for r in [xrange(10), xrange(9,-1,-1)]:
         for i in range(10):
             yield nose.tools.ok_, i in r
             yield nose.tools.ok_, IntSubclass(i) in r
@@ -321,7 +321,7 @@ def test_contains():
 
 
 def test_repr():
-    yield nose.tools.eq_, repr(irange(True)), repr(irange(1))
+    yield nose.tools.eq_, repr(xrange(True)), repr(xrange(1))
     for r in _get_iranges():
         yield eq_irange, eval(repr(r)), r
 
@@ -345,7 +345,7 @@ class _indices(object):
                     for args in [(), (stop,), (start, stop),
                                  (start, stop, step)]:
                         try:
-                            lr = irange(*args)
+                            lr = xrange(*args)
                             if len(args) == 1:
                                 nstart, nstep, nstop = 0, 1, stop
                                 assert stop is not None
@@ -375,7 +375,7 @@ class _indices(object):
                     assert s is not None
                     if N is not None:
                         s = s + N
-                    lr = irange(s)
+                    lr = xrange(s)
                     nose.tools.eq_(lr.length, s)
 
 def test_new():
@@ -385,7 +385,7 @@ def test_new():
 
 @nose.tools.raises(TypeError)
 def test_new_none():
-    irange(None)
+    xrange(None)
 
 @nose.tools.raises(ValueError)
 def test_zero_step():
@@ -393,17 +393,17 @@ def test_zero_step():
 
 def test_overflow():
     lo, hi, step = MAXINT-2, 4*MAXINT+3, MAXINT // 10
-    lr = irange(lo, hi, step)
-    xr = irange(MAXINT//4, MAXINT//2, MAXINT // 10)
+    lr = xrange(lo, hi, step)
+    xr = xrange(MAXINT//4, MAXINT//2, MAXINT // 10)
     nose.tools.eq_(list(lr), list(range(lo, hi, step)))
 
 def test_index_error():
-    r = irange(10)
+    r = xrange(10)
     for i in [-11, 10, 11]:
         yield nose.tools.assert_raises, IndexError, r.__getitem__, i
 
 def test_getitem():
-    r = irange(MAXINT-2, MAXINT+3)
+    r = xrange(MAXINT-2, MAXINT+3)
     for i in range(5):
         yield nose.tools.eq_, r[i], MAXINT-2+i
     for i in range(-1, -5, -1):
@@ -418,7 +418,7 @@ def test_getitem():
 class TestBIGINT(unittest.TestCase):
 
     def setUp(self):
-        self.lr = irange(BIGINT)
+        self.lr = xrange(BIGINT)
 
     def test_big_length(self):
         nose.tools.eq_(self.lr.length, BIGINT)

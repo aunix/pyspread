@@ -39,7 +39,6 @@ from _grid_table import GridTable
 from _grid_renderer import GridRenderer
 from _gui_interfaces import GuiInterfaces
 
-from lib.irange import irange
 import lib.xrect as xrect
 from model.model import CodeArray
 
@@ -253,7 +252,7 @@ class Grid(wx.grid.Grid):
             return max(vis_row_max - row, vis_col_max - col,
                        row - vis_row_min, col - vis_col_min)
         
-        for dist in irange(get_max_visible_distance(row, col)):
+        for dist in xrange(get_max_visible_distance(row, col)):
             all_empty = True
             
             for radius_cell in l1_radius_cells(dist + 1):

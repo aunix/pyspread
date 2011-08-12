@@ -644,8 +644,8 @@ class SelectionActions(object):
             self.grid.SelectBlock(row_slc.start, col_slc.start, 
                                   row_slc.stop-1, col_slc.stop-1)
         else:
-            for row in irange(row_slc.start, row_slc.stop, row_slc.step):
-                for col in irange(col_slc.start, col_slc.stop, col_slc.step):
+            for row in xrange(row_slc.start, row_slc.stop, row_slc.step):
+                for col in xrange(col_slc.start, col_slc.stop, col_slc.step):
                     self.select_cell(row, col, add_to_selected=True)
 
     def delete_selection(self):
