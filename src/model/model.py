@@ -80,6 +80,18 @@ class CellAttributes(list):
     
     """
     
+    def undoable_append(self, value):
+        """Appends item to list and provides undo and redo functionality"""
+        
+        undo_operation = (self.pop, [])
+        redo_operation = (self.undoable_append, [value])
+
+        self.unredo.append(undo_operation, redo_operation)
+        
+        self.unredo.mark()
+        
+        self.append(value)
+    
     def __getitem__(self, key):
         """Returns attribute dict for a single key"""
         
@@ -122,6 +134,7 @@ class DictGrid(KeyValueStore):
         self.shape = shape
         
         self.cell_attributes = CellAttributes()
+        
         self.macros = u""
         
         self.row_heights = {} # Keys have the format (row, table)
@@ -164,6 +177,7 @@ class DataArray(object):
     
         # Undo and redo management
         self.unredo = UnRedo()
+        self.dict_grid.cell_attributes.unredo = self.unredo
         
         # Cell attributes mask
         self.cell_attributes = self.dict_grid.cell_attributes

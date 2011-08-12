@@ -70,7 +70,8 @@ class CellActions(object):
         """
         
         if selection is not None:
-            self.code_array.cell_attributes.append((selection, table, attr))    
+            self.code_array.cell_attributes.undoable_append( \
+                                            (selection, table, attr))
     
     def set_attr(self, attr, value, selection=None):
         """Sets attr of current selection to value"""
