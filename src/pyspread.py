@@ -33,7 +33,7 @@ See __init__.py for extensive docstring.
 from sys import path, modules
 
 try:
-  modules['wx']
+    modules['wx']
 except KeyError:
     # End of patch
     
@@ -41,7 +41,8 @@ except KeyError:
 
     try:
         import wxversion
-        wxversion.select('2.8')
+        wxversion.select(['2.8', '2.9'])
+        
     except ImportError:
         pass
 

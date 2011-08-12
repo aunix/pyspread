@@ -78,6 +78,9 @@ class CellAttributes(list):
     The class provides attribute read access to single cells via __getitem__
     Otherwise it behaves similar to a list.
     
+    Note that for the method undoable_append to work, unredo has to be
+    defined as class attribute.
+    
     """
     
     def undoable_append(self, value):
