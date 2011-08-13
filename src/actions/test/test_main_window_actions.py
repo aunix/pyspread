@@ -13,9 +13,22 @@ from gui._grid import Grid
 import lib.vartypes as vartypes
 from lib._interfaces import PysInterface
 from model.model import DataArray
+from lib.selection import Selection
 
 import actions._main_window_actions as main_window_actions
 
+# test support code
+def params(funcarglist):
+    def wrapper(function):
+        function.funcarglist = funcarglist
+        return function
+    return wrapper
+
+def pytest_generate_tests(metafunc):
+    for funcargs in getattr(metafunc.function, 'funcarglist', ()):
+        metafunc.addcall(funcargs=funcargs)
+
+# actual test code
 
 class TestCsvInterface(object):
     def setup_method(self, method):
@@ -57,7 +70,8 @@ class TestCsvInterface(object):
         
         assert [list(col) for col in csv_gen] == [['1', '2'], ['3', '4']]
         
-        csv_gen = self._get_csv_gen(self.test_filename2, digest_types = [type("")])
+        csv_gen = self._get_csv_gen(self.test_filename2, digest_types = \
+                  [type("")])
         
         
         for i, col in enumerate(csv_gen):
@@ -112,14 +126,42 @@ class TestPrintActions(object):
         pass
     
 class TestClipboardActions(object):
+                
     def test_cut(self):
         pass
+    
+    param_copy = [ \
+        {'key': (0, 0, 0), 'value': "'Test'"},
+        {'key': (999, 0, 0), 'value': "1"},
+        {'key': (999, 99, 0), 'value': "$^%&$^&"},
+    ]
+    
+    @params(param_copy)
+    def test_copy(self, key, value):
+        main_window = MainWindow(None, -1)
+        code_array = main_window.grid.code_array
         
-    def test_copy(self):
-        pass
+        row, col, tab = key
+        code_array[row, col, tab] = value
+        selection = Selection([], [], [], [], [key[:2]])
+        assert main_window.actions.copy(selection) == value
+
+    param_copy_result = [ \
+        {'key': (0, 0, 0), 'value': "'Test'", 'result': "Test"},
+        {'key': (999, 0, 0), 'value': "1", 'result': "1"},
+        {'key': (999, 99, 0), 'value': "$^%&$^&", 
+                'result': "invalid syntax (<string>, line 1)"},
+    ]
+    
+    @params(param_copy_result)
+    def test_copy_result(self, key, value, result):
+        main_window = MainWindow(None, -1)
+        code_array = main_window.grid.code_array
         
-    def test_copy_result(self):
-        pass
+        row, col, tab = key
+        code_array[row, col, tab] = value
+        selection = Selection([], [], [], [], [key[:2]])
+        assert main_window.actions.copy_result(selection) == result
         
     def test_paste(self):
         pass

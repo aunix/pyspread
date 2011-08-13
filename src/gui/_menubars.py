@@ -255,30 +255,30 @@ class MainMenu(_filledMenu):
                         "Refresh selected cells even when frozen"]],
             ], \
         ], \
-        [wx.Menu, "F&ormat", [ \
-            [item, [FontDialogMsg, "Font...", 
-                        "Launch font dialog."]],
-            [item, [FontUnderlineMsg, "Underline", 
-                        "Toggles underline.", wx.ID_UNDERLINE]],
-            [item, [FontStrikethroughMsg, "Strikethrough", 
-                        "Toggles strikethrough."]],
-            ["Separator"], \
-            [item, [FrozenMsg, "Frozen", 
-                        "Toggles frozen state of cell. " + \
-                        "Frozen cells are updated only when F5 is pressed."]],
-            ["Separator"], \
-            [wx.Menu, "Justification", [ \
-                [item, [JustificationMsg, justification, justification] \
-                ] for justification in ["Left", "Center", "Right"]]
-                ], \
-            [wx.Menu, "Alignment", [ \
-                [item, [AlignmentMsg, alignment, alignment] \
-                ] for alignment in ["Top", "Center", "Bottom"]]
-                ], \
-            [item, [RotationDialogMsg, "Rotation..." , 
-                    "Set text rotation."]]
-                ], \
-        ], \
+#        [wx.Menu, "F&ormat", [ \
+#            [item, [FontDialogMsg, "Font...", 
+#                        "Launch font dialog."]],
+#            [item, [FontUnderlineMsg, "Underline", 
+#                        "Toggles underline.", wx.ID_UNDERLINE]],
+#            [item, [FontStrikethroughMsg, "Strikethrough", 
+#                        "Toggles strikethrough."]],
+#            ["Separator"], \
+#            [item, [FrozenMsg, "Frozen", 
+#                        "Toggles frozen state of cell. " + \
+#                        "Frozen cells are updated only when F5 is pressed."]],
+#            ["Separator"], \
+#            [wx.Menu, "Justification", [ \
+#                [item, [JustificationMsg, justification, justification] \
+#                ] for justification in ["Left", "Center", "Right"]]
+#                ], \
+#            [wx.Menu, "Alignment", [ \
+#                [item, [AlignmentMsg, alignment, alignment] \
+#                ] for alignment in ["Top", "Center", "Bottom"]]
+#                ], \
+#            [item, [RotationDialogMsg, "Rotation..." , 
+#                    "Set text rotation."]]
+#                ], \
+#        ], \
         [wx.Menu, "&Macro", [\
             [item, [MacroListMsg, "&Macro list\tCtrl+m", 
                         "Choose, fill in, manage, and create macros"]], \

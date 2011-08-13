@@ -671,7 +671,7 @@ class MainWindowEventHandlers(object):
         
         data = self.main_window.actions.copy_result( \
                             self.main_window.grid.selection)
-        self.clipboard.set_clipboard(data)
+        self.main_window.clipboard.set_clipboard(data)
         
         event.Skip()
     
@@ -691,6 +691,8 @@ class MainWindowEventHandlers(object):
             data = self.main_window.clipboard.get_clipboard()
         
             self.main_window.actions.paste(key, data)
+        
+        self.main_window.grid.ForceRefresh()
         
         event.Skip()
     

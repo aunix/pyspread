@@ -303,42 +303,92 @@ class ClipboardActions(object):
         
         return data
     
-    def copy(self, selection):
-        """Returns code from selection in a tab separated string"""
+    def _get_code(self, key):
+        """Returns code for given key (one cell)
+        
+        Parameters
+        ----------
+        
+        key: 3-Tuple of Integer
+        \t Cell key
+        
+        """
+        
+        return self.grid.code_array(key)
+    
+    def copy(self, selection, getter=None):
+        """Returns code from selection in a tab separated string
+        
+        Cells that are not in selection are included as empty.
+        
+        Parameters
+        ----------
+        
+        selection: Selection object
+        \tSelection of cells in current table that shall be copied
+        getter: Function, defaults to _get_code
+        \tGetter function for copy content
+        
+        """
+        
+        if getter is None:
+            getter = self._get_code
         
         tab = self.grid.current_table
         
-        (bb_top, bb_left), (bb_bottom, bb_right) = selection.get_bbox()
+        selection_bbox = selection.get_bbox()
         
-        data = [[u""] * (bb_right - bb_left + 1)] * (bb_bottom - bb_top + 1)
+        if not selection_bbox:
+            # There is no selection
+            bb_top, bb_left = self.grid.actions.cursor[:2]
+            bb_bottom, bb_right = bb_top, bb_left
+        else:
+            (bb_top, bb_left), (bb_bottom, bb_right) = selection.get_bbox()
         
-        for __row, __col, __tab in self.grid.code_array:
-            if tab == __tab and \
-               bb_top <= __row <= bb_bottom and \
-               bb_left <= __col <= bb_right and \
-               (__row, __col) in selection:
-                   row = __row - bb_top
-                   col = __col - bb_left
-                   data[row][col] = self.grid.code_array((__row, __col, __tab))
+        data = []
+        
+        for __row in xrange(bb_top, bb_bottom + 1):
+            data.append([])
+            
+            for __col in xrange(bb_left, bb_right + 1):
+                # Only copy content if cell is in selection or 
+                # if there is no selection
+                
+                if (__row, __col) in selection or not selection_bbox:
+                    content = getter((__row, __col, tab))                  
+                    
+                    if content is None:
+                        data[-1].append(u"")
+                        
+                    else:
+                        data[-1].append(content)
+                        
+                else:
+                    data[-1].append(u"")
         
         return "\n".join("\t".join(line) for line in data)
+    
+    def _get_result_string(self, key):
+        """Returns unicode string of result for given key (one cell)
+        
+        Parameters
+        ----------
+        
+        key: 3-Tuple of Integer
+        \t Cell key
+        
+        """
+        
+        row, col, tab = key
+        
+        return unicode(self.grid.code_array[row, col, tab])
     
     def copy_result(self, selection):
         """Returns result strings from selection in a tab separated string"""
         
-        tab = self.grid.current_table
+        getter = self._get_result_string
         
-        data = []
-        
-        (bb_top, bb_left), (bb_bottom, bb_right) = selection.get_bbox()
-        
-        for row in xrange(bb_top, bb_bottom):
-            data.append([])
-            for col in xrange(bb_left, bb_right):
-                if (row, col) in selection:
-                    data[-1].append(self.grid.code_array[row, col, tab])
-        
-        return "\n".join("\t".join(line) for line in data)
+        return self.copy(selection, getter=getter)
     
     def paste(self, key, data):
         data_lines = data.split("\n")
