@@ -291,6 +291,9 @@ class MainMenu(_filledMenu):
             [item, [TutorialMsg, "&Tutorial", "Launch tutorial"]],
             [item, [FaqMsg, "&FAQ", "Launch frequently asked questions"]],
             ["Separator"], \
+            [item, [PythonTutorialMsg, "&Python tutorial", 
+                "Python tutorial for coding information (online)"]],
+            ["Separator"], \
             [item, [AboutMsg, "&About", "About this program", wx.ID_ABOUT]],
             ] \
         ] \

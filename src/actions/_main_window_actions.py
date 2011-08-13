@@ -399,7 +399,18 @@ class HelpActions(object):
     """Actions for getting help"""
     
     def launch_help(self, helpname, filename):
-        """Generic help launcher"""
+        """Generic help launcher
+        
+        Launches HTMLWindow that shows content of filename 
+        or the Internet page with the filename url
+        
+        Parameters
+        ----------
+        
+        filename: String
+        \thtml file or url
+        
+        """
         
         # Set up window
         
@@ -411,13 +422,19 @@ class HelpActions(object):
         # Get help data
         current_path = os.getcwd()
         os.chdir(HELP_DIR)
-        help_file = open(filename, "r")
-        help_html = help_file.read()
-        help_file.close()
+        
+        try:
+            help_file = open(filename, "r")
+            help_html = help_file.read()
+            help_file.close()
+            help_htmlwindow.SetPage(help_html)
+        
+        except IOError:
+            
+            help_htmlwindow.LoadPage(filename)
         
         # Show tutorial window
         
-        help_htmlwindow.SetPage(help_html)
         help_window.Show()
         
         os.chdir(current_path)

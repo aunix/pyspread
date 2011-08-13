@@ -71,6 +71,7 @@ CloseMsg, EVT_COMMAND_CLOSE = new_command_event()
 ManualMsg, EVT_COMMAND_MANUAL = new_command_event()
 TutorialMsg, EVT_COMMAND_TUTORIAL = new_command_event()
 FaqMsg, EVT_COMMAND_FAQ = new_command_event()
+PythonTutorialMsg, EVT_COMMAND_PYTHON_TURORIAL = new_command_event()
 AboutMsg, EVT_COMMAND_ABOUT = new_command_event()
 
 MacroListMsg, EVT_COMMAND_MACROLIST = new_command_event()

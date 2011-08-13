@@ -250,6 +250,7 @@ class MainWindow(wx.Frame):
         self.Bind(EVT_COMMAND_MANUAL, handlers.OnManual)
         self.Bind(EVT_COMMAND_TUTORIAL, handlers.OnTutorial)
         self.Bind(EVT_COMMAND_FAQ, handlers.OnFaq)
+        self.Bind(EVT_COMMAND_PYTHON_TURORIAL, handlers.OnPythonTutorial)
         self.Bind(EVT_COMMAND_ABOUT, handlers.OnAbout)
         
         self.Bind(EVT_COMMAND_MACROLIST, handlers.OnMacroList)
@@ -779,6 +780,13 @@ class MainWindowEventHandlers(object):
         """FAQ launch event handler"""
         
         self.main_window.actions.launch_help("Pyspread tutorial", "faq.html")
+
+    def OnPythonTutorial(self, event):
+        """Python tutorial launch event handler"""
+        
+        self.main_window.actions.launch_help("Python tutorial", 
+            "http://docs.python.org/tutorial/")
+    
     
     def OnAbout(self, event):
         """About dialog event handler"""
