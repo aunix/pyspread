@@ -87,9 +87,9 @@ try:
 except ImportError:
     pass
 
-from config import VERSION, SNIFF_SIZE, DEFAULT_DIM, faces
-from config import GPG_KEY_UID, GPG_KEY_PARMS, GPG_KEY_PASSPHRASE
+from config import Config, faces
 
+config = Config()
 
 class SafeUnpickler(object):
     """Unpicklung with this class only allows PICKLE_SAVE classes"""
@@ -99,7 +99,7 @@ class SafeUnpickler(object):
         'model.model': set(['CellAttributes', 'DictGrid']),
         'model.unredo': set(['UnRedo']),
     }
- 
+    
     @classmethod
     def find_class(cls, module, name):
         """Prevents unpickling from non PICKLE_SAFE classes"""
@@ -176,7 +176,7 @@ def sniff(csvfilepath):
     """
     
     csvfile = open(csvfilepath, "rb")
-    sample = csvfile.read(SNIFF_SIZE)
+    sample = csvfile.read(config["sniff_size"])
     csvfile.close()
     
     sniffer = csv.Sniffer()
@@ -314,7 +314,7 @@ def is_pyme_present():
 def _passphrase_callback(hint='', desc='', prev_bad=''): 
     """Callback function needed by pyme"""
     
-    return GPG_KEY_PASSPHRASE
+    return config["gpg_key_passphrase"]
 
 def _get_file_data(filename):
     """Returns pyme.core.Data object of file."""
@@ -339,14 +339,14 @@ def genkey():
     #c.set_progress_cb(callbacks.progress_stdout, None)
     
     # Check if standard key is already present
-    keyname = GPG_KEY_UID
+    keyname = config["gpg_key_uid"]
     c.op_keylist_start(keyname, 0)
     key = c.op_keylist_next()
     if key is None:
         # Key not present --> Create new one
         print "Generating new GPG key", keyname, \
               ". This may take some time..."
-        c.op_genkey(GPG_KEY_PARMS, None, None)
+        c.op_genkey(config["gpg_key_parameters"], None, None)
         print c.op_genkey_result().fpr
 
 
@@ -363,9 +363,9 @@ def sign(filename):
     ctx.set_armor(1)
     ctx.set_passphrase_cb(_passphrase_callback)
     
-    ctx.op_keylist_start(GPG_KEY_UID, 0)
+    ctx.op_keylist_start(config["gpg_key_uid"], 0)
     sigkey = ctx.op_keylist_next()
-    # print sigkey.uids[0].uid
+    ##print sigkey.uids[0].uid
     
     ctx.signers_clear()
     ctx.signers_add(sigkey)
@@ -753,14 +753,17 @@ class Commandlineparser(object):
     parse: Returns command line options and arguments as 2-tuple
 
     """
+    
     def __init__(self):
+        config = Config()
+        
         usage = "usage: %prog [options] [filename]"
-        version = "%prog " + unicode(VERSION)
+        version = "%prog " + unicode(config["version"])
 
         self.parser = optparse.OptionParser(usage=usage, version=version)
 
         self.parser.add_option("-d", "--dimensions", type="int", nargs=3,
-            dest="dimensions", default=DEFAULT_DIM, \
+            dest="dimensions", default=config["grid_shape"], \
             help="Dimensions of empty grid (works only without filename) "
                  "rows, cols, tables [default: %default]")
 

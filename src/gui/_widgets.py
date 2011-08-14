@@ -51,8 +51,8 @@ from wx.lib.intctrl import IntCtrl, EVT_INT
 
 from _events import *
 
-from config import faces, fold_symbol_style
-from config import icons, icon_size, pen_styles
+from config import faces
+from config import icons, icon_size
 
 class CollapsiblePane(wx.CollapsiblePane):
     """Collapsible pane with basic toggle mechanism
@@ -100,6 +100,72 @@ class PythonSTC(stc.StyledTextCtrl):
     fold_symbols = 2
 
     """
+    Fold symbols
+    ------------
+    
+    The following styles are pre-defined:
+      "arrows"      Arrow pointing right for contracted folders,
+                    arrow pointing down for expanded
+      "plusminus"   Plus for contracted folders, minus for expanded
+      "circletree"  Like a flattened tree control using circular headers 
+                    and curved joins
+      "squaretree"  Like a flattened tree control using square headers
+    
+    """
+    
+    fold_symbol_styles = { \
+      "arrows": \
+      [ \
+        (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_ARROWDOWN, "black", "black"), \
+        (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_ARROW, "black", "black"), \
+        (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_EMPTY, "black", "black"), \
+        (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_EMPTY, "black", "black"), \
+        (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_EMPTY, "white", "black"), \
+        (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_EMPTY, "white", "black"), \
+        (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_EMPTY, "white", "black"), \
+      ], \
+      "plusminus": \
+      [ \
+        (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_MINUS, "white", "black"), \
+        (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_PLUS,  "white", "black"), \
+        (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_EMPTY, "white", "black"), \
+        (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_EMPTY, "white", "black"), \
+        (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_EMPTY, "white", "black"), \
+        (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_EMPTY, "white", "black"), \
+        (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_EMPTY, "white", "black"), \
+      ], \
+      "circletree":
+      [ \
+        (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_CIRCLEMINUS, "white", "#404040"), \
+        (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_CIRCLEPLUS, "white", "#404040"), \
+        (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, "white", "#404040"), \
+        (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_LCORNERCURVE,
+                                                        "white", "#404040"), \
+        (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_CIRCLEPLUSCONNECTED, 
+                                                        "white", "#404040"), \
+        (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_CIRCLEMINUSCONNECTED, 
+                                                        "white", "#404040"), \
+        (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNERCURVE, 
+                                                        "white", "#404040"), \
+      ], \
+      "squaretree": 
+      [ \
+        (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_BOXMINUS, "white", "#808080"), \
+        (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_BOXPLUS, "white", "#808080"), \
+        (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, "white", "#808080"), \
+        (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_LCORNER, "white", "#808080"), \
+        (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_BOXPLUSCONNECTED, 
+                                                          "white", "#808080"), \
+        (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_BOXMINUSCONNECTED, 
+                                                          "white", "#808080"), \
+        (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNER, 
+                                                          "white", "#808080"), \
+      ] \
+    }
+    
+    fold_symbol_style = fold_symbol_styles["circletree"]
+
+    """
     Text styles
     -----------
     
@@ -108,6 +174,7 @@ class PythonSTC(stc.StyledTextCtrl):
     sample property files.
     
     """
+    
     
     text_styles = [ \
       (stc.STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % faces), \
@@ -175,7 +242,7 @@ class PythonSTC(stc.StyledTextCtrl):
         self.SetMarginWidth(2, 12)
         
         # Import symbol style from config file
-        for marker in fold_symbol_style:
+        for marker in self.fold_symbol_style:
             self.MarkerDefine(*marker)
         
         self.Bind(stc.EVT_STC_UPDATEUI, self.OnUpdateUI)
@@ -360,6 +427,11 @@ class PenStyleComboBox(ImageComboBox):
     
     """
     
+    pen_styles = [wx.SOLID, wx.TRANSPARENT, wx.DOT, wx.LONG_DASH, wx.SHORT_DASH,
+                  wx.DOT_DASH, wx.BDIAGONAL_HATCH, wx.CROSSDIAG_HATCH, 
+                  wx.FDIAGONAL_HATCH, wx.CROSS_HATCH, wx.HORIZONTAL_HATCH, 
+                  wx.VERTICAL_HATCH]
+    
     def OnDrawItem(self, dc, rect, item, flags):
         
         if item == wx.NOT_FOUND:
@@ -371,7 +443,7 @@ class PenStyleComboBox(ImageComboBox):
         if not 0 < item < 12:
             item = 0
             
-        pen_style = pen_styles[item]
+        pen_style = self.pen_styles[item]
             
         pen = wx.Pen(dc.GetTextForeground(), 3, pen_style)
         dc.SetPen(pen)

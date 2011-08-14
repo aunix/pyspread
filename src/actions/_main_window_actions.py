@@ -51,7 +51,7 @@ from copy import copy
 import wx
 import wx.html
 
-from config import DEFAULT_FILENAME, HELP_SIZE, HELP_DIR
+from sysvars import get_help_path
 
 from lib._interfaces import Digest
 from gui._printout import PrintCanvas, Printout
@@ -467,15 +467,15 @@ class HelpActions(object):
         """
         
         # Set up window
-        
+        size = wx.Size(*self.main_window.config["help_window_size"])
         help_window = wx.Frame(self.main_window, -1, helpname, 
-                            wx.DefaultPosition, wx.Size(*HELP_SIZE))
+                            wx.DefaultPosition, size)
         help_htmlwindow = wx.html.HtmlWindow(help_window, -1, 
-                            wx.DefaultPosition, wx.Size(*HELP_SIZE))
+                            wx.DefaultPosition, size)
         
         # Get help data
         current_path = os.getcwd()
-        os.chdir(HELP_DIR)
+        os.chdir(get_help_path())
         
         try:
             help_file = open(filename, "r")

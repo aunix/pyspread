@@ -1,8 +1,37 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright 2008 Martin Manns
+# Distributed under the terms of the GNU General Public License
+
+# --------------------------------------------------------------------
+# pyspread is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# pyspread is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with pyspread.  If not, see <http://www.gnu.org/licenses/>.
+# --------------------------------------------------------------------
+
 """
 pyspread config file
 ====================
 
 """
+
+from copy import copy
+from os import path
+from getpass import getuser
+
+import wx
+
+from sysvars import get_program_path, get_color_string, get_font_string
 
 """
 Program info
@@ -10,113 +39,129 @@ Program info
 
 """
 
-# The current version of pyspread
-VERSION = "0.1.3" 
+
+class DefaultConfig(object):
+    def __init__(self):
+        # The current version of pyspread
+        self.version = '"0.1.3"'
+        
+        self.set_paths()
+        self.set_window_config()
+        self.set_grid_config()
+        self.set_gpg_config()
+        
+    def set_paths(self):
+        """User defined paths"""
+        
+        standardpaths = wx.StandardPaths.Get()
+        self.work_path = standardpaths.GetDocumentsDir()
+        
+    def set_window_config(self):
+        """Window configuration"""
+
+        self.window_position = "(10, 10)"
+        self.window_size = "(wx.GetDisplaySize()[0] * 9 /10," + \
+                           " wx.GetDisplaySize()[1] * 9 /10)"
+                           
+        self.icon_theme ="'Tango'" 
+        
+        self.help_window_position = "(15, 15)"
+        self.help_window_size = "(wx.GetDisplaySize()[0] * 7 /10," + \
+                                " wx.GetDisplaySize()[1] * 7 /10)"
+        
+
+    def set_grid_config(self):
+        """Grid configuration"""
+        
+        self.grid_shape = "(1000, 100, 3)"
+        self.max_unredo = "5000"
+        
+        # Colors
+        
+        self.grid_color = repr(get_color_string(wx.SYS_COLOUR_ACTIVEBORDER))
+        self.selection_color = repr(get_color_string(wx.SYS_COLOUR_HIGHLIGHT))
+        self.background_color = repr(get_color_string(wx.SYS_COLOUR_WINDOW))
+        self.text_color = repr(get_color_string(wx.SYS_COLOUR_WINDOWTEXT))
+        
+        # Fonts
+        
+        self.font = repr(get_font_string(wx.SYS_DEFAULT_GUI_FONT))
+        
+        # Zoom        
+        
+        self.minimum_zoom = "0.25"
+        self.maximum_zoom = "8.0"
+        
+        # Increase and decrease factor on zoom in and zoom out
+        self.zoom_factor = "0.05"
+        
+    def set_gpg_config(self):
+        """GPG parameters"""
+        
+        self.gpg_key_uid = repr('pyspread_' + getuser())
+        self.gpg_key_passphrase = repr("pyspread") # Set this individually!
+        
+        self.gpg_key_parameters = \
+            '<GnupgKeyParms format="internal">\n' + \
+            'Key-Type: DSA\n' + \
+            'Key-Length: 2048\n' + \
+            'Subkey-Type: ELG-E\n' + \
+            'Subkey-Length: 2048\n' + \
+            'Name-Real: ' + eval(self.gpg_key_uid) + '\n' + \
+            'Name-Comment: Pyspread savefile signature keys\n' + \
+            'Name-Email: pyspread@127.0.0.1\n' + \
+            'Passphrase: ' + eval(self.gpg_key_passphrase) + '\n' + \
+            'Expire-Date: 0\n' + \
+            '</GnupgKeyParms>'
+
+    def set_csv_config(self):
+        """CSV parameters for import and export"""
+        
+        # Number of bytes for the sniffer (should be larger than 1st+2nd line)
+        self.sniff_size = "65536"
 
 
 class Config(object):
-    """Configuration class for the application pyspread
+    """Configuration class for the application pyspread"""
     
-    ## TODO: Implement wx.Python based config 
-    """
+    # Only keys in default_config are config keys
     
-    default_config = { \
-        "default_dim": "1000 100 3",
-        "icon_theme": "Stock", # Stock icon theme is "Tango" for Windows
-        "max_undo": "5000",
-    }
+    config_filename = "pyspreadrc"
     
-    # Main configuration 
-    
-    config = default_config
-    
-    # Helper functions for parsing
-    
-    read_maps = { \
-        "default_dim": lambda s: tuple(int(num) for num in s.split),
-        "icon_theme": lambda s: s,
-        "max_undo": lambda s: int(s),
-    }
-
-    write_maps = { \
-        "default_dim": lambda s: " ".join(s),
-        "icon_theme": lambda s: s,
-        "max_undo": lambda s: repr(s),
-    }
-
-    config_filename = ".pyspreadrc"
-    
-    def __init__(self):
+    def __init__(self, defaults=None):
+        if defaults is None:
+            self.defaults = DefaultConfig()
+            
+        else:
+            self.defaults = defaults()
         
-        self.cfg_file = wx.Config('myconfig')
+        self.data = DefaultConfig()
+        
+        self.cfg_file = wx.Config(self.config_filename)
         
         self.load()
+    
+    def __getitem__(self, key):
+        return eval(getattr(self.data, key))
     
     def load(self):
         """Loads configuration file"""
         
-        for key in self.default_config:
+        # Reset data
+        self.data.__dict__.update(self.defaults.__dict__)
+        
+        for key in self.defaults.__dict__:
             if self.cfg_file.Exists(key):
-                self.config[key] = self.read_maps(self.cfg_file.Read(key))
-            else:
-                self.config[key] = self.read_maps(self.default_config[key])
+                setattr(self.data, key, self.cfg_file.Read(key))
                         
     def save(self):
         """Saves configuration file"""
         
-        for key in self.config:
-            self.cfg_file.Write(key, self.write_maps[key](self.config[key]))
+        for key in self.defaults.__dict__:
+            self.cfg_file.Write(key, getattr(self.data, key))
 
 
-"""
-Command line defaults
-=====================
 
-"""
-
-DEFAULT_DIM = (1000, 100, 3) # Used for empty sheet at start-up
-
-DEFAULT_FILENAME = "unnamed.pys"
-
-"""
-Paths
-=====
-
-Provides paths for libraries and icons
-
-"""
-
-import getpass
-import os.path
-
-import wx
-import wx.stc  as  stc
-
-PROG_DIR = os.path.dirname(os.path.realpath(__file__)) + '/../'
-HELP_DIR = PROG_DIR + "doc/help/"
-
-"""
-GPG key parameters
-==================
-
-"""
-
-GPG_KEY_UID = 'pyspread_' + getpass.getuser()
-GPG_KEY_PASSPHRASE = "pyspread" # Set this individually!
-
-GPG_KEY_PARMS = \
-"""<GnupgKeyParms format="internal">
-    Key-Type: DSA
-    Key-Length: 2048
-    Subkey-Type: ELG-E
-    Subkey-Length: 2048
-    Name-Real: """ + GPG_KEY_UID + """
-    Name-Comment: Pyspread savefile signature keys
-    Name-Email: pyspread@127.0.0.1
-    Passphrase: """ + GPG_KEY_PASSPHRASE + """
-    Expire-Date: 0
-    </GnupgKeyParms>
-    """
     
 
 """
@@ -145,7 +190,7 @@ Main window styling
 
 """
 
-MAIN_WINDOW_ICON = wx.Bitmap(PROG_DIR + 'share/icons/pyspread.png', \
+MAIN_WINDOW_ICON = wx.Bitmap(get_program_path() + 'share/icons/pyspread.png', \
                              wx.BITMAP_TYPE_ANY)
 
 MAIN_WINDOW_SIZE = (int(displaysize[0] * 0.9), int(displaysize[1] * 0.9))
@@ -157,30 +202,6 @@ Grid lines
 """
 
 GRID_LINE_PEN = wx.Pen("Gray80", 1)
-
-"""
-Zoom increase and decrease factor on zoom in and zoom out
-"""
-
-ZOOM_FACTOR = 0.05
-
-MINIMUM_ZOOM = 0.25
-MAXIMUM_ZOOM = 8.0
-
-"""
-CSV
-===
-
-CSV import options
-
-"""
-
-# Number of bytes for the sniffer (should be larger than 1st+2nd line)
-SNIFF_SIZE = 65536 
-
-# Maximum undo / redo size
-
-MAX_UNREDO = 10000
 
 
 """
@@ -263,73 +284,6 @@ default_cell_attributes = {
 }
 
 
-"""
-Fold symbols
-------------
-
-The following styles are pre-defined:
-  "arrows"      Arrow pointing right for contracted folders,
-                arrow pointing down for expanded
-  "plusminus"   Plus for contracted folders, minus for expanded
-  "circletree"  Like a flattened tree control using circular headers 
-                and curved joins
-  "squaretree"  Like a flattened tree control using square headers
-
-"""
-
-fold_symbol_styles = { \
-  "arrows": \
-  [ \
-    (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_ARROWDOWN, "black", "black"), \
-    (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_ARROW, "black", "black"), \
-    (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_EMPTY, "black", "black"), \
-    (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_EMPTY, "black", "black"), \
-    (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_EMPTY, "white", "black"), \
-    (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_EMPTY, "white", "black"), \
-    (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_EMPTY, "white", "black"), \
-  ], \
-  "plusminus": \
-  [ \
-    (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_MINUS, "white", "black"), \
-    (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_PLUS,  "white", "black"), \
-    (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_EMPTY, "white", "black"), \
-    (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_EMPTY, "white", "black"), \
-    (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_EMPTY, "white", "black"), \
-    (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_EMPTY, "white", "black"), \
-    (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_EMPTY, "white", "black"), \
-  ], \
-  "circletree":
-  [ \
-    (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_CIRCLEMINUS, "white", "#404040"), \
-    (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_CIRCLEPLUS, "white", "#404040"), \
-    (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, "white", "#404040"), \
-    (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_LCORNERCURVE,
-                                                    "white", "#404040"), \
-    (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_CIRCLEPLUSCONNECTED, 
-                                                    "white", "#404040"), \
-    (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_CIRCLEMINUSCONNECTED, 
-                                                    "white", "#404040"), \
-    (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNERCURVE, 
-                                                    "white", "#404040"), \
-  ], \
-  "squaretree": 
-  [ \
-    (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_BOXMINUS, "white", "#808080"), \
-    (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_BOXPLUS, "white", "#808080"), \
-    (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, "white", "#808080"), \
-    (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_LCORNER, "white", "#808080"), \
-    (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_BOXPLUSCONNECTED, 
-                                                      "white", "#808080"), \
-    (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_BOXMINUSCONNECTED, 
-                                                      "white", "#808080"), \
-    (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNER, 
-                                                      "white", "#808080"), \
-  ] \
-}
-
-fold_symbol_style = fold_symbol_styles["circletree"]
-
-
 
 """
 Icontheme
@@ -351,15 +305,15 @@ small_icon_size = (24, 24)
 
 theme = "Tango"
 
-_action_path = PROG_DIR + "share/icons/" + theme + "/" + \
+_action_path = get_program_path() + "share/icons/" + theme + "/" + \
                str(icon_size[0]) + "x" + str(icon_size[1]) + \
                "/actions/"
                
-_action_path_small = PROG_DIR + "share/icons/" + theme + "/" + \
+_action_path_small = get_program_path() + "share/icons/" + theme + "/" + \
                      str(small_icon_size[0]) + "x" + str(small_icon_size[1]) + \
                      "/actions/"
                
-_toggle_path = PROG_DIR + "share/icons/" + theme + "/" + \
+_toggle_path = get_program_path() + "share/icons/" + theme + "/" + \
                str(small_icon_size[0]) + "x" + str(small_icon_size[1]) + \
                "/toggles/"
 
@@ -403,174 +357,21 @@ icons = {"FileNew": _action_path + "filenew.png",
          "SearchWholeword": _toggle_path + "wholeword" + wide_icon + ".png",
          }
 
+
+
 # Bitmap and position of cell overflow rects
+               
 overflow_rects = { \
-    "RIGHT": [wx.Bitmap(_toggle_path + "arrow_right.xpm", wx.BITMAP_TYPE_XPM), 
-              lambda x, y, w, h: (x - 6, y + h / 2 - 5)], 
-    "LEFT": [wx.Bitmap(_toggle_path + "arrow_left.xpm", wx.BITMAP_TYPE_XPM), 
-              lambda x, y, w, h: (x + w + 1, y + h / 2 - 5)], 
-    "UP": [wx.Bitmap(_toggle_path + "arrow_up.xpm", wx.BITMAP_TYPE_XPM), 
-              lambda x, y, w, h: (x + w / 2 - 5, y + h + 1)], 
-    "DOWN": [wx.Bitmap(_toggle_path + "arrow_down.xpm", wx.BITMAP_TYPE_XPM), 
-              lambda x, y, w, h: (x + w / 2 - 5, y - 6)], 
-}
-
-"""
-Border toggles
-==============
-
-Toggles for border changes, points to (top, bottom, left, right, inner, outer)
-
-"""
-
-border_toggles = [ \
-    ("AllBorders",       (1, 1, 1, 1, 1, 1)),
-    ("LeftBorders",      (0, 0, 1, 0, 1, 1)),
-    ("RightBorders",     (0, 0, 0, 1, 1, 1)),
-    ("TopBorders",       (1, 0, 0, 0, 1, 1)),
-    ("BottomBorders",    (0, 1, 0, 0, 1, 1)),
-    ("InsideBorders",    (1, 1, 1, 1, 1, 0)),
-    ("OutsideBorders",   (1, 1, 1, 1, 0, 1)),
-    ("TopBottomBorders", (1, 1, 0, 0, 0, 1)),
-]
-
-bordermap = { \
-    "AllBorders":      ("top", "bottom", "left", "right"),
-    "LeftBorders":     ("left"),
-    "RightBorders":    ("right"),
-    "TopBorders":      ("top"),
-    "BottomBorders":   ("bottom"),
-    "InsideBorders":   (""),
-    "OutsideBorders":  (""),
-    "TopBottomBorders":("top", "bottom"),
-}
-
-"""
-ODF tags
-========
-
-The tags that identify recognizable attributes in ODF files
-
-"""
-
-odftags = {
-           "root": "document-content",
-           "autostyle": "automatic-styles",
-           "body": "body",
-           "office": "office",
-           "table": "table",
-           "column": "table-column",
-           "row": "table-row",
-           "cell": "table-cell",
-           "style": "style",
-           "name": "name",
-           "stylename": "style-name",
-           "colwidth": "column-width",
-           "rowheight": "row-height",
-           "strikethrough": "{urn:oasis:names:tc:opendocument:" + \
-                            "xmlns:style:1.0}text-line-through-style",
-           "fontcolor":     "{urn:oasis:names:tc:opendocument:" + \
-                            "xmlns:xsl-fo-compatible:1.0}color",
-           "verticalalign": "{urn:oasis:names:tc:opendocument:" + \
-                            "xmlns:style:1.0}vertical-align",
-           "rotationangle": "{urn:oasis:names:tc:opendocument:" + \
-                            "xmlns:style:1.0}rotation-angle",
-           "justification": "{urn:oasis:names:tc:opendocument:" + \
-                            "xmlns:xsl-fo-compatible:1.0}fo:text-align",
-           "textalign":     "{urn:oasis:names:tc:opendocument:" + \
-                            "xmlns:xsl-fo-compatible:1.0}text-align",
-           "underline":     "{urn:oasis:names:tc:opendocument:" + \
-                            "xmlns:xsl-fo-compatible:1.0}text-underline-mode",
-}
-
-repeated_tags = {
-           "rowsrepeated":  "{urn:oasis:names:tc:opendocument:xmlns:" + \
-                            "table:1.0}number-rows-repeated",
-           "colsrepeated":  "{urn:oasis:names:tc:opendocument:xmlns:" + \
-                            "table:1.0}number-columns-repeated"
-}
-
-column_width_tag = '{urn:oasis:names:tc:opendocument:xmlns:style:1.0}' + \
-                   'column-width'
-row_height_tag = '{urn:oasis:names:tc:opendocument:xmlns:style:1.0}' + \
-                 'row-height'
-
-# Font attributes: tag: 
-# [getter, setter, assertionfunction, conversionfunction]
-
-font_weight_styles = [ \
-            ("normal", wx.FONTWEIGHT_NORMAL), 
-            ("bold", wx.FONTWEIGHT_BOLD),
-            ("lighter", wx.FONTWEIGHT_LIGHT),
-]
-
-font_styles = [ \
-            ("normal", wx.FONTSTYLE_NORMAL),
-            ("italic", wx.FONTSTYLE_ITALIC),
-]
-
-font_attributes = { \
-    "font-size": {
-        "getter": "GetPointSize",
-        "setter": "SetPointSize",
-        "assert_func": lambda size: size[-2:] == "pt",
-        "convert_func": lambda size: int(size[:-2]),
-    },
-    "font-size-complex": {
-        "getter": "GetPointSize",
-        "setter": "SetPointSize",
-        "assert_func": lambda size: size[-2:] == "pt",
-        "convert_func": lambda size: int(size[:-2]),
-    },
-    "font-style": { \
-        "getter": "GetStyle",
-        "setter": "SetStyle",
-        "assert_func": lambda style: style in ["normal", "italic"],
-        "convert_func": lambda style: dict(font_styles)[style],
-    },
-    "font-style-complex": { \
-        "getter": "GetStyle",
-        "setter": "SetStyle",
-        "assert_func": lambda style: style in ["normal", "italic"],
-        "convert_func": lambda style: dict(font_styles)[style],
-    },
-    "font-weight": { \
-        "getter": "GetWeight",
-        "setter": "SetWeight",
-        "assert_func": lambda weight: weight in \
-            ["normal", "bold", "lighter"],
-        "convert_func": lambda weight: dict(font_weight_styles)[weight],
-    },
-    "font-weight-complex": { \
-        "getter": "GetWeight",
-        "setter": "SetWeight",
-        "assert_func": lambda weight: weight in \
-            ["normal", "bold", "lighter"],
-        "convert_func": lambda weight: dict(font_weight_styles)[weight],
-    },
-    "text-underline-style": { \
-        "getter": "GetUnderlined",
-        "setter": "SetUnderlined",
-        "assert_func": lambda underlined: underlined == "solid",
-        "convert_func": lambda underlined: 1,
-    },
+  "RIGHT": [wx.Bitmap(_toggle_path + "arrow_right.xpm", wx.BITMAP_TYPE_XPM),
+          lambda x, y, w, h: (x - 6, y + h / 2 - 5)], 
+  "LEFT": [wx.Bitmap(_toggle_path + "arrow_left.xpm", wx.BITMAP_TYPE_XPM), 
+          lambda x, y, w, h: (x + w + 1, y + h / 2 - 5)], 
+  "UP": [wx.Bitmap(_toggle_path + "arrow_up.xpm", wx.BITMAP_TYPE_XPM), 
+          lambda x, y, w, h: (x + w / 2 - 5, y + h + 1)], 
+  "DOWN": [wx.Bitmap(_toggle_path + "arrow_down.xpm", wx.BITMAP_TYPE_XPM), 
+          lambda x, y, w, h: (x + w / 2 - 5, y - 6)], 
 }
 
 
 
-pen_styles = [wx.SOLID, wx.TRANSPARENT, wx.DOT, wx.LONG_DASH, wx.SHORT_DASH,
-              wx.DOT_DASH, wx.BDIAGONAL_HATCH, wx.CROSSDIAG_HATCH, 
-              wx.FDIAGONAL_HATCH, wx.CROSS_HATCH, wx.HORIZONTAL_HATCH, 
-              wx.VERTICAL_HATCH]
 
-file_approval_warning = \
-u"""You are going to approve and trust a file that
-you have received from an untrusted source.\n
-After proceeding, the file is executed.
-It can harm your system as any program can.
-Unless you took precautions, it can delete your
-files or send them away over the Internet.\n
-CHECK EACH CELL BEFORE PROCEEDING.
-Do not forget cells outside the visible range.
-You have been warned. \n
-Proceed and sign this file as trusted?"""

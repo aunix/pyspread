@@ -49,7 +49,6 @@ Provides:
 import bz2
 from copy import copy
 
-from config import ZOOM_FACTOR, MINIMUM_ZOOM, MAXIMUM_ZOOM
 from config import default_cell_attributes
 
 from gui._grid_table import GridTable
@@ -93,6 +92,7 @@ class FileActions(object):
         """Leaves save mode"""
         
         self.code_array.safe_mode = False
+        post_command_event(self.main_window, SafeModeExitMsg)
         
     def approve(self, filepath):
         """Sets safe mode if signature missing of invalid"""
@@ -236,15 +236,13 @@ class FileActions(object):
         self.grid.GetTable().ResetView()
         self.grid.ForceRefresh()
         
-        # File sucessfully opened
-        statustext = str(cycle) + " lines successfully read from " + \
-                     filepath + "."
-        post_command_event(self.main_window, StatusBarMsg, text=statustext)
+        # File sucessfully opened. Approve again to show status.
+        self.approve(filepath)
         
     def sign_file(self, filepath):
         """Signs file if possible"""
         
-        if is_pyme_present() and not self.main_window.safe_mode:
+        if is_pyme_present() and not self.code_array.safe_mode:
             signature = sign(filepath)
             signfile = open(filepath + '.sig','wb')
             signfile.write(signature)
@@ -630,23 +628,23 @@ class GridActions(object):
         post_command_event(self.main_window, StatusBarMsg, text=statustext)
     
     def zoom_in(self):
-        """Zooms in by ZOOM_FACTOR"""
+        """Zooms in by zoom factor"""
         
         zoom = self.grid.grid_renderer.zoom
         
-        target_zoom = zoom * (1 + ZOOM_FACTOR)
+        target_zoom = zoom * (1 + self.main_window.config["zoom_factor"])
         
-        if target_zoom < MAXIMUM_ZOOM:
+        if target_zoom < self.main_window.config["maximum_zoom"]:
             self.zoom(target_zoom)
         
     def zoom_out(self):
-        """Zooms out by ZOOM_FACTOR"""
+        """Zooms out by zoom factor"""
         
         zoom = self.grid.grid_renderer.zoom
         
-        target_zoom = zoom * (1 - ZOOM_FACTOR)
+        target_zoom = zoom * (1 - self.main_window.config["zoom_factor"])
         
-        if target_zoom > MINIMUM_ZOOM:
+        if target_zoom > self.main_window.config["minimum_zoom"]:
             self.zoom(target_zoom)
     
     def on_mouse_over(self, key):

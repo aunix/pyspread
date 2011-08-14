@@ -42,7 +42,7 @@ import lib.xrect as xrect
 from lib._interfaces import get_pen_from_data, \
                             get_font_from_data, hex_to_rgb
 
-from config import odftags, selected_cell_color
+from config import selected_cell_color, overflow_rects
 
 class GridRenderer(wx.grid.PyGridCellRenderer):
     """This renderer draws borders and text at specified font, size, color"""
@@ -126,7 +126,7 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         
         """
 
-        arrow, trafo = overflow_rects[block_direction]
+        arrow, trafo = self.overflow_rects[block_direction]
 
         arrow_x, arrow_y = trafo(cell_rect.x, cell_rect.y,
                           cell_rect.width, cell_rect.height)

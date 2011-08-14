@@ -55,7 +55,7 @@ from gui._widgets import PythonSTC
 from gui._events import *
 from lib._interfaces import Digest, sniff, fill_wxgrid
 from lib._interfaces import ALPHA_ONLY, DIGIT_ONLY, Validator
-from config import VERSION, PROG_DIR
+from sysvars import get_program_path
 
 class ChoiceRenderer(wx.grid.PyGridCellRenderer):
     """Renders choice dialog box for grid
@@ -998,7 +998,7 @@ class AboutDialog(object):
         
         info = wx.AboutDialogInfo()
         info.Name = "pyspread"
-        info.Version = VERSION
+        info.Version = parent.config["version"]
         info.Copyright = "(C) Martin Manns 2008-2011"
         info.Description = wordwrap( 
             "A cross-platform Python spreadsheet application.\nPyspread is "
@@ -1009,7 +1009,7 @@ class AboutDialog(object):
         info.Developers = ["Martin Manns"]
         info.DocWriters = ["Martin Manns", "Bosko Markovic"]
         
-        license_file = open(PROG_DIR + "/COPYING", "r")
+        license_file = open(get_program_path() + "/COPYING", "r")
         license_text = license_file.read()
         license_file.close()
         

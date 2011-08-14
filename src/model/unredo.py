@@ -29,7 +29,7 @@ UnRedo contains the UnRedo class that manages undo and redo operations.
 
 """
 
-from config import MAX_UNREDO
+from config import Config
 
 class UnRedo(object):
     """Undo/Redo framework class.
@@ -64,6 +64,8 @@ class UnRedo(object):
         "MARK" separartes undo/redo steps
         
         """
+        
+        self.config = Config()
         
         self.undolist = []
         self.redolist = []
@@ -129,8 +131,8 @@ class UnRedo(object):
         """
         
         # If the lists grow too large they are emptied
-        if len(self.undolist) > MAX_UNREDO or \
-           len(self.redolist) > MAX_UNREDO:
+        if len(self.undolist) > self.config["max_unredo"] or \
+           len(self.redolist) > self.config["max_unredo"]:
             self.reset()
         
         # Check attribute types

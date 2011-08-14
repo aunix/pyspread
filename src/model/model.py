@@ -51,8 +51,6 @@ from lib.selection import Selection
 
 from unredo import UnRedo
 
-from config import default_cell_attributes
-
 class KeyValueStore(dict):
     """Key-Value store in memory. Currently a dict with default value None.
     
@@ -83,6 +81,28 @@ class CellAttributes(list):
     defined as class attribute.
     
     """
+    ## TODO: How to get config to model?
+    default_cell_attributes = {
+        "borderwidth_bottom": 1,
+        "borderwidth_right": 1,
+        "bordercolor_bottom": wx.Colour(200, 200, 200).GetRGB(),
+        "bordercolor_right": wx.Colour(200, 200, 200).GetRGB(),
+        "bgcolor": wx.Colour(255, 255, 255).GetRGB(),
+        "textfont": wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT).\
+                                      GetFaceName(),
+        "pointsize": 10,
+        "fontweight": wx.NORMAL,
+        "fontstyle": wx.NORMAL,
+        "textcolor": wx.Colour(0, 0, 0).GetRGB(),
+        "underline": False,
+        "strikethrough": False,
+        "angle": 0.0,
+        "column-width": 150,
+        "row-height": 26,
+        "vertical_align": "top",
+        "justification": "left",
+        "frozen": False,
+    }
     
     def undoable_append(self, value):
         """Appends item to list and provides undo and redo functionality"""
@@ -103,7 +123,7 @@ class CellAttributes(list):
         
         row, col, tab  = key
         
-        result_dict = copy(default_cell_attributes)
+        result_dict = copy(self.default_cell_attributes)
         
         for selection, table, attr_dict in self:
             if tab == table and (row, col) in selection:

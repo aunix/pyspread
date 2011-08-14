@@ -39,8 +39,7 @@ import wx.lib.colourselect as csel
 
 from _events import *
 
-from config import odftags, border_toggles, default_cell_attributes
-from config import FONT_SIZES, faces, bordermap
+from config import FONT_SIZES, faces, default_cell_attributes
 from config import icons, icon_size, small_icon_size
 
 from lib._interfaces import get_font_list, textfont_from_string
@@ -287,8 +286,39 @@ class FindToolbar(wx.ToolBar):
 
 
 class AttributesToolbar(wx.ToolBar):
-    """Toolbar for editing cell attributes"""
-        
+    """Toolbar for editing cell attributes
+    
+    Class attributes
+    ----------------
+    
+    border_toggles: Toggles for border changes, points to 
+                    (top, bottom, left, right, inner, outer)
+    bordermap: Meaning of each border_toggle item
+    
+    """
+
+    border_toggles = [ \
+        ("AllBorders",       (1, 1, 1, 1, 1, 1)),
+        ("LeftBorders",      (0, 0, 1, 0, 1, 1)),
+        ("RightBorders",     (0, 0, 0, 1, 1, 1)),
+        ("TopBorders",       (1, 0, 0, 0, 1, 1)),
+        ("BottomBorders",    (0, 1, 0, 0, 1, 1)),
+        ("InsideBorders",    (1, 1, 1, 1, 1, 0)),
+        ("OutsideBorders",   (1, 1, 1, 1, 0, 1)),
+        ("TopBottomBorders", (1, 1, 0, 0, 0, 1)),
+    ]
+    
+    bordermap = { \
+        "AllBorders":      ("top", "bottom", "left", "right"),
+        "LeftBorders":     ("left"),
+        "RightBorders":    ("right"),
+        "TopBorders":      ("top"),
+        "BottomBorders":   ("bottom"),
+        "InsideBorders":   (""),
+        "OutsideBorders":  (""),
+        "TopBottomBorders":("top", "bottom"),
+    }
+
     def __init__(self, parent, *args, **kwargs):
         kwargs["style"] = wx.TB_FLAT | wx.TB_NODIVIDER
         wx.ToolBar.__init__(self, parent, *args, **kwargs)
@@ -375,10 +405,10 @@ class AttributesToolbar(wx.ToolBar):
         """Create border choice combo box"""
         
         self.borderchoice_combo = _widgets.BorderEditChoice(self, 
-                                choices=[c[0] for c in border_toggles], \
+                                choices=[c[0] for c in self.border_toggles], \
                                 style=wx.CB_READONLY, size=(50, -1))
         
-        self.borderstate = border_toggles[0][0]
+        self.borderstate = self.border_toggles[0][0]
         
         self.AddControl(self.borderchoice_combo)
         
@@ -653,7 +683,7 @@ class AttributesToolbar(wx.ToolBar):
         """Line color choice event handler"""
         
         color = event.GetValue().GetRGB()
-        borders = bordermap[self.borderstate]
+        borders = self.bordermap[self.borderstate]
         
         post_command_event(self, BorderColorMsg, color=color, borders=borders)
     
@@ -663,7 +693,7 @@ class AttributesToolbar(wx.ToolBar):
         linewidth_combobox = event.GetEventObject()
         idx = event.GetInt()
         width  = int(linewidth_combobox.GetString(idx))
-        borders = bordermap[self.borderstate]
+        borders = self.bordermap[self.borderstate]
         
         post_command_event(self, BorderWidthMsg, width=width, borders=borders)
         

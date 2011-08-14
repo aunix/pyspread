@@ -37,8 +37,7 @@ import wx.aui
 
 import wx.lib.agw.genericmessagedialog as GMD
 
-from config import MAIN_WINDOW_ICON, MAIN_WINDOW_SIZE, DEFAULT_DIM
-from config import file_approval_warning
+from config import Config
 
 from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
@@ -47,6 +46,7 @@ from _widgets import EntryLine, StatusBar, TableChoiceIntCtrl
 from lib._interfaces import PysInterface, Clipboard
 
 from _gui_interfaces import GuiInterfaces
+from gui.icons import Icons
 
 from _grid import Grid
 from model.model import CodeArray
@@ -68,6 +68,10 @@ class MainWindow(wx.Frame):
         self.parent = parent
         
         self.handlers = MainWindowEventHandlers(self)
+        
+        self.icons = Icons()
+        
+        self.config = Config()
         
         # Program states
         # --------------
@@ -106,10 +110,11 @@ class MainWindow(wx.Frame):
         
         # Main grid
         
-        self.grid = Grid(self, -1, dimensions=DEFAULT_DIM)
+        dimensions = self.config["grid_shape"]
+        self.grid = Grid(self, -1, dimensions=dimensions)
 
         # IntCtrl for table choice
-        self.table_choice = TableChoiceIntCtrl(self, DEFAULT_DIM[2])
+        self.table_choice = TableChoiceIntCtrl(self, dimensions[2])
 
         # Clipboard
         self.clipboard = Clipboard()
@@ -137,11 +142,11 @@ class MainWindow(wx.Frame):
     def _set_properties(self):
         """Setup title, icon, size, scale, statusbar, main grid"""
         
-        self.set_icon(MAIN_WINDOW_ICON)
+        self.set_icon(self.icons["PyspreadLogo"])
         
         # Set initial size to 90% of screen
-        
-        self.SetInitialSize(MAIN_WINDOW_SIZE)
+        self.SetInitialSize(self.config["window_size"])
+        self.SetPosition(self.config["window_position"])
         
         # Without minimum size, initial size is minimum size in wxGTK
         self.SetMinSize((2, 2))
@@ -621,13 +626,22 @@ class MainWindowEventHandlers(object):
         if not self.main_window.safe_mode:
             return
         
-        msg = file_approval_warning
+        msg = u"You are going to approve and trust a file that\n" + \
+              u"you have received from an untrusted source.\n" + \
+              u"After proceeding, the file is executed.\n" + \
+              u"It can harm your system as any program can.\n" + \
+              u"Unless you took precautions, it can delete your\n" + \
+              u"files or send them away over the Internet.\n" + \
+              u"CHECK EACH CELL BEFORE PROCEEDING.\n \n" + \
+              u"Do not forget cells outside the visible range.\n" + \
+              u"You have been warned.\n \n" + \
+              u"Proceed and sign this file as trusted?"
+            
         short_msg = "Security warning"
         
-        if self.main_window.interfaces.get_warning_choice(msg, short_msg) == \
-                wx.ID_YES:
+        if self.main_window.interfaces.get_warning_choice(msg, short_msg):
             # Leave safe mode
-            self.main_window.grid.actions.leave_save_mode()
+            self.main_window.grid.actions.leave_safe_mode()
             
             # Display safe mode end in status bar
         
