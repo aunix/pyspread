@@ -909,3 +909,22 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
                 
         # Continue
         return False
+
+    def _replace_bbox_none(self, bbox):
+        """Returns bbox, in which None is replaced by grid boundaries"""
+        
+        (bb_top, bb_left), (bb_bottom, bb_right) = bbox
+        
+        if bb_top is None:
+            bb_top = 0
+        
+        if bb_left is None:
+            bb_left = 0    
+        
+        if bb_bottom is None:
+            bb_bottom = self.code_array.shape[0] - 1
+        
+        if bb_right is None:
+            bb_right = self.code_array.shape[1] - 1  
+        
+        return (bb_top, bb_left), (bb_bottom, bb_right)

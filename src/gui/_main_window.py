@@ -428,8 +428,10 @@ class MainWindowEventHandlers(object):
         post_command_event(self.main_window, ResizeGridMsg, 
                            dim=dim)
         
-        # Display grid creation in status bar
+        self.main_window.grid.GetTable().ResetView()
+        self.main_window.grid.ForceRefresh()
         
+        # Display grid creation in status bar
         statustext = "New grid with dimensions " + str(dim) + " created."
         post_command_event(self.main_window, StatusBarMsg, text=statustext)
 

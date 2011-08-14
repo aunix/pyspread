@@ -343,7 +343,9 @@ class ClipboardActions(object):
             bb_top, bb_left = self.grid.actions.cursor[:2]
             bb_bottom, bb_right = bb_top, bb_left
         else:
-            (bb_top, bb_left), (bb_bottom, bb_right) = selection.get_bbox()
+            replace_none = self.main_window.grid.actions._replace_bbox_none
+            (bb_top, bb_left), (bb_bottom, bb_right) = \
+                            replace_none(selection.get_bbox())
         
         data = []
         
@@ -398,6 +400,8 @@ class ClipboardActions(object):
         for data_row, line in enumerate(data_lines):
             for data_col, value in enumerate(line.split()):
                 self.grid.code_array[row+data_row, col+data_col, tab] = value
+        
+        self.main_window.grid.ForceRefresh()
 
 class MacroActions(object):
     """Actions which affect macros"""
