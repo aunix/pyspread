@@ -56,6 +56,7 @@ from gui._grid_table import GridTable
 from gui._events import *
 from lib._interfaces import sign, verify, is_pyme_present
 from lib.selection import Selection
+from model.model import DictGrid
 
 from actions._grid_cell_actions import CellActions
 
@@ -111,6 +112,33 @@ class FileActions(object):
                          "activated. Select File -> Approve to leave safe mode."
             post_command_event(self.main_window, StatusBarMsg, text=statustext)
 
+    def _get_file_version(self, infile):
+        """Returns infile version string."""
+        
+        # Determine file version
+        for line1 in infile:
+            break
+        for line2 in infile:
+            break
+        if line1.strip() != "[Pyspread save file version]":
+            errortext = "File format unsupported. " + filepath + \
+                " seems not to be a pyspread save file version 0.1."
+            raise ValueError, errortext
+        
+        return line2.strip()
+
+    def _abort_open(self, filepath, infile):
+        """Aborts file open"""
+        
+        statustext = "File loading aborted."
+        post_command_event(self.main_window, StatusBarMsg, 
+                           text=statustext)
+        
+        infile.close()
+        
+        self.opening = False
+        self.need_abort = False
+
     def open(self, event):
         """Opens a file that is specified in event.attr
         
@@ -118,15 +146,21 @@ class FileActions(object):
         ----------
         event.attr: Dict
         \tkey filepath contains file path of file to be loaded
-        \tkey interface contains interface class for loading file
         
         """
         
-        interface = event.attr["interface"]()
         filepath = event.attr["filepath"]
         
+        # Set states for file open
+        
+        self.opening = True
+        self.need_abort = False
+        
+        # Print this on IOErrors when reading from the infile
+        ioerror_statustext = "Error reading from file " + filepath + "."
+        
         try:
-            interface.open(filepath)
+            infile = bz2.BZ2File(filepath, "r")
             
         except IOError:
             statustext = "Error opening file " + filepath + "."
@@ -137,37 +171,76 @@ class FileActions(object):
         # Make loading safe
         self.approve(filepath)
         
-        # Get cell values
+        # Abort if file version not supported
         try:
-            self.grid.code_array.dict_grid = interface.get_values()
+            version = self._get_file_version(infile)
+            if version != "0.1":
+                statustext = "File version " + version + \
+                             "unsupported (not 0.1)."
+                post_command_event(self.main_window, StatusBarMsg, 
+                                   text=statustext)
+                return False
             
+        except (IOError, ValueError), errortext:
+            post_command_event(self.main_window, StatusBarMsg, text=errortext)
+        
+        # Parse content
+
+        def parser(*args):
+            """Dummy parser. Raises ValueError"""
+            
+            raise ValueError_grid_actions.py, "No section parser present."
+
+        section_readers = { \
+            "[shape]": self.code_array.dict_grid.parse_to_shape,
+            "[grid]": self.code_array.dict_grid.parse_to_grid,
+            "[attributes]": self.code_array.dict_grid.parse_to_attribute,
+            "[row_heights]": self.code_array.dict_grid.parse_to_height,
+            "[col_widths]": self.code_array.dict_grid.parse_to_width,
+            "[macros]": self.code_array.dict_grid.parse_to_macro,
+        }
+        
+        try:
+            for cycle, line in enumerate(infile):
+                stripped_line = line.strip()
+                if stripped_line:
+                    # There is content in this line
+                    if stripped_line in section_readers:
+                        # Switch parser
+                        parser = section_readers[stripped_line]
+                    else:
+                        # Parse line
+                        parser(line)
+                        if stripped_line == "[shape]":
+                            shape = self.code_array.shape
+                            # Empty grid
+                            self.code_array.dict_grid = DictGrid(shape)
+                            self.grid.table.ResetView()
+                else:
+                   pass
+                   
+                # Enable abort during long saves
+                if self._is_aborted(cycle, "Loading file... "):
+                    self._abort_open(filepath, outfile)
+                    return False
+        
         except IOError:
             statustext = "Error opening file " + filepath + "."
             post_command_event(self.main_window, StatusBarMsg, text=statustext)
             
             return False
         
-        interface.close()
+        infile.close()
+        self.opening = False
         
-        _grid_table = GridTable(self.grid, self.grid.code_array)
-        self.grid.SetTable(_grid_table, True)
+        self.grid.GetTable().ResetView()
+        self.grid.ForceRefresh()
         
-        ## TODO: Reset row and col sizes and then adjust anew 
-        ## --> best made in change table
-#        # Adjust rows 
-#        print self.grid.code_array.row_heights
-#        for key in self.grid.code_array.row_heights:
-#            if key[1] == self.grid.current_table:
-#                row = key[0]
-#                self.grid.SetRowSize(row, self.grid.code_array.row_heights[key])
-#            
-#        # Adjust columns
-#        for key in self.grid.code_array.col_widths:
-#            if key[1] == self.grid.current_table:
-#                col = key[0]
-#            self.grid.SetColSize(col, self.grid.code_array.col_widths[key])
-
-    
+        # File sucessfully opened
+        statustext = str(cycle) + " lines successfully read from " + \
+                     filepath + "."
+        post_command_event(self.main_window, StatusBarMsg, text=statustext)
+        
     def sign_file(self, filepath):
         """Signs file if possible"""
         
@@ -186,7 +259,7 @@ class FileActions(object):
             self.main_window.interfaces.display_warning(msg, short_msg)
 
     def _abort_save(self, filepath, outfile):
-        """Aborts import"""
+        """Aborts file save"""
         
         statustext = "Save aborted."
         post_command_event(self.main_window, StatusBarMsg, 
@@ -215,62 +288,67 @@ class FileActions(object):
         self.saving = True
         self.need_abort = False
         
+        # Print this on IOErrors when writing to the outfile
+        ioerror_statustext = "Error writing to file " + filepath + "."
+        
         # Save file is compressed
-        outfile = bz2.BZ2File(filepath, "wb")
+        try:
+            outfile = bz2.BZ2File(filepath, "wb")
+            
+        except IOError:
+            statustext = "Error opening file " + filepath + "."
+            post_command_event(self.main_window, StatusBarMsg, text=statustext)
+            return False
+    
+        # Header
+        try:
+            outfile.write("[Pyspread save file version]\n")
+            outfile.write("0.1\n")
+            
+        except IOError:
+            post_command_event(self.main_window, StatusBarMsg, 
+                               text=ioerror_statustext)
+            return False
         
-        # Grid content
+        # The output generators yield the lines for the outfile
+        output_generators = [ \
+            # Grid content
+            dict_grid.grid_to_strings(),
+            # Cell attributes
+            dict_grid.attributes_to_strings(),
+            # Row heights
+            dict_grid.heights_to_strings(),
+            # Column widths
+            dict_grid.widths_to_strings(),
+            # Macros
+            dict_grid.macros_to_strings(),
+        ]
         
-        for i, line in enumerate(dict_grid.grid_to_strings()):
-            
-            outfile.write(line)
-            
-            if self._is_aborted("Saving grid... ", i, len(dict_grid)):
-                self._abort_save(filepath, outfile)
-                return 0
-
-        # Cell attributes
+        # Options for self._is_aborted
+        abort_options_list = [ \
+            ["Saving grid... ", len(dict_grid), 100000],
+            ["Saving cell attributes... ", len(dict_grid.cell_attributes)],
+            ["Saving row heights... ", len(dict_grid.row_heights)],
+            ["Saving column widths... ", len(dict_grid.col_widths)],
+            ["Saving macros... ", dict_grid.macros.count("\n")],
+        ]
         
-        for i, line in enumerate(dict_grid.attributes_to_strings()):
-            
-            outfile.write(line)
-            
-            if self._is_aborted("Saving cell attributes... ", i, 
-                                len(dict_grid.cell_attributes)):
-                self._abort_save(filepath, outfile)
-                return 0
+        # Save cycle
         
-        # Row heights
-        
-        for i, line in enumerate(dict_grid.heights_to_strings()):
-            
-            outfile.write(line)
-            
-            if self._is_aborted("Saving row heights... ", i, 
-                                len(dict_grid.row_heights)):
-                self._abort_save(filepath, outfile)
-                return 0
-        
-        # Column widths
-        
-        for i, line in enumerate(dict_grid.widths_to_strings()):
-            
-            outfile.write(line)
-            
-            if self._is_aborted("Saving column widths... ", i,
-                                len(dict_grid.col_widths)):
-                self._abort_save(filepath, outfile)
-                return 0
-        
-        # Macros
-
-        for i, line in enumerate(dict_grid.macros_to_strings()):
-            
-            outfile.write(line)
-            
-            if self._is_aborted("Saving macros... ", i,
-                                dict_grid.macros.count("\n")):
-                self._abort_save(filepath, outfile)
-                return 0
+        for generator, options in zip(output_generators, abort_options_list):
+            for cycle, line in enumerate(generator):
+                try:
+                    outfile.write(line)
+                    
+                except IOError:
+                    post_command_event(self.main_window, StatusBarMsg, 
+                                       text=ioerror_statustext)
+                    return False
+                
+                # Enable abort during long saves
+                if self._is_aborted(cycle, *options):
+                    self._abort_save(filepath, outfile)
+                    return False
 
         # Save is done
 
@@ -421,9 +499,9 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
         for src_row, col_data in enumerate(data):
             target_row = tl_row + src_row
             
-            if self._is_aborted("Pasting cells... ", src_row):
+            if self._is_aborted(src_row, "Pasting cells... "):
                 self._abort_paste()
-                return 0
+                return False
             
             # Check if rows fit into grid
             if target_row >= grid_rows:
@@ -791,7 +869,7 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
         FindActions.__init__(self)
         CellActions.__init__(self)
 
-    def _is_aborted(self, statustext, cycle, total_elements=None, freq=1000):
+    def _is_aborted(self, cycle, statustext, total_elements=None, freq=1000):
         """Displays progress and returns True if abort
         
         Parameters
@@ -810,7 +888,7 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
         
         # Show progress in statusbar each 1000 cells
         if cycle % 1000 == 0:
-            # See if we know how mucvh data comes along
+            # See if we know how much data comes along
             if total_elements is None:
                 total_elements_str = ""
             else:

@@ -143,6 +143,20 @@ class GridTable(wx.grid.PyGridTableBase):
         self._rows = self.GetNumberRows()
         self._cols = self.GetNumberCols()
 
+        # Adjust rows 
+        row_heights = grid.code_array.row_heights
+        for key in row_heights:
+            if key[1] == grid.current_table:
+                row = key[0]
+                grid.SetRowSize(row, row_heights[key])
+            
+        # Adjust columns
+        col_widths = grid.code_array.col_widths
+        for key in col_widths:
+            if key[1] == self.grid.current_table:
+                col = key[0]
+                grid.SetColSize(col, col_widths[key])
+
         # update the scrollbars and the displayed part 
         # of the grid
         
