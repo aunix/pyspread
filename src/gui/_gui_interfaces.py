@@ -114,7 +114,7 @@ class ModalDialogInterfaceMixin(object):
         """Displays a warning message"""
         
         dlg = GMD.GenericMessageDialog(self.main_window, message, short_message,
-                                       wx.CANCEL | wx.ICON_WARNING)
+                                       wx.OK | wx.ICON_WARNING)
         dlg.ShowModal()
         dlg.Destroy()
 
@@ -129,7 +129,7 @@ class ModalDialogInterfaceMixin(object):
         
         dlg.Destroy()
         
-        return choice
+        return choice == wx.ID_YES
 
     def get_print_setup(self, print_data):
         """Opens print setup dialog and returns print_data"""

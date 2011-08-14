@@ -88,7 +88,7 @@ class CsvInterface(object):
                 yield self._get_csv_cells_gen(line)
                 self.first_line = False
                                               
-        except Error, err:
+        except Exception, err:
             msg = 'The file "' + self.csvfilename + '" only partly loaded.' + \
                   '\n \nError message:\n' + str(err)
             short_msg = 'Error reading CSV file'

@@ -153,6 +153,104 @@ class DictGrid(KeyValueStore):
                       str(key) + " outside grid shape " + str(shape)
         
         return KeyValueStore.__getitem__(self, key)
+    
+    def grid_to_strings(self):
+        """Yields a string that represents the grid content for saving
+        
+        Format
+        ------
+        
+        [grid]
+        row\tcol\ttab\tcode\n
+        ...
+        
+        """
+        
+        yield u"[grid]\n"
+        
+        for key in self:
+            yield "\t".join([repr(ele) for ele in key] + [self[key]]) + "\n"
+
+    def attributes_to_strings(self):
+        """Yields a string that represents the cell attributes for saving
+        
+        Format
+        ------
+        
+        [attributes]
+        selection[0]\t...\tselection[5]\ttab\tkey\tvalue\t...\tkey\tvalue\n
+        ...
+        
+        """
+        
+        yield u"[attributes]\n"
+        for selection, tab, attr_dict in self.cell_attributes:
+            sel_list = [selection.block_tl, selection.block_br, 
+                        selection.rows, selection.cols, selection.cells]
+                        
+            tab_list = [tab]
+            
+            attr_dict_list = []
+            for key in attr_dict:
+                attr_dict_list.append(key)
+                attr_dict_list.append(attr_dict[key])
+                
+            line_list = map(repr, sel_list + tab_list + attr_dict_list)
+            
+            yield "\t".join(line_list) + "\n"
+
+            
+    def heights_to_strings(self):
+        """Yields a string that represents the row heights for saving
+        
+        Format
+        ------
+        
+        [row_heights]
+        row\ttab\tvalue\n
+        ...
+        
+        """
+        
+        yield u"[row_heights]\n"
+        
+        for row, tab in self.row_heights:
+            height_strings = map(repr, [row, tab, self.row_heights[(row, tab)]])
+            yield "\t".join(height_strings) + "\n"
+
+    def widths_to_strings(self):
+        """Yields a string that represents the column widths for saving
+        
+        Format
+        ------
+        
+        [col_widths]
+        col\ttab\tvalue\n
+        ...
+        
+        """
+        
+        yield u"[col_widths]\n"
+        
+        for col, tab in self.col_widths:
+            width_strings = map(repr, [col, tab, self.col_widths[(col, tab)]])
+            yield "\t".join(width_strings) + "\n"
+            
+    def macros_to_strings(self):
+        """Yields a string that represents the content for saving
+        
+        Format
+        ------
+        
+        [macros]
+        Macro code
+        
+        """
+        
+        yield u"[macros]\n"
+        
+        for line in self.macros.split("\n"):
+            yield line + "\n"
 
 # End of class DictGrid
 
@@ -650,6 +748,7 @@ class CodeArray(DataArray):
 
         try:
             exec(self.macros, globals())
+            
         except Exception, err:
             print err
 

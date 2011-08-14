@@ -46,6 +46,9 @@ Provides:
 
 """
 
+import bz2
+from copy import copy
+
 from config import ZOOM_FACTOR, MINIMUM_ZOOM, MAXIMUM_ZOOM
 from config import default_cell_attributes
 
@@ -60,8 +63,10 @@ class FileActions(object):
     """File actions on the grid"""
     
     def __init__(self):
+        self.saving = False
+        
         self.main_window.Bind(EVT_COMMAND_GRID_ACTION_OPEN, self.open) 
-        self.main_window.Bind(EVT_COMMAND_GRID_ACTION_SAVE, self.save) 
+        self.main_window.Bind(EVT_COMMAND_GRID_ACTION_SAVE, self.save)
 
     def validate_signature(self, filename):
         """Returns True if a valid signature is present for filename"""
@@ -171,11 +176,27 @@ class FileActions(object):
             signfile = open(filepath + '.sig','wb')
             signfile.write(signature)
             signfile.close()
+            msg = 'File successfully saved and signed.'
+            statustext = 'File saved and signed'
+            post_command_event(self.main_window, StatusBarMsg, 
+                               text=statustext)
         else:
             msg = 'Cannot sign the file. Maybe PyMe is not installed.'
             short_msg = 'Cannot sign file!'
             self.main_window.interfaces.display_warning(msg, short_msg)
 
+    def _abort_save(self, filepath, outfile):
+        """Aborts import"""
+        
+        statustext = "Save aborted."
+        post_command_event(self.main_window, StatusBarMsg, 
+                           text=statustext)
+        
+        outfile.close()
+        os.remove(filepath)
+        
+        self.saving = False
+        self.need_abort = False
     
     def save(self, event):
         """Saves a file that is specified in event.attr
@@ -184,14 +205,81 @@ class FileActions(object):
         ----------
         event.attr: Dict
         \tkey filepath contains file path of file to be saved
-        \tkey interface contains interface class for saving file
         
         """
         
-        interface = event.attr["interface"]()
         filepath = event.attr["filepath"]
         
-        interface.save(self.code_array.dict_grid, filepath)
+        dict_grid = self.code_array.dict_grid
+        
+        self.saving = True
+        self.need_abort = False
+        
+        # Save file is compressed
+        outfile = bz2.BZ2File(filepath, "wb")
+        
+        # Grid content
+        
+        for i, line in enumerate(dict_grid.grid_to_strings()):
+            
+            outfile.write(line)
+            
+            if self._is_aborted("Saving grid... ", i, len(dict_grid)):
+                self._abort_save(filepath, outfile)
+                return 0
+
+        # Cell attributes
+        
+        for i, line in enumerate(dict_grid.attributes_to_strings()):
+            
+            outfile.write(line)
+            
+            if self._is_aborted("Saving cell attributes... ", i, 
+                                len(dict_grid.cell_attributes)):
+                self._abort_save(filepath, outfile)
+                return 0
+        
+        # Row heights
+        
+        for i, line in enumerate(dict_grid.heights_to_strings()):
+            
+            outfile.write(line)
+            
+            if self._is_aborted("Saving row heights... ", i, 
+                                len(dict_grid.row_heights)):
+                self._abort_save(filepath, outfile)
+                return 0
+        
+        # Column widths
+        
+        for i, line in enumerate(dict_grid.widths_to_strings()):
+            
+            outfile.write(line)
+            
+            if self._is_aborted("Saving column widths... ", i,
+                                len(dict_grid.col_widths)):
+                self._abort_save(filepath, outfile)
+                return 0
+        
+        # Macros
+
+        for i, line in enumerate(dict_grid.macros_to_strings()):
+            
+            outfile.write(line)
+            
+            if self._is_aborted("Saving macros... ", i,
+                                dict_grid.macros.count("\n")):
+                self._abort_save(filepath, outfile)
+                return 0
+
+        # Save is done
+
+        outfile.close()
+        
+        self.saving = False
+        
+        # Sign so that the new file may be retrieved without safe mode
+        
         self.sign_file(filepath)
 
 
@@ -268,16 +356,16 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
         
         # If paste is running and Esc is pressed then we need to abort
         
-        if self.pasting and event.GetKeyCode() == wx.WXK_ESCAPE:
+        if event.GetKeyCode() == wx.WXK_ESCAPE and \
+           self.pasting or self.saving:
             self.need_abort = True
         
         event.Skip()
     
-    def _abort_paste(self, src_row):
+    def _abort_paste(self):
         """Aborts import"""
         
-        statustext = "Import aborted after importing " + \
-                     str(src_row) + " rows."
+        statustext = "Paste aborted."
         post_command_event(self.main_window, StatusBarMsg, 
                            text=statustext)
         
@@ -301,14 +389,6 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
                      "Use a larger grid for full import."
         post_command_event(self.main_window, StatusBarMsg, text=statustext)
     
-    def _show_paste_progress(self, src_row, abort_msg=False):
-        """Shows progress in statusbar"""
-        
-        statustext = str(src_row) + " rows imported."
-        if abort_msg:
-            statustext += " Press <Esc> to abort."
-        post_command_event(self.main_window, StatusBarMsg, text=statustext)
-    
     def paste(self, tl_key, data):
         """Pastes data into grid table starting at top left cell tl_key
         
@@ -325,7 +405,7 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
         self.pasting = True
         
         grid_rows, grid_cols, _ = self.grid.code_array.shape
-        
+                
         self.need_abort = False
         
         try:
@@ -341,40 +421,31 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
         for src_row, col_data in enumerate(data):
             target_row = tl_row + src_row
             
-            # Show progress in statusbar each 1000 rows
-            
-            if src_row % 1000 == 0:
-                self._show_paste_progress(src_row, abort_msg=True)
-                
-                # Now wait for the statusbar update to be written on screen
-                wx.Yield()
-                
-                # Abort if we have to
-                if self.need_abort:
-                    self._abort_paste(src_row)
-                    return
-
+            if self._is_aborted("Pasting cells... ", src_row):
+                self._abort_paste()
+                return 0
             
             # Check if rows fit into grid
-            if target_row > grid_rows:
+            if target_row >= grid_rows:
                 row_overflow = True
                 break
             
             for src_col, cell_data in enumerate(col_data):
                 target_col = tl_col + src_col
                 
-                if target_col > grid_cols:
+                if target_col >= grid_cols:
                     col_overflow = True
                     break
                 
                 key = target_row, target_col, tl_tab
                 
-                self.grid.code_array[key] = cell_data
+                try:
+                    self.grid.code_array[key] = cell_data
+                except KeyError:
+                    pass
         
         if row_overflow or col_overflow:
             self._show_final_overflow_message(row_overflow, col_overflow)
-        else:
-            self._show_paste_progress(src_row)
 
         self.pasting = False
 
@@ -719,3 +790,44 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
         SelectionActions.__init__(self)
         FindActions.__init__(self)
         CellActions.__init__(self)
+
+    def _is_aborted(self, statustext, cycle, total_elements=None, freq=1000):
+        """Displays progress and returns True if abort
+        
+        Parameters
+        ----------
+        
+        statustext: String
+        \tLeft text in statusbar to be displayed
+        cycle: Integer
+        \tThe current operation cycle
+        total_elements: Integer:
+        \tThe number of elements that have to be processed
+        freq: Integer, defaults to 1000
+        \tNo. operations between two abort possibilities
+        
+        """
+        
+        # Show progress in statusbar each 1000 cells
+        if cycle % 1000 == 0:
+            # See if we know how mucvh data comes along
+            if total_elements is None:
+                total_elements_str = ""
+            else:
+                total_elements_str = " of " + str(total_elements)
+                
+            statustext = statustext + str(cycle) + total_elements_str + \
+                        " elements processed. Press <Esc> to abort."
+            post_command_event(self.main_window, StatusBarMsg, 
+                       text=statustext)
+            
+            # Now wait for the statusbar update to be written on screen
+            wx.Yield()
+            
+            # Abort if we have to
+            if self.need_abort:
+                # We have to abort`
+                return True
+                
+        # Continue
+        return False

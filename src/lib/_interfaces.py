@@ -95,13 +95,9 @@ class SafeUnpickler(object):
     """Unpicklung with this class only allows PICKLE_SAVE classes"""
     
     PICKLE_SAFE = {
-        'copy_reg': set(['_reconstructor']),
         '__builtin__': set(['object']),
-        'numpy': set(['ndarray', 'dtype']),
-        'numpy.core.multiarray': set(['_reconstruct']),
-        'lib._interfaces': set(['UserString']),
         'model.model': set(['CellAttributes', 'DictGrid']),
-        'wx._gdi': set(['Colour']),
+        'model.unredo': set(['UnRedo']),
     }
  
     @classmethod

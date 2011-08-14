@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Tasks SYSTEM "Tasks-4.2.dtd">
 <!-- eric4 tasks file for project pyspread -->
-<!-- Saved: 2011-08-13, 16:11:39 -->
+<!-- Saved: 2011-08-14, 02:38:27 -->
 <Tasks version="4.2">
   <Task priority="1" completed="False" bugfix="False">
     <Summary>TODO: Code for cell selection by mouse here</Summary>
@@ -22,30 +22,12 @@
     </Resource>
   </Task>
   <Task priority="1" completed="False" bugfix="False">
-    <Summary>TODO: Reset row and col sizes and then adjust anew</Summary>
-    <Description></Description>
-    <Created>2011-08-13, 00:12:30</Created>
-    <Resource>
-      <Filename>src/actions/_grid_actions.py</Filename>
-      <Linenumber>150</Linenumber>
-    </Resource>
-  </Task>
-  <Task priority="1" completed="False" bugfix="False">
     <Summary>TODO: Implement wx.Python based config</Summary>
     <Description></Description>
     <Created>2011-08-13, 01:13:45</Created>
     <Resource>
       <Filename>src/config.py</Filename>
       <Linenumber>20</Linenumber>
-    </Resource>
-  </Task>
-  <Task priority="1" completed="False" bugfix="False">
-    <Summary>TODO</Summary>
-    <Description></Description>
-    <Created>2011-08-13, 14:02:13</Created>
-    <Resource>
-      <Filename>src/pyspread.py</Filename>
-      <Linenumber>101</Linenumber>
     </Resource>
   </Task>
   <Task priority="1" completed="False" bugfix="False">
@@ -64,6 +46,24 @@
     <Resource>
       <Filename>src/actions/test/test_grid_actions.py</Filename>
       <Linenumber>334</Linenumber>
+    </Resource>
+  </Task>
+  <Task priority="1" completed="False" bugfix="False">
+    <Summary>TODO</Summary>
+    <Description></Description>
+    <Created>2011-08-13, 23:39:09</Created>
+    <Resource>
+      <Filename>src/pyspread.py</Filename>
+      <Linenumber>101</Linenumber>
+    </Resource>
+  </Task>
+  <Task priority="1" completed="False" bugfix="False">
+    <Summary>TODO: Reset row and col sizes and then adjust anew</Summary>
+    <Description></Description>
+    <Created>2011-08-14, 02:28:43</Created>
+    <Resource>
+      <Filename>src/actions/_grid_actions.py</Filename>
+      <Linenumber>155</Linenumber>
     </Resource>
   </Task>
 </Tasks>

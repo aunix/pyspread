@@ -30,6 +30,8 @@ Provides:
 
 """
 
+import os
+
 import wx
 import wx.aui
 
@@ -503,6 +505,27 @@ class MainWindowEventHandlers(object):
                                     wildcard, message, style)
         
         if filepath is not None:
+            
+            # Look if path is already present
+            if os.path.exists(filepath):
+                if os.path.isfile(filepath):
+                    # There is a file with the same path
+                    message = "The file " + filepath + \
+                              " is already present.\nOverwrite?"
+                    short_message = "File collison"
+                    if not self.main_window.interfaces.get_warning_choice( \
+                                message, short_message):
+                        
+                        statustext = "File present. Save aborted by user."
+                        post_command_event(self.main_window, StatusBarMsg, 
+                                       text=statustext)
+                        return 0
+                else:
+                    # There is a directory with the same path
+                    statustext = "Directory present. Save aborted."
+                    post_command_event(self.main_window, StatusBarMsg, 
+                                       text=statustext)
+                    return 0
             
             # Put pys suffix if wildcard choice is 0
             
