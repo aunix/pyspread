@@ -49,6 +49,7 @@ class DefaultConfig(object):
         self.set_window_config()
         self.set_grid_config()
         self.set_gpg_config()
+        self.set_csv_config()
         
     def set_paths(self):
         """User defined paths"""
@@ -182,19 +183,6 @@ except wx.PyNoAppError:
 dpi = map(lambda (pixels, length_mm): pixels * 25.6 / length_mm, 
           zip(displaysize, wx.GetDisplaySizeMM()))
 
-
-"""
-
-Main window styling
-===================
-
-"""
-
-MAIN_WINDOW_ICON = wx.Bitmap(get_program_path() + 'share/icons/pyspread.png', \
-                             wx.BITMAP_TYPE_ANY)
-
-MAIN_WINDOW_SIZE = (int(displaysize[0] * 0.9), int(displaysize[1] * 0.9))
-HELP_SIZE = (int(displaysize[0] * 0.7), int(displaysize[1] * 0.7))
 
 """
 Grid lines
