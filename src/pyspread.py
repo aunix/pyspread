@@ -49,6 +49,9 @@ except KeyError:
 from wx import App
 from wx import InitAllImageHandlers
 
+
+from gui._events import *
+
 DEBUG = False
 
 # If pyspread is installed but run from a local dir
@@ -93,14 +96,10 @@ class MainApplication(App):
         self.SetTopWindow(self.main_window)
         self.main_window.Show()
 
-        #self.main_window.MainGrid.cursor = 0, 0
-
         # Load filename if provided
-        if self.filename is not None:
-            raise NotImplementedError
-            ## TODO
-            self.main_window.make_safe(self.filename)
-            self.main_window.loadfile(self.filename)
+        if self.filepath is not None:
+            post_command_event(self.main_window, GridActionOpenMsg, 
+                               attr={"filepath": self.filepath})
         
         return True
 
@@ -123,7 +122,7 @@ class MainApplication(App):
         from lib._interfaces import Commandlineparser
 
         cmdp = Commandlineparser()
-        self.options, self.filename = cmdp.parse()
+        self.options, self.filepath = cmdp.parse()
 
         if self.filename is None:
             self.dimensions = self.options.dimensions

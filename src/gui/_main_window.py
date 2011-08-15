@@ -37,7 +37,7 @@ import wx.aui
 
 import wx.lib.agw.genericmessagedialog as GMD
 
-from config import Config
+from config import config
 
 from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
@@ -70,8 +70,6 @@ class MainWindow(wx.Frame):
         self.handlers = MainWindowEventHandlers(self)
         
         self.icons = Icons()
-        
-        self.config = Config()
         
         # Program states
         # --------------
@@ -110,7 +108,7 @@ class MainWindow(wx.Frame):
         
         # Main grid
         
-        dimensions = self.config["grid_shape"]
+        dimensions = config["grid_shape"]
         self.grid = Grid(self, -1, dimensions=dimensions)
 
         # IntCtrl for table choice
@@ -145,8 +143,8 @@ class MainWindow(wx.Frame):
         self.set_icon(self.icons["PyspreadLogo"])
         
         # Set initial size to 90% of screen
-        self.SetInitialSize(self.config["window_size"])
-        self.SetPosition(self.config["window_position"])
+        self.SetInitialSize(config["window_size"])
+        self.SetPosition(config["window_position"])
         
         # Without minimum size, initial size is minimum size in wxGTK
         self.SetMinSize((2, 2))
@@ -204,6 +202,10 @@ class MainWindow(wx.Frame):
         """Bind events to handlers"""
         
         handlers = self.handlers
+        
+        # Main window events
+        self.Bind(wx.EVT_MOVE, handlers.OnMove)
+        self.Bind(wx.EVT_SIZE, handlers.OnSize)
         
         # Program state events
         
@@ -289,7 +291,22 @@ class MainWindowEventHandlers(object):
         self.main_window = parent
         self.interfaces = parent.interfaces
     
+    
     # Main window events
+    
+    def OnMove(self, event):
+        """Main window move event"""
+        
+        # Store window position in config
+        
+        config["window_position"] = repr(event.GetPosition())
+    
+    def OnSize(self, event):
+        """Main window move event"""
+        
+        # Store window position in config
+        
+        config["window_size"] = repr(event.GetSize())
     
     def OnTitle(self, event):
         """Title change event handler"""
@@ -330,6 +347,10 @@ class MainWindowEventHandlers(object):
         # Uninit the AUI stuff
         
         self.main_window._mgr.UnInit()
+        
+        # Save config
+        
+        config.save()
         
         # Close main_window
         
@@ -468,7 +489,7 @@ class MainWindowEventHandlers(object):
         # Load file into grid
         
         post_command_event(self.main_window, GridActionOpenMsg, 
-            attr={"filepath": filepath, "interface": PysInterface})
+                           attr={"filepath": filepath})
         
         # Set Window title to new filepath
         

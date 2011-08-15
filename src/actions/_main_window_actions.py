@@ -53,6 +53,7 @@ import wx.html
 
 from sysvars import get_help_path
 
+from config import config
 from lib._interfaces import Digest
 from gui._printout import PrintCanvas, Printout
 
@@ -467,11 +468,15 @@ class HelpActions(object):
         """
         
         # Set up window
-        size = wx.Size(*self.main_window.config["help_window_size"])
-        help_window = wx.Frame(self.main_window, -1, helpname, 
-                            wx.DefaultPosition, size)
-        help_htmlwindow = wx.html.HtmlWindow(help_window, -1, 
-                            wx.DefaultPosition, size)
+        
+        position = config["help_window_position"]
+        size = config["help_window_size"]
+        
+        help_window = wx.Frame(self.main_window, -1, helpname, position, size)
+        help_htmlwindow = wx.html.HtmlWindow(help_window, -1, (0, 0), size)
+        
+        help_window.Bind(wx.EVT_MOVE, self.OnHelpMove)
+        help_window.Bind(wx.EVT_SIZE, self.OnHelpSize)
         
         # Get help data
         current_path = os.getcwd()
@@ -492,7 +497,16 @@ class HelpActions(object):
         help_window.Show()
         
         os.chdir(current_path)
+    
+    def OnHelpMove(self, event):
+        """Help window move event handler stores position in config"""
         
+        config["help_window_position"] = repr(event.GetPosition())
+        
+    def OnHelpSize(self, event):
+        """Help window size event handler stores size in config"""
+        
+        config["help_window_size"] = repr(event.GetSize())
     
 class AllMainWindowActions(ExchangeActions, PrintActions, 
                            ClipboardActions, MacroActions, HelpActions):

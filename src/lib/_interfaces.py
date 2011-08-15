@@ -87,9 +87,7 @@ try:
 except ImportError:
     pass
 
-from config import Config, faces
-
-config = Config()
+from config import config, faces
 
 class SafeUnpickler(object):
     """Unpicklung with this class only allows PICKLE_SAVE classes"""
@@ -755,8 +753,6 @@ class Commandlineparser(object):
     """
     
     def __init__(self):
-        config = Config()
-        
         usage = "usage: %prog [options] [filename]"
         version = "%prog " + unicode(config["version"])
 

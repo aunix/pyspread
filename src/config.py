@@ -66,8 +66,8 @@ class DefaultConfig(object):
                            
         self.icon_theme ="'Tango'" 
         
-        self.help_window_position = "(15, 15)"
-        self.help_window_size = "(wx.GetDisplaySize()[0] * 7 /10," + \
+        self.help_window_position = "(wx.GetDisplaySize()[0] * 7 / 10, 15)"
+        self.help_window_size = "(wx.GetDisplaySize()[0] * 3 /10," + \
                                 " wx.GetDisplaySize()[1] * 7 /10)"
         
 
@@ -143,7 +143,14 @@ class Config(object):
         self.load()
     
     def __getitem__(self, key):
+        """Main config element read access"""
+        
         return eval(getattr(self.data, key))
+    
+    def __setitem__(self, key, value):
+        """Main config element write access"""
+        
+        setattr(self.data, key, value)
     
     def load(self):
         """Loads configuration file"""
@@ -162,7 +169,7 @@ class Config(object):
             self.cfg_file.Write(key, getattr(self.data, key))
 
 
-
+config = Config()
     
 
 """
