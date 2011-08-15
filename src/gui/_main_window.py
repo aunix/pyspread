@@ -46,7 +46,7 @@ from _widgets import EntryLine, StatusBar, TableChoiceIntCtrl
 from lib._interfaces import PysInterface, Clipboard
 
 from _gui_interfaces import GuiInterfaces
-from gui.icons import Icons
+from gui.icons import icons
 
 from _grid import Grid
 from model.model import CodeArray
@@ -68,8 +68,6 @@ class MainWindow(wx.Frame):
         self.parent = parent
         
         self.handlers = MainWindowEventHandlers(self)
-        
-        self.icons = Icons()
         
         # Program states
         # --------------
@@ -140,7 +138,7 @@ class MainWindow(wx.Frame):
     def _set_properties(self):
         """Setup title, icon, size, scale, statusbar, main grid"""
         
-        self.set_icon(self.icons["PyspreadLogo"])
+        self.set_icon(icons["PyspreadLogo"])
         
         # Set initial size to 90% of screen
         self.SetInitialSize(config["window_size"])

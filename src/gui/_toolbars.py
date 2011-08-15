@@ -41,6 +41,7 @@ from _events import *
 
 from config import FONT_SIZES, faces, default_cell_attributes
 from config import icons, icon_size, small_icon_size
+from icons import icons
 
 from lib._interfaces import get_font_list, textfont_from_string
 from lib._interfaces import get_default_font
@@ -90,7 +91,8 @@ class MainToolbar(wx.ToolBar):
 
     def __init__(self, *args, **kwargs):
         wx.ToolBar.__init__(self, *args, **kwargs)
-        self.SetToolBitmapSize(icon_size)
+        
+        self.SetToolBitmapSize(icons.icon_size)
         
         self.ids_msgs = {}
         
@@ -107,7 +109,7 @@ class MainToolbar(wx.ToolBar):
             elif obj == self.tool:
                 msgtype = tool[1]
                 label = tool[2]
-                icon = wx.Bitmap(icons[tool[3]], wx.BITMAP_TYPE_ANY)
+                icon = icons[tool[3]]
                 icon2 = wx.NullBitmap
                 tooltip = tool[4]
                 helpstring = tool[5]
@@ -161,7 +163,8 @@ class FindToolbar(wx.ToolBar):
     def __init__(self, parent, *args, **kwargs):
         kwargs["style"] = wx.TB_FLAT | wx.TB_NODIVIDER
         wx.ToolBar.__init__(self, parent, *args, **kwargs)
-        self.SetToolBitmapSize(small_icon_size)
+        
+        self.SetToolBitmapSize(icons.icon_size)
         
         self.parent = parent
         
@@ -187,7 +190,7 @@ class FindToolbar(wx.ToolBar):
             shorthelp = sfbs[name]["shorthelp"]
             longhelp = sfbs[name]["longhelp"]
             
-            bmp = wx.Bitmap(icons[iconname], wx.BITMAP_TYPE_PNG)
+            bmp = icons[iconname]
             self.AddCheckLabelTool(__id, name, bmp, 
                 shortHelp=shorthelp, longHelp=longhelp)
             
@@ -204,7 +207,7 @@ class FindToolbar(wx.ToolBar):
         """Setup of search direction toggle button for searching up and down"""
         
         iconnames = ["SearchDirectionUp", "SearchDirectionDown"]
-        bmplist = [wx.Bitmap(icons[iconname]) for iconname in iconnames]
+        bmplist = [icons[iconname] for iconname in iconnames]
         self.search_direction_tb = _widgets.BitmapToggleButton(self, bmplist)
         
         self.search_direction_tb.SetInitialSize()
@@ -325,7 +328,7 @@ class AttributesToolbar(wx.ToolBar):
         
         self.parent = parent
         
-        self.SetToolBitmapSize(small_icon_size)
+        self.SetToolBitmapSize(icons.icon_size)
         
         self._create_font_choice_combo()
         self._create_font_size_combo()
@@ -378,7 +381,7 @@ class AttributesToolbar(wx.ToolBar):
             ]
             
         for __id, method, iconname, helpstring in font_face_buttons:
-            bmp = wx.Bitmap(icons[iconname])
+            bmp = icons[iconname]
             self.AddCheckLabelTool(__id, "", bmp, shortHelp=helpstring)
             self.Bind(wx.EVT_TOOL, getattr(self, method), id=__id)
     
@@ -386,7 +389,7 @@ class AttributesToolbar(wx.ToolBar):
         """Creates horizontal justification button"""
         
         iconnames = ["JustifyLeft", "JustifyCenter", "JustifyRight"]
-        bmplist = [wx.Bitmap(icons[iconname]) for iconname in iconnames]
+        bmplist = [icons[iconname] for iconname in iconnames]
         self.justify_tb = _widgets.BitmapToggleButton(self, bmplist)
         self.Bind(wx.EVT_BUTTON, self.OnJustification, self.justify_tb)
         self.AddControl(self.justify_tb)
@@ -395,7 +398,7 @@ class AttributesToolbar(wx.ToolBar):
         """Creates vertical alignment button"""
         
         iconnames = ["AlignTop", "AlignCenter", "AlignBottom"]
-        bmplist = [wx.Bitmap(icons[iconname]) for iconname in iconnames]
+        bmplist = [icons[iconname] for iconname in iconnames]
         
         self.alignment_tb = _widgets.BitmapToggleButton(self, bmplist)
         self.Bind(wx.EVT_BUTTON, self.OnAlignment, self.alignment_tb)

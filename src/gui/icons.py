@@ -36,71 +36,107 @@ import wx
 
 from sysvars import get_program_path
 
-class Icons(object):
-    """Custom art provider class for providing additional icons"""
+class _ArtProvider(wx.ArtProvider):
+    """Provides extra icons in addition to the standard ones
     
+    Used only by Icons class
+    
+    """
+    
+    def __init__(self, theme, icon_size):
+        
+        wx.ArtProvider.__init__(self)
+        
+        _size_str = "x".join(map(str, icon_size))
+        
+        _theme_path = get_program_path() + "share/icons/" 
+        _icon_path = _theme_path + theme + "/" + _size_str + "/"
+        _action_path = _icon_path + "actions/"
+        _toggle_path = _icon_path + "toggles/"
+    
+        self.extra_icons = { \
+            "PyspreadLogo": _theme_path + "pyspread.png",
+            "EditCopyRes": _action_path + "edit-copy-results.png",
+            "FormatTextBold": _action_path + "format-text-bold.png",
+            "FormatTextItalic": _action_path + "format-text-italic.png",
+            "FormatTextUnderline": _action_path + \
+                                            "format-text-underline.png",
+            "FormatTextStrikethrough": _action_path + \
+                                            "format-text-strikethrough.png",
+            "JustifyRight": _action_path + "format-justify-right.png",
+            "JustifyCenter": _action_path + "format-justify-center.png",
+            "JustifyLeft": _action_path + "format-justify-left.png",
+            "AlignTop": _action_path + "format-text-aligntop.png",
+            "AlignCenter": _action_path + "format-text-aligncenter.png", 
+            "AlignBottom": _action_path + "format-text-alignbottom.png", 
+            "Freeze": _action_path + "frozen_small.png",
+            "AllBorders": _toggle_path + "border_all.xpm",
+            "LeftBorders": _toggle_path + "border_left.xpm",
+            "RightBorders": _toggle_path + "border_right.xpm",
+            "TopBorders": _toggle_path + "border_top.xpm",
+            "BottomBorders": _toggle_path + "border_bottom.xpm",
+            "InsideBorders": _toggle_path + "border_inside.xpm",
+            "OutsideBorders": _toggle_path + "border_outside.xpm",
+            "TopBottomBorders": _toggle_path + "border_top_n_bottom.xpm",
+            "SearchCaseSensitive": _toggle_path + "aA.png",
+            "SearchRegexp": _toggle_path + "regex.png",
+            "SearchWholeword": _toggle_path + "wholeword.png",
+            }
+            
+    
+    def CreateBitmap(self, artid, client, size):
+        """Adds custom images to Artprovider"""
+        
+        if artid in self.extra_icons:
+            return wx.Bitmap(self.extra_icons[artid], wx.BITMAP_TYPE_ANY)
+            
+        else:
+            return wx.ArtProvider.GetBitmap(artid, client, size)
+        
+
+class Icons(object):
+    """Provides icons for pyspread"""
+        
     theme = "Tango"
     
     icon_size = (24, 24)
-    wide_icon = ""
+    icon_set = wx.ART_OTHER
     
-    _action_path = get_program_path() + "share/icons/" + theme + "/" + \
-                   str(icon_size[0]) + "x" + str(icon_size[1]) + \
-                   "/actions/"
-                   
-    _action_path_small = get_program_path() + "share/icons/" + theme + "/" + \
-                         str(icon_size[0]) + "x" + \
-                         str(icon_size[1]) + "/actions/"
-                   
-    _toggle_path = get_program_path() + "share/icons/" + theme + "/" + \
-                   str(icon_size[0]) + "x" + str(icon_size[1]) + \
-                   "/toggles/"
+    icons = { \
+        "FileNew": wx.ART_NEW, 
+        "FileOpen": wx.ART_FILE_OPEN, 
+        "FileSave": wx.ART_FILE_SAVE, 
+        "FilePrint": wx.ART_PRINT, 
+        "EditCut": wx.ART_CUT, 
+        "EditCopy": wx.ART_COPY,
+        "EditPaste": wx.ART_PASTE,
+        "Undo": wx.ART_UNDO,
+        "Redo": wx.ART_REDO,
+        "Find": wx.ART_FIND,
+        "FindReplace": wx.ART_FIND_AND_REPLACE,
+        "SearchDirectionUp": wx.ART_GO_UP,
+        "SearchDirectionDown": wx.ART_GO_DOWN,
+        }
     
-    icons = {"PyspreadLogo": "pyspread.png", 
-             "FileNew": _action_path + "filenew.png", 
-             "FileOpen": _action_path + "fileopen.png", 
-             "FileSave": _action_path + "filesave.png", 
-             "FilePrint": _action_path + "fileprint.png", 
-             "EditCut": _action_path + "edit-cut.png", 
-             "EditCopy": _action_path + "edit-copy.png", 
-             "EditCopyRes": _action_path + "edit-copy-results.png", 
-             "EditPaste": _action_path + "edit-paste.png",
-             "Undo": _action_path + "edit-undo.png",
-             "Redo": _action_path + "edit-redo.png",
-             "Find": _action_path + "edit-find.png",
-             "FindReplace": _action_path + "edit-find-replace.png",
-             "FormatTextBold": _action_path_small + "format-text-bold.png",
-             "FormatTextItalic": _action_path_small + "format-text-italic.png",
-             "FormatTextUnderline": _action_path_small + \
-                                                "format-text-underline.png",
-             "FormatTextStrikethrough": _action_path_small + \
-                                                "format-text-strikethrough.png",
-             "JustifyRight": _action_path_small + "format-justify-right.png",
-             "JustifyCenter": _action_path_small + "format-justify-center.png",
-             "JustifyLeft": _action_path_small + "format-justify-left.png",
-             "AlignTop": _action_path_small + "format-text-aligntop.png",
-             "AlignCenter": _action_path_small + "format-text-aligncenter.png", 
-             "AlignBottom": _action_path_small + "format-text-alignbottom.png", 
-             "Freeze": _action_path_small + "frozen_small.png",
-             "AllBorders": _toggle_path + "border_all.xpm",
-             "LeftBorders": _toggle_path + "border_left.xpm",
-             "RightBorders": _toggle_path + "border_right.xpm",
-             "TopBorders": _toggle_path + "border_top.xpm",
-             "BottomBorders": _toggle_path + "border_bottom.xpm",
-             "InsideBorders": _toggle_path + "border_inside.xpm",
-             "OutsideBorders": _toggle_path + "border_outside.xpm",
-             "TopBottomBorders": _toggle_path + "border_top_n_bottom.xpm",
-             "SearchDirectionUp": _toggle_path + "go-down.png",
-             "SearchDirectionDown": _toggle_path + "go-up.png",
-             "SearchCaseSensitive": _toggle_path + "aA" + wide_icon + ".png",
-             "SearchRegexp": _toggle_path + "regex" + wide_icon + ".png",
-             "SearchWholeword": _toggle_path + "wholeword" + wide_icon + ".png",
-             }
+    def __init__(self):
+        wx.ArtProvider.Push(_ArtProvider(self.theme, self.icon_size))
+                 
     
-
-    def __getitem__(self, key):
-        """Returns bmps by name"""
+    def __getitem__(self, icon_name):
+        """Returns by bitmap
         
-        icon_path = get_program_path() + 'share/icons/' + self.icons[key]
+        Parameters
+        ----------
+        icon_name: String
+        \tString identifier of the icon.
         
-        return wx.Bitmap(icon_path, wx.BITMAP_TYPE_ANY)
+        """
+        
+        if icon_name in self.icons:
+            icon_name = self.icons[icon_name]
+        
+        bmp = wx.ArtProvider.GetBitmap(icon_name, self.icon_set, self.icon_size)
+        
+        return bmp
+        
+icons = Icons()
