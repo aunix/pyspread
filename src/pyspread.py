@@ -100,6 +100,7 @@ class MainApplication(App):
         if self.filepath is not None:
             post_command_event(self.main_window, GridActionOpenMsg, 
                                attr={"filepath": self.filepath})
+            self.main_window.filepath = self.filepath
         
         return True
 

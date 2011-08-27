@@ -39,11 +39,6 @@ Provides:
 class CellActions(object):
     """Mixin class that supplies Cell code additions, changes and deletion"""
         
-    def set_cell_code_fast(self,  key,  code):
-        """Sets code for key cell"""
-        
-        self.code_array.__setitem__(key, code, fast=True)
-        
     def delete_cell(self,  key):
         """Deletes key cell"""
         

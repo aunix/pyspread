@@ -399,7 +399,7 @@ class ClipboardActions(object):
         row, col, tab = key
         
         for data_row, line in enumerate(data_lines):
-            for data_col, value in enumerate(line.split()):
+            for data_col, value in enumerate(line.split("\t")):
                 self.grid.code_array[row+data_row, col+data_col, tab] = value
         
         self.main_window.grid.ForceRefresh()

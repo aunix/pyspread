@@ -49,7 +49,7 @@ Provides:
 import bz2
 from copy import copy
 
-from config import default_cell_attributes
+from config import config, default_cell_attributes
 
 from gui._grid_table import GridTable
 from gui._events import *
@@ -200,6 +200,9 @@ class FileActions(object):
             "[macros]": self.code_array.dict_grid.parse_to_macro,
         }
         
+        # Disable undo
+        self.grid.code_array.unredo.active = True
+        
         try:
             for cycle, line in enumerate(infile):
                 stripped_line = line.strip()
@@ -232,6 +235,9 @@ class FileActions(object):
         
         infile.close()
         self.opening = False
+        
+        # Enable undo again
+        self.grid.code_array.unredo.active = False
         
         self.grid.GetTable().ResetView()
         self.grid.ForceRefresh()
@@ -632,9 +638,9 @@ class GridActions(object):
         
         zoom = self.grid.grid_renderer.zoom
         
-        target_zoom = zoom * (1 + self.main_window.config["zoom_factor"])
+        target_zoom = zoom * (1 + config["zoom_factor"])
         
-        if target_zoom < self.main_window.config["maximum_zoom"]:
+        if target_zoom < config["maximum_zoom"]:
             self.zoom(target_zoom)
         
     def zoom_out(self):
@@ -642,9 +648,9 @@ class GridActions(object):
         
         zoom = self.grid.grid_renderer.zoom
         
-        target_zoom = zoom * (1 - self.main_window.config["zoom_factor"])
+        target_zoom = zoom * (1 - config["zoom_factor"])
         
-        if target_zoom > self.main_window.config["minimum_zoom"]:
+        if target_zoom > config["minimum_zoom"]:
             self.zoom(target_zoom)
     
     def on_mouse_over(self, key):

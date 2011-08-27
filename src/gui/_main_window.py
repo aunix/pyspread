@@ -102,7 +102,7 @@ class MainWindow(wx.Frame):
         self.attributes_toolbar = AttributesToolbar(self, -1)
         
         # Entry line
-        self.entry_line = EntryLine(self)
+        self.entry_line = EntryLine(self, style=wx.TE_PROCESS_ENTER)
         
         # Main grid
         

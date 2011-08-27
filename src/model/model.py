@@ -104,6 +104,10 @@ class CellAttributes(list):
         "frozen": False,
     }
     
+    # Cache for __getattr__ maps key to tuple of len and attr_dict
+    
+    _attr_cache = {}
+    
     def undoable_append(self, value):
         """Appends item to list and provides undo and redo functionality"""
         
@@ -121,6 +125,13 @@ class CellAttributes(list):
         
         assert not any(type(key_ele) is SliceType for key_ele in key)
         
+        if key in self._attr_cache:
+           cache_len, cache_dict = self._attr_cache[key]
+           
+           # Use cache result only if no new attrs have been defined 
+           if cache_len == len(self):
+               return cache_dict
+        
         row, col, tab  = key
         
         result_dict = copy(self.default_cell_attributes)
@@ -128,6 +139,9 @@ class CellAttributes(list):
         for selection, table, attr_dict in self:
             if tab == table and (row, col) in selection:
                 result_dict.update(attr_dict)
+        
+        # Upddate cache with current length and dict
+        self._attr_cache[key] = (len(self), result_dict)
         
         return result_dict
 
@@ -746,7 +760,7 @@ class CodeArray(DataArray):
         else:
             result = self._eval_cell(key)
             
-            if result is not None:
+            if self(key) is not None:
                 self.result_cache[repr(key)] = result
             
             return result
@@ -834,7 +848,7 @@ class CodeArray(DataArray):
             result = Exception(err)
         
         # Change back cell value for evaluation from other cells
-        self[key] = code
+        self.dict_grid[key] = code
         
         if glob_var is not None:
             globals().update({glob_var: result})

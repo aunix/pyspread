@@ -30,6 +30,8 @@ Grid selection representation
 
 from copy import copy
 
+from itertools import izip
+
 class Selection(object):
     """Represents grid selection
     
@@ -100,7 +102,7 @@ class Selection(object):
         cell_row, cell_col = cell
         
         # Block selections
-        for top_left, bottom_right in zip(self.block_tl, self.block_br):
+        for top_left, bottom_right in izip(self.block_tl, self.block_br):
             top, left = top_left
             bottom, right = bottom_right
             

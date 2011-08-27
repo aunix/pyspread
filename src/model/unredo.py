@@ -128,6 +128,9 @@ class UnRedo(object):
         
         """
         
+        if self.active:
+            return False
+        
         # If the lists grow too large they are emptied
         if len(self.undolist) > config["max_unredo"] or \
            len(self.redolist) > config["max_unredo"]:

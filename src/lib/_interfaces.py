@@ -89,41 +89,6 @@ except ImportError:
 
 from config import config, faces
 
-class SafeUnpickler(object):
-    """Unpicklung with this class only allows PICKLE_SAVE classes"""
-    
-    PICKLE_SAFE = {
-        '__builtin__': set(['object']),
-        'model.model': set(['CellAttributes', 'DictGrid']),
-        'model.unredo': set(['UnRedo']),
-    }
-    
-    @classmethod
-    def find_class(cls, module, name):
-        """Prevents unpickling from non PICKLE_SAFE classes"""
-        
-        if not module in cls.PICKLE_SAFE:
-            raise pickle.UnpicklingError(
-                'Attempting to unpickle unsafe module %s' % module
-            )
-        __import__(module)
-        mod = sys.modules[module]
-        if not name in cls.PICKLE_SAFE[module]:
-            raise pickle.UnpicklingError(
-                'Attempting to unpickle unsafe class ' + str(name) + \
-                ' from module ' + str(module)
-            )
-        klass = getattr(mod, name)
-        return klass
- 
-    @classmethod
-    def loads(cls, pickle_string):
-        """Loads only PICKLE_SAFE classes"""
-        
-        pickle_obj = pickle.Unpickler(StringIO.StringIO(pickle_string))
-        pickle_obj.find_global = cls.find_class
-        return pickle_obj.load()
-
 def sorted_keys(keys, startkey, reverse=False):
     """Generator that yields sorted keys starting with startkey
 
@@ -182,83 +147,6 @@ def sniff(csvfilepath):
     has_header = sniffer.has_header(sample)
     
     return dialect, has_header
-
-def fill_numpyarray(target, src_it, digest_types, key=(0, 0, 0), \
-                    has_header = False, fast=False):
-    """
-    Fills the target array with data from src_it at position key
-    
-    Parameters
-    ----------
-    target: wx.grid.Grid
-    \tTarget grid
-    src_it: Iterable object
-    \tThe source of the data that shall be pasted has to be iterable.
-    \tThe iterable can yield iterables but iterables that are strings
-    \tare always treated as values.
-    digest_types: tuple of types
-    \tTypes of data for each col
-    key: 3-tuple of int
-    \tInsertion point
-    has_header: bool
-    \tTrue if the first line shall be treated as a header line
-    fast: bool
-    \tAllow fast insertion (only for imports without undo!)
-    
-    """
-    errormessages = []
-    
-    tl_row, tl_col, tl_tab = key
-    maxrows, maxcols, maxtabs = target.shape
-    
-    for i, line in enumerate(src_it):
-        row = i + tl_row
-        if row >= maxrows:
-            errormessages += ["Too many lines to fit into table!"]
-            break
-            
-        for j, value in enumerate(line):
-            col = j + tl_col
-            
-            if col >= maxcols:
-                errormessages += ["Too many columns to fit into table!"]
-                break
-            try:
-                digest_key = digest_types[j]
-            except IndexError:
-                digest_key = digest_types[0]
-            
-            if i == 0 and has_header:
-                digest = lambda x: x
-            else:
-                digest = Digest(acceptable_types=[digest_key])
-            
-            try:
-                digest_res = digest(value)
-                
-                if digest_res is not None and \
-                   digest_res != "\b" and \
-                   digest_key is not types.CodeType:
-                    digest_res = repr(digest_res)
-                elif digest_res == "\b":
-                    digest_res = None
-                
-            except Exception, err:
-                
-                digest_res = str(err)
-            
-            if digest_res is not None:
-                if fast:
-                    try:
-                        target.__setitem__((row, col, tl_tab), digest_res, 
-                                            fast=True)
-                    except TypeError:
-                        target.__setitem__((row, col, tl_tab), digest_res)
-                else:
-                    target.__setitem__((row, col, tl_tab), digest_res)
-        
-    if errormessages:
-        raise ValueError, '\n'.join(set(errormessages))
 
 def fill_wxgrid(target, src_it, digest_types, key=(0, 0)):
     """
@@ -873,14 +761,6 @@ class Digest(object):
         return errormessage
 
 # end of class Digest
-
-
-class UserString(unicode):
-    """Unicode wrapper class that can hold attributes"""
-    
-    pass
-
-# end of class UserString
 
 ALPHA_ONLY = 1
 DIGIT_ONLY = 2
