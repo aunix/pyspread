@@ -576,6 +576,12 @@ class GridActions(object):
         
         # Grid table handles interaction to code_array
         self.grid.code_array.dict_grid = event.code_array.dict_grid
+        self.grid.code_array.cell_attributes = \
+                    self.grid.code_array.dict_grid.cell_attributes
+        self.grid.code_array.row_heights = \
+                    self.grid.code_array.dict_grid.row_heights 
+        self.grid.code_array.col_widths = \
+                    self.grid.code_array.dict_grid.col_widths  
     
         _grid_table = GridTable(self.grid, self.grid.code_array)
         self.grid.SetTable(_grid_table, True)
