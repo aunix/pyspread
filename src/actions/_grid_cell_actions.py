@@ -24,6 +24,8 @@
 
 import wx
 
+from gui._events import *
+
 """
 _grid_cell_actions.py
 =======================
@@ -46,6 +48,62 @@ class CellActions(object):
             self.code_array.pop(key)
         except KeyError:
             pass
+    
+    def _get_absolute_reference(self, ref_key):
+        """Returns absolute reference code for key."""
+        
+        key_str = u", ".join(map(str, ref_key))
+        return u"S[" + key_str + u"]"
+
+    def _get_relative_reference(self, key, ref_key):
+        """Returns absolute reference code for key."""
+        
+        magics = ["X+", "Y+", "Z+"]
+        
+        # mapper takes magic, key, ref_key to build string
+        mapper = lambda val: val[0] + str(val[2] - val[1])
+        
+        key_str = u", ".join(map(mapper, zip(magics, key, ref_key)))
+        
+        return u"S[" + key_str + u"]"
+
+    def append_reference_code(self, key, ref_key, ref_type="absolute"):
+        """Appends reference code to cell code. 
+        
+        Replaces existing reference.
+        
+        Parameters
+        ----------
+        key: 3-tuple of Integer
+        \tKey of cell that gets the reference
+        ref_key: 3-tuple of Integer
+        \tKey of cell that is referenced
+        ref_type: Sting in ["absolute", "relative"]
+        \tAn absolute or a relative reference is added
+        
+        """
+        
+        if ref_type == "absolute":
+            code = self._get_absolute_reference(ref_key)
+            
+        elif ref_type == "relative":
+            code = self._get_relative_reference(key, ref_key)
+            
+        else:
+            raise ValueError, 'ref_type has to be "absolute" or "relative".'
+        
+        old_code = self.grid.code_array(key)
+        
+        if old_code is None:
+            old_code = u""
+        
+        if "S" in old_code and old_code[-1] == "]":
+            old_code_left, _ = old_code.rsplit("S", 1)
+            new_code = old_code_left + code
+        else:
+            new_code = old_code + code
+        
+        post_command_event(self.grid.main_window, EntryLineMsg, text=new_code)
     
     def _set_cell_attr(self, selection, table, attr):
         """Sets cell attr for key cell

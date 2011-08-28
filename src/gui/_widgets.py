@@ -674,6 +674,8 @@ class EntryLine(wx.TextCtrl):
         
         ## TODO: Code for cell selection by mouse here
         
+        #print event.GetKeyCode()
+        
         event.Skip()
         
 # end of class EntryLine

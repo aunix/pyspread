@@ -123,6 +123,7 @@ class Grid(wx.grid.Grid):
         # Grid events
         
         self.GetGridWindow().Bind(wx.EVT_MOTION, handlers.OnMouseMotion)
+        self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, handlers.OnMouseClick)
         self.Bind(wx.EVT_SCROLLWIN, handlers.OnScroll)
         
         # Cell code events
@@ -501,6 +502,31 @@ class GridEventHandlers(object):
         grid.actions.on_mouse_over((row, col, tab))
         
         event.Skip()
+
+    def OnMouseClick(self, event):
+        """Grid left mouse click event handler"""
+        
+        cursor = self.grid.actions.cursor
+        click_key = event.GetRow(), event.GetCol(), self.grid.current_table
+        
+        if event.ControlDown() and event.ShiftDown():
+            # Add click position as relative reference
+            self.grid.actions.append_reference_code(cursor, click_key, 
+                                                    ref_type="relative")
+            # Yield to let grid update happen first
+            wx.Yield()
+            self.grid.ForceRefresh()
+            
+        elif event.ControlDown() and not event.ShiftDown():
+            # Add click position as absolute reference
+            self.grid.actions.append_reference_code(cursor, click_key, 
+                                                    ref_type="absolute")
+            # Yield to let grid update happen first
+            wx.Yield()
+            self.grid.ForceRefresh()
+        
+        else:
+            event.Skip()
 
     def OnKey(self, event):
         """Handles non-standard shortcut events"""

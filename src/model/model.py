@@ -81,7 +81,7 @@ class CellAttributes(list):
     defined as class attribute.
     
     """
-    ## TODO: How to get config to model?
+    
     default_cell_attributes = {
         "borderwidth_bottom": 1,
         "borderwidth_right": 1,
@@ -266,6 +266,7 @@ class StringGeneratorMixin(object):
         """
         
         yield u"[attributes]\n"
+        
         for selection, tab, attr_dict in self.cell_attributes:
             sel_list = [selection.block_tl, selection.block_br, 
                         selection.rows, selection.cols, selection.cells]
@@ -279,7 +280,7 @@ class StringGeneratorMixin(object):
                 
             line_list = map(repr, sel_list + tab_list + attr_dict_list)
             
-            yield "\t".join(line_list) + "\n"
+            yield u"\t".join(line_list) + u"\n"
             
             
     def heights_to_strings(self):
@@ -298,7 +299,7 @@ class StringGeneratorMixin(object):
         
         for row, tab in self.row_heights:
             height_strings = map(repr, [row, tab, self.row_heights[(row, tab)]])
-            yield "\t".join(height_strings) + "\n"
+            yield u"\t".join(height_strings) + u"\n"
 
 
     def widths_to_strings(self):
@@ -317,7 +318,7 @@ class StringGeneratorMixin(object):
         
         for col, tab in self.col_widths:
             width_strings = map(repr, [col, tab, self.col_widths[(col, tab)]])
-            yield "\t".join(width_strings) + "\n"
+            yield u"\t".join(width_strings) + u"\n"
       
     def macros_to_strings(self):
         """Yields a string that represents the content for saving
@@ -333,7 +334,7 @@ class StringGeneratorMixin(object):
         yield u"[macros]\n"
         
         for line in self.macros.split("\n"):
-            yield line + "\n"
+            yield line + u"\n"
 
 # End of class StringGeneratorMixin
 
