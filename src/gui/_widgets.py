@@ -743,7 +743,7 @@ class TableChoiceIntCtrl(IntCtrl):
     def OnResizeGrid(self, event):
         """Event handler for grid resizing"""
         
-        self.change_max(event.dim[2])
+        self.change_max(event.shape[2])
         
     def OnInt(self, event):
         """IntCtrl event method that updates the current table"""

@@ -139,6 +139,15 @@ class FileActions(object):
         self.opening = False
         self.need_abort = False
 
+    def _empty_grid(self, shape):
+        """Empties grid and sets shape to shape"""
+        
+        empty_grid = DictGrid(shape)
+        self.code_array.dict_grid = empty_grid
+        self.code_array.cell_attributes = empty_grid.cell_attributes
+        self.code_array.row_heights = empty_grid.row_heights 
+        self.code_array.col_widths = empty_grid.col_widths  
+
     def open(self, event):
         """Opens a file that is specified in event.attr
         
@@ -216,15 +225,17 @@ class FileActions(object):
                         parser(line)
                         if stripped_line == "[shape]":
                             shape = self.code_array.shape
+                            
                             # Empty grid
-                            self.code_array.dict_grid = DictGrid(shape)
+                            self._empty_grid(shape)
+                            
                             self.grid.table.ResetView()
                 else:
                    pass
-                   
+                
                 # Enable abort during long saves
                 if self._is_aborted(cycle, "Loading file... "):
-                    self._abort_open(filepath, outfile)
+                    self._abort_open(filepath, infile)
                     return False
         
         except IOError:
@@ -575,13 +586,8 @@ class GridActions(object):
         """Creates a new spreadsheet. Expects code_array in event."""
         
         # Grid table handles interaction to code_array
-        self.grid.code_array.dict_grid = event.code_array.dict_grid
-        self.grid.code_array.cell_attributes = \
-                    self.grid.code_array.dict_grid.cell_attributes
-        self.grid.code_array.row_heights = \
-                    self.grid.code_array.dict_grid.row_heights 
-        self.grid.code_array.col_widths = \
-                    self.grid.code_array.dict_grid.col_widths  
+        
+        self._empty_grid(event.shape)
     
         _grid_table = GridTable(self.grid, self.grid.code_array)
         self.grid.SetTable(_grid_table, True)

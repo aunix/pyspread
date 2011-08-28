@@ -62,7 +62,7 @@ class Grid(wx.grid.Grid):
         
         # Create new grid
         self.code_array = CodeArray(dimensions)
-        post_command_event(self, GridActionNewMsg, code_array=self.code_array)
+        post_command_event(self, GridActionNewMsg, shape=dimensions)
 
         _grid_table = GridTable(self, self.code_array)
         self.SetTable(_grid_table, True)
@@ -572,7 +572,11 @@ class GridEventHandlers(object):
                 
                 # Do not enter cell
                 return
-        
+                
+            elif keycode == 27:
+                # Esc pressed
+                self.grid.actions.need_abort = True
+            
         event.Skip()
 
     def OnScroll(self, event):

@@ -432,12 +432,10 @@ class MainWindowEventHandlers(object):
         
         # Get grid dimensions
         
-        dim = self.interfaces.get_dimensions_from_user(no_dim=3)
+        shape = self.interfaces.get_dimensions_from_user(no_dim=3)
         
-        if dim is None:
+        if shape is None:
             return
-        
-        code_array = CodeArray(dim)
         
         # Set new filepath and post it to the title bar
         
@@ -445,18 +443,16 @@ class MainWindowEventHandlers(object):
         post_command_event(self.main_window, TitleMsg, text="pyspread")
         
         # Create new grid
-        post_command_event(self.main_window, GridActionNewMsg, 
-                           code_array=code_array)
+        post_command_event(self.main_window, GridActionNewMsg, shape=shape)
         
         # Update TableChoiceIntCtrl
-        post_command_event(self.main_window, ResizeGridMsg, 
-                           dim=dim)
+        post_command_event(self.main_window, ResizeGridMsg, shape=shape)
         
         self.main_window.grid.GetTable().ResetView()
         self.main_window.grid.ForceRefresh()
         
         # Display grid creation in status bar
-        statustext = "New grid with dimensions " + str(dim) + " created."
+        statustext = "New grid with dimensions " + str(shape) + " created."
         post_command_event(self.main_window, StatusBarMsg, text=statustext)
 
     def OnOpen(self, event):
