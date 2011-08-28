@@ -517,6 +517,12 @@ class GridEventHandlers(object):
             wx.Yield()
             self.grid.ForceRefresh()
             
+            # Enter entry line to continue editing
+            
+            self.grid.main_window.entry_line.SetFocus()
+            self.grid.main_window.entry_line.SetInsertionPointEnd()
+            
+            
         elif event.ControlDown() and not event.ShiftDown():
             # Add click position as absolute reference
             self.grid.actions.append_reference_code(cursor, click_key, 
@@ -524,6 +530,11 @@ class GridEventHandlers(object):
             # Yield to let grid update happen first
             wx.Yield()
             self.grid.ForceRefresh()
+            
+            # Enter entry line to continue editing
+            
+            self.grid.main_window.entry_line.SetFocus()
+            self.grid.main_window.entry_line.SetInsertionPointEnd()
         
         else:
             event.Skip()
