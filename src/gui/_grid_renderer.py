@@ -191,7 +191,8 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         for distance, __row, __col in grid.colliding_cells(row, col, textbox):
             
             if blocking_distance is None or distance == blocking_distance:
-                if self.data_array[__row, __col, tab]:
+                if self.data_array[__row, __col, tab] is not None and \
+                   self.data_array[__row, __col, tab] != "":
                     blocking_distance = distance
                 else:
                     yield __row, __col, tab

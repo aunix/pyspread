@@ -843,7 +843,7 @@ class CodeArray(DataArray):
             
         except AttributeError, err:
             # Attribute Error includes RunTimeError
-            result = 'KeyError("Circular dependency at ' + str(key) + '")'
+            result = err 
             
         except Exception, err:
             result = Exception(err)

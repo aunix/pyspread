@@ -476,7 +476,13 @@ class GridCellEventHandlers(object):
         
         # Update entry line
         cell_code = self.grid.code_array(key)
-        post_command_event(self.grid.main_window, EntryLineMsg, text=cell_code)
+        post_command_event(self.grid, EntryLineMsg, text=cell_code)
+        
+        # Update attribute toolbar
+        
+        post_command_event(self.grid, ToolbarUpdateMsg, 
+                           key=key, 
+                           attr=self.grid.code_array.cell_attributes[key])
         
         event.Skip()
     

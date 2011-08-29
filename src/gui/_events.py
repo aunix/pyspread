@@ -87,6 +87,7 @@ FindToolbarToggleMsg, EVT_COMMAND_FIND_TOOLBAR_TOGGLE = new_command_event()
 EntryLineToggleMsg, EVT_COMMAND_ENTRYLINE_TOGGLE = new_command_event()
 TableChoiceToggleMsg, EVT_COMMAND_TABLECHOICE_TOGGLE = new_command_event()
 
+ToolbarUpdateMsg, EVT_COMMAND_TOOLBAR_UPDATE = new_command_event()
 
 # Grid cell
 # =========

@@ -146,7 +146,9 @@ class FileActions(object):
         self.code_array.dict_grid = empty_grid
         self.code_array.cell_attributes = empty_grid.cell_attributes
         self.code_array.row_heights = empty_grid.row_heights 
-        self.code_array.col_widths = empty_grid.col_widths  
+        self.code_array.col_widths = empty_grid.col_widths
+        empty_grid.unredo = self.code_array.unredo
+        self.code_array.cell_attributes.unredo = self.code_array.unredo
 
     def open(self, event):
         """Opens a file that is specified in event.attr

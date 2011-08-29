@@ -73,7 +73,7 @@ class MainToolbar(wx.ToolBar):
     [tool, UndoMsg, "Undo", "Undo", "Undo", "Undo last operation"], \
     [tool, RedoMsg, "Redo", "Redo", "Redo", "Redo next operation"], \
     ["Separator"] , \
-    [tool, FindMsg, "Find", "Find", "Find", "Find cell by content"], \
+    [tool, FindFocusMsg, "Find", "Find", "Find", "Find cell by content"], \
     [tool, ReplaceMsg, "Replace", "FindReplace", "Replace", 
         "Replace strings in cells"], \
     ["Separator"] , \
@@ -353,7 +353,9 @@ class AttributesToolbar(wx.ToolBar):
                                     choices=self.fonts, style=wx.CB_READONLY,
                                     size=(125, -1))
         self.AddControl(self.font_choice_combo)
+        
         self.Bind(wx.EVT_COMBOBOX, self.OnTextFont, self.font_choice_combo)
+        self.parent.Bind(EVT_COMMAND_TOOLBAR_UPDATE, self.OnUpdate)
     
     def _create_font_size_combo(self):
         """Creates font size combo box"""
@@ -477,95 +479,107 @@ class AttributesToolbar(wx.ToolBar):
     # Update widget state methods
     # ---------------------------
     
-    def _update_textfont(self, textfont=None):
-        """Updates text font widgets"""
+    def _update_font(self, textfont):
+        """Updates text font widget
+                
+        Parameters
+        ----------
         
-        if textfont is None:
-            textfont = get_default_font()
+        textfont: String
+        \tFont name
         
-        font_face = textfont.FaceName
-        font_size = textfont.PointSize
-        font_weight = textfont.GetWeight()
-        font_style = textfont.GetStyle()
-        font_is_underlined = textfont.GetUnderlined()
+        """
         
         try:
-            fontface_id = self.fonts.index(font_face)
+            fontface_id = self.fonts.index(textfont)
         except ValueError:
             fontface_id = 0
         
         self.font_choice_combo.Select(fontface_id)
         
-        self.font_size_combo.SetValue(str(font_size))
-        
-        if font_weight == wx.FONTWEIGHT_NORMAL:
-            # Toggle up
-            self.ToggleTool(wx.FONTWEIGHT_BOLD, 0)
-        elif font_weight == wx.FONTWEIGHT_BOLD:
-            # Toggle down
-            self.ToggleTool(wx.FONTWEIGHT_BOLD, 1)
-        else:
-            print "Unknown fontweight"
-        
-        if font_style == wx.FONTSTYLE_NORMAL:
-            # Toggle up
-            self.ToggleTool(wx.FONTSTYLE_ITALIC, 0)
-        elif font_style == wx.FONTSTYLE_ITALIC:
-            # Toggle down
-            self.ToggleTool(wx.FONTSTYLE_ITALIC, 1)
-        else:
-            print "Unknown fontstyle"
-    
-    def _update_bgbrush(self, bgbrush_data):
-        """Updates background color"""
-        
-        try:
-            brush_color = wx.Colour(255, 255, 255, 0)
-            brush_color.SetRGB(bgbrush_data[0])
-        except KeyError:
-            brush_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
-        
-        self.bgcolor_choice.SetColour(brush_color)
-    
-    def _update_borderpen(self, borderpen_data):
-        """Updates background color"""
-        
-        try:
-            borderpen_color = wx.Colour(255, 255, 255, 0)
-            borderpen_color.SetRGB(borderpen_data[0])
-            borderpen_width = borderpen_data[1]
-        except KeyError:
-            borderpen_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
-            borderpen_width = 0
-        
-        self.linecolor_choice.SetColour(borderpen_color)
-        self.pen_width_combo.SetSelection(borderpen_width)
-    
-    def _update_frozencell(self, frozen):
-        """Updates frozen cell button
-        
+    def _update_pointsize(self, pointsize):
+        """Updates text size widget
+                
         Parameters
         ----------
         
-        frozen: Bool
-        \tSwitches button to untoggled if False and toggled if True
+        pointsize: Integer
+        \tFont point size
         
         """
         
-        self.ToggleTool(wx.FONTFLAG_MASK, frozen)
+        self.font_size_combo.SetValue(str(pointsize))
+
+    def _update_font_weight(self, font_weight):
+        """Updates font weight widget
+                
+        Parameters
+        ----------
+        
+        font_weight: Integer
+        \tButton down iif font_weight == wx.FONTWEIGHT_BOLD
+        
+        """
+        
+        toggle_state = font_weight == wx.FONTWEIGHT_BOLD
+        
+        self.ToggleTool(wx.FONTFLAG_BOLD, toggle_state)
+
+    def _update_font_style(self, font_style):
+        """Updates font style widget
+                
+        Parameters
+        ----------
+        
+        font_style: Integer
+        \tButton down iif font_style == wx.FONTSTYLE_ITALIC
+        
+        """
+        
+        toggle_state = font_style == wx.FONTSTYLE_ITALIC
+        
+        self.ToggleTool(wx.FONTFLAG_ITALIC, toggle_state)
+    
+    def _update_frozencell(self, frozen):
+        """Updates frozen cell widget
+                
+        Parameters
+        ----------
+        
+        frozen: Bool or string
+        \tUntoggled iif False
+        
+        """
+        
+        toggle_state = not frozen is False
+        
+        self.ToggleTool(wx.FONTFLAG_MASK, toggle_state)
     
     def _update_underline(self, underlined):
-        """Updates underline cell button
+        """Updates underline widget
                 
         Parameters
         ----------
         
         underlined: Bool
-        \tSwitches button to untoggled if False and toggled if True
+        \tToggle state
         
         """
         
-        self.ToggleTool(wx.FONTFLAG_MASK, underlined)
+        self.ToggleTool(wx.FONTFLAG_UNDERLINED, underlined)
+    
+    def _update_strikethrough(self, strikethrough):
+        """Updates text strikethrough widget
+                
+        Parameters
+        ----------
+        
+        strikethrough: Bool
+        \tToggle state
+        
+        """
+        
+        self.ToggleTool(wx.FONTFLAG_STRIKETHROUGH, strikethrough)
     
     def _update_justification(self, justification):
         """Updates horizontal text justification button
@@ -596,7 +610,7 @@ class AttributesToolbar(wx.ToolBar):
         
         """
         
-        states = {"left": 2, "center": 0, "bottom": 1}
+        states = {"top": 2, "middle": 0, "bottom": 1}
         
         self.alignment_tb.state = states[alignment]
             
@@ -613,20 +627,6 @@ class AttributesToolbar(wx.ToolBar):
             textcolor = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT)
         self.textcolor_choice.SetColour(textcolor)
     
-    def _update_strikethrough(self, textattributes):
-        """Updates text strikethrough button"""
-        
-        try:
-            strikethrough_tag = odftags["strikethrough"]
-            strikethrough = textattributes[strikethrough_tag]
-        except KeyError:
-            strikethrough = "transparent"
-        
-        if strikethrough == "solid":
-            self.ToggleTool(wx.FONTFLAG_STRIKETHROUGH, 1)
-        else:
-            self.ToggleTool(wx.FONTFLAG_STRIKETHROUGH, 0)
-    
     def _update_textrotation(self, textattributes):
         """Updates text rotation spin control"""
         
@@ -637,45 +637,60 @@ class AttributesToolbar(wx.ToolBar):
             angle = 0.0
         
         self.rotation_spinctrl.SetValue(angle)
+
+    def _update_bgbrush(self, bgbrush_data):
+        """Updates background color"""
+        
+        try:
+            brush_color = wx.Colour(255, 255, 255, 0)
+            brush_color.SetRGB(bgbrush_data[0])
+        except KeyError:
+            brush_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
+        
+        self.bgcolor_choice.SetColour(brush_color)
     
-    def update(self, borderpen_data=None, bgbrush_data=None, 
-                     textattributes=None, textfont=None, frozen=None):
-        """Updates all widgets
+    def _update_borderpen(self, borderpen_data):
+        """Updates background color"""
         
-        Parameters
-        ----------
+        try:
+            borderpen_color = wx.Colour(255, 255, 255, 0)
+            borderpen_color.SetRGB(borderpen_data[0])
+            borderpen_width = borderpen_data[1]
+        except KeyError:
+            borderpen_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
+            borderpen_width = 0
         
-        borderpen: wx.Pen (defaults to None)
-        \tPen for cell borders
-        bgbrush: wx.Brush (defaults to None), 
-        \tBrush for cell background
-        textattributes: Dict (defaults to None)
-        \tAdditional text attributes
-        textfont: wx.Font (defaults to None)
-        \tText font
-        
-        """
-        
-        if textattributes is None:
-            textattributes = {}
-        
-        self._update_textfont(textfont)
-        self._update_bgbrush(bgbrush_data)
-        self._update_borderpen(borderpen_data)
-        self._update_frozencell(frozen)
-        
-        # Text attributes
-        
-        self._update_underline(textattributes)
-        self._update_justification(textattributes)
-        self._update_alignment(textattributes)
-        self._update_fontcolor(textattributes)
-        self._update_strikethrough(textattributes)
-        self._update_textrotation(textattributes)
+        self.linecolor_choice.SetColour(borderpen_color)
+        self.pen_width_combo.SetSelection(borderpen_width)
+
 
     # Attributes toolbar event handlers
     # ---------------------------------
-    
+
+    def OnUpdate(self, event):
+        """Updates the toolbar states"""
+        
+        wx.Yield()
+        
+        attributes = event.attr
+        
+        print attributes
+        
+        self._update_font(attributes["textfont"])
+        self._update_pointsize(attributes["pointsize"])
+        self._update_font_weight(attributes["fontweight"])
+        self._update_font_style(attributes["fontstyle"])
+        self._update_frozencell(attributes["frozen"])
+        self._update_underline(attributes["underline"])
+        self._update_strikethrough(attributes["strikethrough"])
+        self._update_justification(attributes["justification"])
+        self._update_alignment(attributes["vertical_align"])
+        #self._update_fontcolor(textattributes)
+        #self._update_textrotation(textattributes)
+        #self._update_bgbrush(bgbrush_data)
+        #self._update_borderpen(borderpen_data)
+
+
     def OnBorderChoice(self, event):
         """Change the borders that are affected by color and width changes"""
         
