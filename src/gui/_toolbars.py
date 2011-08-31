@@ -617,51 +617,47 @@ class AttributesToolbar(wx.ToolBar):
         self.alignment_tb.toggle(None)
         self.alignment_tb.Refresh()
     
-    def _update_fontcolor(self, textattributes):
-        """Updates text font color button"""
+    def _update_fontcolor(self, fontcolor):
+        """Updates text font color button
         
-        try:
-            fontcolortag = odftags["fontcolor"]
-            textcolor = textattributes[fontcolortag]
-        except KeyError:
-            textcolor = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT)
+        Parameters
+        ----------
+        
+        fontcolor: Integer
+        \tText color in integer RGB format
+        
+        """
+        
+        textcolor = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOWTEXT)
+        textcolor.SetRGB(fontcolor)
+        
         self.textcolor_choice.SetColour(textcolor)
     
-    def _update_textrotation(self, textattributes):
+    def _update_textrotation(self, angle):
         """Updates text rotation spin control"""
-        
-        try:
-            rot_angle_tag = odftags["rotationangle"]
-            angle = float(textattributes[rot_angle_tag])
-        except KeyError:
-            angle = 0.0
         
         self.rotation_spinctrl.SetValue(angle)
 
-    def _update_bgbrush(self, bgbrush_data):
+    def _update_bgbrush(self, bgcolor):
         """Updates background color"""
         
-        try:
-            brush_color = wx.Colour(255, 255, 255, 0)
-            brush_color.SetRGB(bgbrush_data[0])
-        except KeyError:
-            brush_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
+        brush_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
+        brush_color.SetRGB(bgcolor)
         
         self.bgcolor_choice.SetColour(brush_color)
     
-    def _update_borderpen(self, borderpen_data):
+    def _update_bordercolor(self, bordercolor):
         """Updates background color"""
         
-        try:
-            borderpen_color = wx.Colour(255, 255, 255, 0)
-            borderpen_color.SetRGB(borderpen_data[0])
-            borderpen_width = borderpen_data[1]
-        except KeyError:
-            borderpen_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW)
-            borderpen_width = 0
+        border_color = wx.SystemSettings_GetColour(wx.SYS_COLOUR_ACTIVEBORDER)
+        border_color.SetRGB(bordercolor)
         
-        self.linecolor_choice.SetColour(borderpen_color)
-        self.pen_width_combo.SetSelection(borderpen_width)
+        self.linecolor_choice.SetColour(border_color)
+
+    def _update_borderwidth(self, borderwidth):
+        """Updates background color"""
+        
+        self.pen_width_combo.SetSelection(borderwidth)
 
 
     # Attributes toolbar event handlers
@@ -674,8 +670,6 @@ class AttributesToolbar(wx.ToolBar):
         
         attributes = event.attr
         
-        print attributes
-        
         self._update_font(attributes["textfont"])
         self._update_pointsize(attributes["pointsize"])
         self._update_font_weight(attributes["fontweight"])
@@ -685,10 +679,11 @@ class AttributesToolbar(wx.ToolBar):
         self._update_strikethrough(attributes["strikethrough"])
         self._update_justification(attributes["justification"])
         self._update_alignment(attributes["vertical_align"])
-        #self._update_fontcolor(textattributes)
-        #self._update_textrotation(textattributes)
-        #self._update_bgbrush(bgbrush_data)
-        #self._update_borderpen(borderpen_data)
+        self._update_fontcolor(attributes["textcolor"])
+        self._update_textrotation(attributes["angle"])
+        self._update_bgbrush(attributes["bgcolor"])
+        self._update_bordercolor(attributes["bordercolor_bottom"])
+        self._update_borderwidth(attributes["borderwidth_bottom"])
 
 
     def OnBorderChoice(self, event):
