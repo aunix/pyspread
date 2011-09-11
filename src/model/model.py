@@ -34,6 +34,7 @@ Layer 0: KeyValueStore
 
 """
 
+import ast
 from copy import copy
 import cStringIO
 from itertools import imap, product
@@ -181,7 +182,7 @@ class ParserMixin(object):
         
         splitline = self._split_tidy(line)
         
-        selection_data = map(eval, splitline[:5])
+        selection_data = map(ast.literal_eval, splitline[:5])
         selection = Selection(*selection_data)
         
         tab = int(splitline[5])
@@ -190,11 +191,11 @@ class ParserMixin(object):
         for col, ele in enumerate(splitline[6:]):
             if col % 2:
                 # Even cols are values
-                attrs[key] = eval(ele)
+                attrs[key] = ast.literal_eval(ele)
                 
             else:
                 # Odd entries are keys
-                key = eval(ele)
+                key = ast.literal_eval(ele)
                 
         self.cell_attributes.append((selection, tab, attrs))
 
