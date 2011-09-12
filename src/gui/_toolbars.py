@@ -306,19 +306,19 @@ class AttributesToolbar(wx.ToolBar):
         ("RightBorders",     (0, 0, 0, 1, 1, 1)),
         ("TopBorders",       (1, 0, 0, 0, 1, 1)),
         ("BottomBorders",    (0, 1, 0, 0, 1, 1)),
-        ("InsideBorders",    (1, 1, 1, 1, 1, 0)),
+        ##("InsideBorders",    (1, 1, 1, 1, 1, 0)),
         ("OutsideBorders",   (1, 1, 1, 1, 0, 1)),
         ("TopBottomBorders", (1, 1, 0, 0, 0, 1)),
     ]
     
     bordermap = { \
-        "AllBorders":      ("top", "bottom", "left", "right"),
+        "AllBorders":      ("top", "bottom", "left", "right", "inner"),
         "LeftBorders":     ("left"),
         "RightBorders":    ("right"),
         "TopBorders":      ("top"),
         "BottomBorders":   ("bottom"),
-        "InsideBorders":   (""),
-        "OutsideBorders":  (""),
+        ##"InsideBorders":   ("inner"),
+        "OutsideBorders":  ("top", "bottom", "left", "right"),
         "TopBottomBorders":("top", "bottom"),
     }
 

@@ -26,6 +26,8 @@ import wx
 
 from gui._events import *
 
+from lib.selection import Selection
+
 """
 _grid_cell_actions.py
 =======================
@@ -148,20 +150,49 @@ class CellActions(object):
         """Sets border attribute by adjusting selection to borders"""
         
         selection = self.grid.selection
+        # determine selection for core cells and selection for border cells
+        # Then apply according to inner and outer
+        # A cell is inner iif it is not at the edge of the selection bbox
         
-        if "top" in borders:
-            adj_selection = selection + (-1, 0)
-            self.set_attr(attr + "_bottom", value, adj_selection)
-        
-        if "bottom" in borders:
-            self.set_attr(attr + "_bottom", value)
+        if "inner" in borders:
+            if "top" in borders:
+                adj_selection = selection + (-1, 0)
+                self.set_attr(attr + "_bottom", value, adj_selection)
             
-        if "left" in borders:
-            adj_selection = selection + (0, -1)
-            self.set_attr(attr + "_right", value, adj_selection)
-        
-        if "right" in borders:
-            self.set_attr(attr + "_right", value)
+            if "bottom" in borders:
+                self.set_attr(attr + "_bottom", value)
+                
+            if "left" in borders:
+                adj_selection = selection + (0, -1)
+                self.set_attr(attr + "_right", value, adj_selection)
+            
+            if "right" in borders:
+                self.set_attr(attr + "_right", value)
+            
+        else:
+            # Adjust selection so that only bounding box edge is in selection
+            bbox_tl, bbox_lr = selection.get_bbox()
+            if "top" in borders:
+                adj_selection = Selection([bbox_tl], [(bbox_tl[0], bbox_lr[1])],
+                                          [], [], []) + (-1, 0)
+                self.set_attr(attr + "_bottom", value, adj_selection)
+            
+            if "bottom" in borders:
+                adj_selection = Selection([(bbox_lr[0], bbox_tl[1])], [bbox_lr],
+                                          [], [], [])
+                self.set_attr(attr + "_bottom", value, adj_selection)
+                
+            if "left" in borders:
+                adj_selection = Selection([bbox_tl], [(bbox_lr[0], bbox_tl[1])],
+                                          [], [], []) + (0, -1)
+                self.set_attr(attr + "_right", value, adj_selection)
+            
+            if "right" in borders:
+                adj_selection = Selection([(bbox_tl[0], bbox_lr[1])], [bbox_lr],
+                                          [], [], [])
+                self.set_attr(attr + "_right", value, adj_selection)
+            
+
     
     def toggle_attr(self, attr):
         """Toggles an attribute attr for current selection"""
@@ -281,7 +312,7 @@ class CellActions(object):
         
         selection = self.grid.selection
         
-        # Add cursor to empty selction
+        # Add cursor to empty selection
         
         if not selection:
             selection.cells.append(self.cursor[:2])
