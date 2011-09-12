@@ -142,14 +142,13 @@ class FileActions(object):
     def _empty_grid(self, shape):
         """Empties grid and sets shape to shape"""
         
-        empty_grid = DictGrid(shape)
-        self.code_array.dict_grid = empty_grid
-        self.code_array.cell_attributes = empty_grid.cell_attributes
-        self.code_array.row_heights = empty_grid.row_heights 
-        self.code_array.col_widths = empty_grid.col_widths
-        empty_grid.unredo = self.code_array.unredo
-        self.code_array.cell_attributes.unredo = self.code_array.unredo
+        self.code_array.dict_grid.clear()
+        c_a = self.code_array.dict_grid.cell_attributes
+        [c_a.pop() for _ in xrange(len(c_a))]
+        self.code_array.unredo.reset()
+        self.code_array.result_cache.clear()
 
+        
     def open(self, event):
         """Opens a file that is specified in event.attr
         
@@ -225,13 +224,11 @@ class FileActions(object):
                     else:
                         # Parse line
                         parser(line)
-                        if stripped_line == "[shape]":
-                            shape = self.code_array.shape
-                            
+                        if parser == self.code_array.dict_grid.parse_to_shape:
                             # Empty grid
-                            self._empty_grid(shape)
+                            self._empty_grid(self.code_array.shape)
                             
-                            self.grid.table.ResetView()
+                            self.grid.GetTable().ResetView()
                 else:
                    pass
                 

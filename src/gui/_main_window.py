@@ -454,6 +454,8 @@ class MainWindowEventHandlers(object):
         # Display grid creation in status bar
         statustext = "New grid with dimensions " + str(shape) + " created."
         post_command_event(self.main_window, StatusBarMsg, text=statustext)
+        
+        self.main_window.grid.ForceRefresh()
 
     def OnOpen(self, event):
         """File open event handler"""
@@ -494,6 +496,8 @@ class MainWindowEventHandlers(object):
         
         statustext = "File " + filepath + " loaded."
         post_command_event(self.main_window, StatusBarMsg, text=statustext)
+        
+        self.main_window.grid.ForceRefresh()
     
     def OnSave(self, event):
         """File save event handler"""

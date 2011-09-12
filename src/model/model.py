@@ -408,16 +408,24 @@ class DataArray(object):
         self.unredo = UnRedo()
         self.dict_grid.cell_attributes.unredo = self.unredo
         
-        # Cell attributes mask
-        self.cell_attributes = self.dict_grid.cell_attributes
-        
-        # Row and column attributes, keys have the format (row, table)
-        self.row_heights = self.dict_grid.row_heights 
-        self.col_widths = self.dict_grid.col_widths  
-        
         # Safe mode
         self.safe_mode = False
-            
+    
+    # Row and column attributes mask
+    # Keys have the format (row, table)
+    
+    @property
+    def row_heights(self):
+        return self.dict_grid.row_heights 
+    
+    @property
+    def col_widths(self):
+        return self.dict_grid.col_widths  
+    
+    # Cell attributes mask
+    @property
+    def cell_attributes(self):
+        return self.dict_grid.cell_attributes
     
     def __iter__(self):
         """returns iterator over self.dict_grid"""
