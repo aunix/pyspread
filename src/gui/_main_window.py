@@ -599,6 +599,8 @@ class MainWindowEventHandlers(object):
         
         grid.actions.paste(tl_cell, import_data)
         
+        self.main_window.grid.ForceRefresh()
+        
     def OnExport(self, event):
         """File export event handler
         
@@ -792,6 +794,9 @@ class MainWindowEventHandlers(object):
         style = wx.OPEN | wx.CHANGE_DIR
         filepath, filterindex = self.interfaces.get_filepath_findex_from_user( \
                                     wildcard, message, style)
+        
+        if filepath is None:
+            return
         
         # Enter safe mode because macro file could be harmful
         

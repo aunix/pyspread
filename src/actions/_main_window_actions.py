@@ -56,6 +56,7 @@ from sysvars import get_help_path
 from config import config
 from lib._interfaces import Digest
 from gui._printout import PrintCanvas, Printout
+from gui._events import *
 
 class CsvInterface(object):
     """CSV interface class
@@ -67,7 +68,8 @@ class CsvInterface(object):
     
     """
     
-    def __init__(self, path, dialect, digest_types, has_header):
+    def __init__(self, main_window, path, dialect, digest_types, has_header):
+        self.main_window = main_window
         self.path = path
         self.csvfilename = os.path.split(path)[1]
         
@@ -80,8 +82,16 @@ class CsvInterface(object):
     def __iter__(self):
         """Generator of generators that yield csv data"""
         
-        csv_file = open(self.path, "r")
-        csv_reader = csv.reader(csv_file, self.dialect)
+        try:
+            csv_file = open(self.path, "r")
+            csv_reader = csv.reader(csv_file, self.dialect)
+            
+        except IOError, err:
+            statustext = "Error opening file " + self.path + "."
+            post_command_event(self.main_window, StatusBarMsg, text=statustext)
+            
+            csv_file = [] 
+        
         self.first_line = self.has_header
         
         try:
@@ -94,6 +104,10 @@ class CsvInterface(object):
                   '\n \nError message:\n' + str(err)
             short_msg = 'Error reading CSV file'
             self.main_window.interfaces.display_warning(msg, short_msg)
+        
+        finally:
+            statustext = "File " + self.csvfilename + " imported successfully."
+            post_command_event(self.main_window, StatusBarMsg, text=statustext)
         
         csv_file.close()
     
@@ -143,13 +157,18 @@ class CsvInterface(object):
 class TxtGenerator(object):
     """Generator of generators of Whitespace separated txt file cell content"""
         
-    def __init__(self, filename):
-        self.filename = filename
+    def __init__(self, main_window, path):
+        self.main_window = main_window
+        try:
+            self.infile = open(path, "r")
+            
+        except IOError, err:
+            statustext = "Error opening file " + path + "."
+            post_command_event(self.main_window, StatusBarMsg, text=statustext)
+            self.infile = []
 
     def __iter__(self):
-        infile = open(self.filename)
-        
-        for line in infile:
+        for line in self.infile:
             for col in line.split():
                 yield col
         
@@ -169,8 +188,14 @@ class ExchangeActions(object):
                 
         except TypeError:
             return
+            
+        except IOError, err:
+            statustext = "Error opening file " + path + "."
+            post_command_event(self.main_window, StatusBarMsg, text=statustext)
+            return
         
-        return CsvInterface(path, dialect, digest_types, has_header)
+        return CsvInterface(self.main_window, 
+                            path, dialect, digest_types, has_header)
     
     def _import_txt(self, path):
         """Whitespace-delimited txt import workflow. This should be fast."""
@@ -202,6 +227,7 @@ class ExchangeActions(object):
             
             self.main_window.interfaces.display_warning(msg, short_msg)
 
+
     def _export_csv(self, filepath, data):
         """CSV import workflow"""
 
@@ -224,6 +250,7 @@ class ExchangeActions(object):
         
         try:
             csv_interface.write(data)
+            
         except IOError, err:
             msg = 'The file "' + path + '" could not be fully written ' + \
                   '\n \nError message:\n' + str(err)
@@ -427,7 +454,15 @@ class MacroActions(object):
         
         """
         
-        macro_infile = open(filepath, "r")
+        try:
+            macro_infile = open(filepath, "r")
+            
+        except IOError, err:
+            statustext = "Error opening file " + filepath + "."
+            post_command_event(self.main_window, StatusBarMsg, text=statustext)
+            
+            return False
+            
         macrocode = macro_infile.read()
         macro_infile.close()
         

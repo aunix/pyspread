@@ -513,7 +513,7 @@ class CSVPreviewTextCtrl(wx.TextCtrl):
         csvwriter = csv.writer(csvfile, dialect=dialect)
         
         for i, line in enumerate(data):
-            print list(line)
+            #print list(line)
             csvwriter.writerow(line)
             if i >= self.preview_lines:
                 break
