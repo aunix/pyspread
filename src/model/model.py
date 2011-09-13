@@ -767,11 +767,9 @@ class CodeArray(DataArray):
         if repr(key) in self.result_cache:
             return self.result_cache[repr(key)]
             
-        else:
+        elif self(key) is not None:
             result = self._eval_cell(key)
-            
-            if self(key) is not None:
-                self.result_cache[repr(key)] = result
+            self.result_cache[repr(key)] = result
             
             return result
     
@@ -784,11 +782,7 @@ class CodeArray(DataArray):
             if ele is None:
                 res.append(None)
                 
-            elif is_string_like(ele):
-                # String
-                res.append(ele)
-                
-            elif is_generator_like(ele):
+            elif not is_string_like(ele) and is_generator_like(ele):
                 # Nested generator
                 res.append(self._make_nested_list(ele))
                 
@@ -834,7 +828,7 @@ class CodeArray(DataArray):
         elif is_generator_like(code):
             # We have a generator object
             
-            return numpy.array(self._make_nested_list(code))
+            return numpy.array(self._make_nested_list(code), dtype="O")
         
         # If only 1 term in front of the "=" --> global
         
