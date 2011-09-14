@@ -52,7 +52,7 @@ from wx.lib.intctrl import IntCtrl, EVT_INT
 from _events import *
 
 from config import faces
-from config import icons, icon_size
+from icons import icons
 
 class CollapsiblePane(wx.CollapsiblePane):
     """Collapsible pane with basic toggle mechanism
@@ -549,24 +549,25 @@ class BorderEditChoice(ImageComboBox):
         
         r = wx.Rect(*rect)  # make a copy
         item_name = self.GetItems()[item]
-        icon = wx.Icon(icons[item_name], wx.BITMAP_TYPE_XPM)
+        
+        bmp = icons[item_name]
+        
+        icon = wx.EmptyIcon()
+        icon.CopyFromBitmap(bmp)
+        
         dc.DrawIcon(icon, r.x, r.y)
     
     def OnMeasureItem(self, item):
         """Returns the height of the items in the popup"""
         
         item_name = self.GetItems()[item]
-        icon = wx.Icon(icons[item_name], wx.BITMAP_TYPE_XPM)
-        
-        return icon.GetHeight()
+        return icons[item_name].GetHeight()
 
     def OnMeasureItemWidth(self, item):
         """Returns the height of the items in the popup"""
         
         item_name = self.GetItems()[item]
-        icon = wx.Icon(icons[item_name], wx.BITMAP_TYPE_XPM)
-        
-        return icon.GetWidth()
+        return icons[item_name].GetWidth()
 
 # end of class BorderEditChoice
 

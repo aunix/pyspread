@@ -52,10 +52,10 @@ def get_dpi():
     pxmm_2_dpi = lambda (pixels, length_mm): pixels * 25.6 / length_mm
     return map(pxmm_2_dpi , zip(wx.GetDisplaySize(), wx.GetDisplaySizeMM()))
     
-def get_color_string(name):
+def get_color(name):
     """Returns string representation of named system color"""
     
-    return wx.SystemSettings.GetColour(name).GetAsString()
+    return wx.SystemSettings.GetColour(name).Get()
     
 def get_font_string(name):
     """Returns string representation of named system font"""

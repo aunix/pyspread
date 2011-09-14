@@ -39,8 +39,7 @@ import wx.lib.colourselect as csel
 
 from _events import *
 
-from config import FONT_SIZES, faces, default_cell_attributes
-from config import icons, icon_size, small_icon_size
+from config import FONT_SIZES, faces
 from icons import icons
 
 from lib._interfaces import get_font_list, textfont_from_string
@@ -206,7 +205,7 @@ class FindToolbar(wx.ToolBar):
     def setup_searchdirection_togglebutton(self):
         """Setup of search direction toggle button for searching up and down"""
         
-        iconnames = ["SearchDirectionUp", "SearchDirectionDown"]
+        iconnames = ["SearchDirectionDown", "SearchDirectionUp"]
         bmplist = [icons[iconname] for iconname in iconnames]
         self.search_direction_tb = _widgets.BitmapToggleButton(self, bmplist)
         

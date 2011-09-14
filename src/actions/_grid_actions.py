@@ -49,11 +49,12 @@ Provides:
 import bz2
 from copy import copy
 
-from config import config, default_cell_attributes
+from config import config
 
 from gui._grid_table import GridTable
 from gui._events import *
-from lib._interfaces import sign, verify, is_pyme_present
+from lib._interfaces import sign, verify, is_pyme_present, get_font_from_data
+
 from lib.selection import Selection
 from model.model import DictGrid
 
@@ -621,7 +622,7 @@ class GridActions(object):
         """Adjust grid label font to zoom factor"""
         
         labelfont = self.grid.GetLabelFont()
-        default_fontsize = default_cell_attributes["pointsize"]
+        default_fontsize = get_font_from_data(config["font"]).GetPointSize() - 2
         labelfont.SetPointSize(max(1, int(round(default_fontsize * zoom))))
         self.grid.SetLabelFont(labelfont)
     

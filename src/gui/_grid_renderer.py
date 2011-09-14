@@ -42,7 +42,7 @@ import lib.xrect as xrect
 from lib._interfaces import get_pen_from_data, \
                             get_font_from_data, hex_to_rgb
 
-from config import selected_cell_color, overflow_rects
+from config import config
 
 class GridRenderer(wx.grid.PyGridCellRenderer):
     """This renderer draws borders and text at specified font, size, color"""
@@ -111,27 +111,6 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
         angle = float(text_pos[2]) 
         
         return xrect.RotoRect(rr_x, rr_y, text_extent[0], text_extent[1], angle)
-    
-    def draw_blocking_rect(self, dc, cell_rect, block_direction):
-        """Draws block rectangles for given direction and blocking cell
-        
-        Properties
-        ----------
-        dc: wx.DC
-        \t Target draw context
-        block_direction: String in overflow_rects.keys()
-        \tIdentifier for direction, in which blocking rect shall point
-        cell_rect: wx.Rect
-        \tRect of blocking cell
-        
-        """
-
-        arrow, trafo = self.overflow_rects[block_direction]
-
-        arrow_x, arrow_y = trafo(cell_rect.x, cell_rect.y,
-                          cell_rect.width, cell_rect.height)
-
-        dc.DrawBitmap(arrow, arrow_x, arrow_y, True)
     
     def draw_textbox(self, dc, text_pos, text_extent):
     
@@ -533,13 +512,15 @@ class Background(object):
     def draw_background(self, dc):
         """Draws the background of the background"""
         
+        color = wx.Colour()
+        
         if self.selection:
-            bgbrush = wx.Brush(selected_cell_color, wx.SOLID)
+            color.Set(*config["selection_color"])
         else:
             rgb = self.data_array.cell_attributes[self.key]["bgcolor"]
-            color = wx.Colour()
             color.SetRGB(rgb)
-            bgbrush = wx.Brush(color, wx.SOLID)
+        
+        bgbrush = wx.Brush(color, wx.SOLID)
         
         dc.SetBrush(bgbrush)
         dc.SetPen(wx.TRANSPARENT_PEN)

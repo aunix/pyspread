@@ -44,8 +44,6 @@ from model.model import CodeArray
 
 from actions._grid_actions import AllGridActions
 
-from config import default_cell_attributes
-
 class Grid(wx.grid.Grid):
     """Pyspread's main grid"""
 

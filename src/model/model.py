@@ -45,6 +45,8 @@ import numpy
 
 import wx
 
+from config import config
+
 from lib._interfaces import sorted_keys, string_match
 from lib.irange import slice_range
 from lib.typechecks import is_slice_like, is_string_like, is_generator_like
@@ -86,15 +88,14 @@ class CellAttributes(list):
     default_cell_attributes = {
         "borderwidth_bottom": 1,
         "borderwidth_right": 1,
-        "bordercolor_bottom": wx.Colour(200, 200, 200).GetRGB(),
-        "bordercolor_right": wx.Colour(200, 200, 200).GetRGB(),
-        "bgcolor": wx.Colour(255, 255, 255).GetRGB(),
-        "textfont": wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT).\
-                                      GetFaceName(),
+        "bordercolor_bottom": wx.Colour(*config["grid_color"]).GetRGB(),
+        "bordercolor_right": wx.Colour(*config["grid_color"]).GetRGB(),
+        "bgcolor": wx.Colour(*config["background_color"]).GetRGB(),
+        "textfont": config["font"],
         "pointsize": 10,
         "fontweight": wx.NORMAL,
         "fontstyle": wx.NORMAL,
-        "textcolor": wx.Colour(0, 0, 0).GetRGB(),
+        "textcolor": wx.Colour(*config["text_color"]).GetRGB(),
         "underline": False,
         "strikethrough": False,
         "angle": 0.0,

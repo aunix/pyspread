@@ -436,6 +436,8 @@ class MainWindowEventHandlers(object):
         
         if shape is None:
             return
+            
+        self.main_window.grid.actions.change_grid_shape(shape)
         
         # Set new filepath and post it to the title bar
         
