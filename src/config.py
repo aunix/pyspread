@@ -78,7 +78,7 @@ class DefaultConfig(object):
         self.max_unredo = "5000"
         
         # Colors
-        self.grid_color = repr(get_color(wx.SYS_COLOUR_ACTIVEBORDER))
+        self.grid_color = repr(get_color(wx.SYS_COLOUR_3DSHADOW))
         self.selection_color = repr(get_color(wx.SYS_COLOUR_HIGHLIGHT))
         self.background_color = repr(get_color(wx.SYS_COLOUR_WINDOW))
         self.text_color = repr(get_color(wx.SYS_COLOUR_WINDOWTEXT))
