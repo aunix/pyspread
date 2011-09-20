@@ -170,6 +170,11 @@ class Grid(wx.grid.Grid):
         # Find events
         main_window.Bind(EVT_COMMAND_FIND, handlers.OnFind)
         main_window.Bind(EVT_COMMAND_REPLACE, handlers.OnShowFindReplace)
+        main_window.Bind(wx.EVT_FIND, handlers.OnReplaceFind)
+        main_window.Bind(wx.EVT_FIND_NEXT, handlers.OnReplaceFind)
+        main_window.Bind(wx.EVT_FIND_REPLACE, handlers.OnReplace)
+        main_window.Bind(wx.EVT_FIND_REPLACE_ALL, handlers.OnReplaceAll)
+        main_window.Bind(wx.EVT_FIND_CLOSE, handlers.OnCloseFindReplace)
         
         # Grid change events
         
@@ -663,7 +668,9 @@ class GridEventHandlers(object):
     # Find events
 
     def OnFind(self, event):
-        """Find functionality should be in interfaces"""
+        """Find functionality, called from menu, toolbar & FindReplace dialog"""
+        
+        ## should be in interfaces
         
         # Search starts in next cell after the current one
         gridpos = list(self.grid.actions.cursor)
@@ -690,10 +697,36 @@ class GridEventHandlers(object):
     def OnShowFindReplace(self, event):
         """Calls the find-replace dialog"""
         
+        data = wx.FindReplaceData()
+        dlg = wx.FindReplaceDialog(self.grid, data, "Find & Replace", 
+                                   wx.FR_REPLACEDIALOG)
+        dlg.data = data  # save a reference to data
+        dlg.Show(True)
+        
+    def OnReplaceFind(self, event):
+        """Called when a find operation is started from F&R dialog"""
+        
+        print event.GetFindString(), event.GetReplaceString(), event.GetFlags()
+
+    def OnReplace(self, event):
+        """Called when a replace operation is started"""
+        
+        print event.GetFindString(), event.GetReplaceString(), event.GetFlags()
+
+    def OnReplaceAll(self, event):
+        """Called when a replace all operation is started"""
+        
         raise NotImplementedError
         
         event.Skip()
 
+    def OnCloseFindReplace(self, event):
+        """Called when the find"""
+        
+        raise NotImplementedError
+        
+        event.Skip()
+    
     # Grid change events
     
     def _get_no_rowscols(self, bbox):

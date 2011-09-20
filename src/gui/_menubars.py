@@ -205,7 +205,7 @@ class MainMenu(_filledMenu):
                 "Paste cells from clipboard", wx.ID_PASTE]], \
             ["Separator"], \
             [item, [FindFocusMsg, "&Find\tCtrl+f", "Find cell by content"]], \
-            [item, [ReplaceMsg, "Replace\tCtrl+Shift+f", 
+            [item, [ReplaceMsg, "Replace...\tCtrl+Shift+f", 
                 "Replace strings in cells"]], \
             ["Separator"], \
             [item, [InsertRowsMsg, "Insert &rows", 
