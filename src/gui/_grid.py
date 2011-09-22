@@ -668,9 +668,7 @@ class GridEventHandlers(object):
     # Find events
 
     def OnFind(self, event):
-        """Find functionality, called from menu, toolbar & FindReplace dialog"""
-        
-        ## should be in interfaces
+        """Find functionality, called from toolbar"""
         
         # Search starts in next cell after the current one
         gridpos = list(self.grid.actions.cursor)
@@ -706,7 +704,22 @@ class GridEventHandlers(object):
     def OnReplaceFind(self, event):
         """Called when a find operation is started from F&R dialog"""
         
-        print event.GetFindString(), event.GetReplaceString(), event.GetFlags()
+        
+        # Converts wxPython integer flag to pyspread flag list
+            
+        wx_flags = { 0: ["UP", ],
+                     1: ["DOWN"],
+                     2: ["UP", "WHOLE_WORD"],
+                     3: ["DOWN", "WHOLE_WORD"],
+                     4: ["UP", "MATCH_CASE"],
+                     5: ["DOWN", "MATCH_CASE"],
+                     6: ["UP", "WHOLE_WORD", "MATCH_CASE"],
+                     7: ["DOWN", "WHOLE_WORD", "MATCH_CASE"] }
+        
+        event.text = event.GetFindString()
+        event.flags = wx_flags[event.GetFlags()]
+        
+        self.OnFind(event)
 
     def OnReplace(self, event):
         """Called when a replace operation is started"""
