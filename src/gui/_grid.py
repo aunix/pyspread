@@ -666,9 +666,9 @@ class GridEventHandlers(object):
             event.Skip()
     
     # Find events
-
+    
     def OnFind(self, event):
-        """Find functionality, called from toolbar"""
+        """Find functionality, called from toolbar, returns find position"""
         
         # Search starts in next cell after the current one
         gridpos = list(self.grid.actions.cursor)
@@ -691,6 +691,8 @@ class GridEventHandlers(object):
         post_command_event(self.grid.main_window, StatusBarMsg, text=statustext)
         
         event.Skip()
+        
+        return findpos
 
     def OnShowFindReplace(self, event):
         """Calls the find-replace dialog"""
@@ -700,13 +702,10 @@ class GridEventHandlers(object):
                                    wx.FR_REPLACEDIALOG)
         dlg.data = data  # save a reference to data
         dlg.Show(True)
+    
+    def _wxflag2flag(self, wxflag):
+        """Converts wxPython integer flag to pyspread flag list"""
         
-    def OnReplaceFind(self, event):
-        """Called when a find operation is started from F&R dialog"""
-        
-        
-        # Converts wxPython integer flag to pyspread flag list
-            
         wx_flags = { 0: ["UP", ],
                      1: ["DOWN"],
                      2: ["UP", "WHOLE_WORD"],
@@ -716,27 +715,51 @@ class GridEventHandlers(object):
                      6: ["UP", "WHOLE_WORD", "MATCH_CASE"],
                      7: ["DOWN", "WHOLE_WORD", "MATCH_CASE"] }
         
+        return wx_flags[wxflag]
+    
+    def OnReplaceFind(self, event):
+        """Called when a find operation is started from F&R dialog"""
+        
         event.text = event.GetFindString()
-        event.flags = wx_flags[event.GetFlags()]
+        event.flags = self._wxflag2flag(event.GetFlags())
         
         self.OnFind(event)
 
     def OnReplace(self, event):
-        """Called when a replace operation is started"""
+        """Called when a replace operation is started, returns find position"""
         
-        print event.GetFindString(), event.GetReplaceString(), event.GetFlags()
-
+        event.text = find_string = event.GetFindString()
+        event.flags = self._wxflag2flag(event.GetFlags())
+        replace_string = event.GetReplaceString()
+        
+        findpos = self.OnFind(event)
+        
+        if findpos is not None:
+            old_code = self.grid.code_array(findpos)
+            new_code = old_code.replace(find_string, replace_string)
+        
+            self.grid.code_array[findpos] = new_code
+            self.grid.actions.cursor = findpos
+        
+            statustext = "Replaced '" + old_code + "' with '" + new_code + \
+                         "' in cell " + unicode(list(findpos)) + "."
+        
+        event.Skip()
+        
+        return findpos
+        
     def OnReplaceAll(self, event):
         """Called when a replace all operation is started"""
         
-        raise NotImplementedError
+        while self.OnReplace(event) is not None:
+            pass
         
         event.Skip()
 
     def OnCloseFindReplace(self, event):
-        """Called when the find"""
+        """Called when the find&replace dialog is closed"""
         
-        raise NotImplementedError
+        event.GetDialog().Destroy()
         
         event.Skip()
     

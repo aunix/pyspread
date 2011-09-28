@@ -903,7 +903,7 @@ class CodeArray(DataArray):
         -----------
         startkey:   Start position of search
         find_string:String to be searched for
-        flags:      List of strings, out ouf 
+        flags:      List of strings, out of 
                     ["UP" xor "DOWN", "WHOLE_WORD", "MATCH_CASE", "REG_EXP"]
         
         """
