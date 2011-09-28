@@ -391,11 +391,21 @@ class TableRowActionsMixin(object):
         """Adds no_rows rows before row, appends if row > maxrows"""
         
         self.code_array.insert(row, no_rows, axis=0)
-
+        
+        # Adjust cell attributes
+        for selection, _, _ in self.grid.code_array.cell_attributes:
+            selection.insert(row, no_rows, 0)
+        self.grid.code_array.cell_attributes._attr_cache.clear()
+        
     def delete_rows(self, row, no_rows=1):
         """Deletes no_rows rows"""
         
         self.code_array.delete(row, no_rows, axis=0)
+        
+        # Adjust cell attributes
+        for selection, _, _ in self.grid.code_array.cell_attributes:
+            selection.insert(row, -no_rows, 0)
+        self.grid.code_array.cell_attributes._attr_cache.clear()
 
 
 class TableColumnActionsMixin(object):
@@ -411,10 +421,20 @@ class TableColumnActionsMixin(object):
         
         self.code_array.insert(col, no_cols, axis=1)
         
+        # Adjust cell attributes
+        for selection, _, _ in self.grid.code_array.cell_attributes:
+            selection.insert(col, no_cols, 1)
+        self.grid.code_array.cell_attributes._attr_cache.clear()
+        
     def delete_cols(self, col, no_cols=1):
         """Deletes no_cols column"""
         
         self.code_array.delete(col, no_cols, axis=1)
+        
+        # Adjust cell attributes
+        for selection, _, _ in self.grid.code_array.cell_attributes:
+            selection.insert(col, -no_cols, 1)
+        self.grid.code_array.cell_attributes._attr_cache.clear()
 
 
 class TableTabActionsMixin(object):
@@ -424,11 +444,29 @@ class TableTabActionsMixin(object):
         """Adds no_tabs tabs before table, appends if tab > maxtabs"""
         
         self.code_array.insert(tab, no_tabs, axis=2)
+        
+        # Adjust cell attributes
+        new_tabs = []
+        for _, old_tab, _ in self.grid.code_array.cell_attributes:
+            new_tabs.append(old_tab + no_tabs if old_tab > tab else old_tab)
+        
+        for i, new_tab in new_tabs:
+            self.grid.code_array.cell_attributes[i][1] = new_tab
+        self.grid.code_array.cell_attributes._attr_cache.clear()
 
     def delete_tabs(self, tab, no_tabs=1):
         """Deletes no_tabs tabs"""
         
         self.code_array.delete(tab, no_tabs, axis=2)
+        
+        # Adjust cell attributes
+        new_tabs = []
+        for _, old_tab, _ in self.grid.code_array.cell_attributes:
+            new_tabs.append(old_tab - no_tabs if old_tab > tab else old_tab)
+        
+        for i, new_tab in new_tabs:
+            self.grid.code_array.cell_attributes[i][1] = new_tab
+        self.grid.code_array.cell_attributes._attr_cache.clear()
 
 class TableActions(TableRowActionsMixin, TableColumnActionsMixin, 
                    TableTabActionsMixin):

@@ -120,36 +120,79 @@ class Selection(object):
         
         return False
         
-    def __add__(self, value):
-        """Shifts selection down and / or right
-        
+#    def __add__(self, value):
+#        """Shifts selection down and / or right
+#        
+#        Parameters
+#        ----------
+#        
+#        value: 2-tuple
+#        \tRows and cols to be shifted up
+#        
+#        """
+#        
+#        delta_row, delta_col = value
+#        
+#        selection = copy(self)
+#        
+#        selection.block_tl = [(t + delta_row, l + delta_col) 
+#                                    for t, l in selection.block_tl]
+#        
+#        selection.block_br = [(t + delta_row, l + delta_col) 
+#                                    for t, l in selection.block_br]
+#        
+#        selection.rows = [row + delta_row for row in selection.rows]
+#        
+#        selection.cols = [col + delta_col for col in selection.cols]
+#        
+#        selection.cells = [(r + delta_row, c + delta_col) 
+#                                    for r, c in selection.cells]
+#        
+#        return selection
+    
+    def insert(self, point, number, axis):
+        """Inserts number of rows/cols/tabs into selection at point on axis
         Parameters
         ----------
         
-        value: 2-tuple
-        \tRows and cols to be shifted up
+        point: Integer
+        \tAt this point the rows/cols are inserted or deleted
+        number: Integer
+        \tNumber of rows/cols to be inserted, negative number deletes
+        axis: Integer in 0, 1
+        \tDefines whether rows or cols are affected
         
         """
         
-        delta_row, delta_col = value
+        assert axis in [0, 1]
         
-        selection = copy(self)
+        def build_tuple_list(source_list, point, number, axis):
+            """"""
+            
+            target_list = []
+            
+            for tl in source_list:
+                tl_list = list(tl)
+                if tl[axis] > point:
+                    tl_list[axis] += number
+                target_list.append(tuple(tl_list))
+                
+            return target_list
         
-        selection.block_tl = [(t + delta_row, l + delta_col) 
-                                    for t, l in selection.block_tl]
+        self.block_tl = build_tuple_list(self.block_tl, point, number, axis)
         
-        selection.block_br = [(t + delta_row, l + delta_col) 
-                                    for t, l in selection.block_br]
+        self.block_br = build_tuple_list(self.block_br, point, number, axis)
         
-        selection.rows = [row + delta_row for row in selection.rows]
-        
-        selection.cols = [col + delta_col for col in selection.cols]
-        
-        selection.cells = [(r + delta_row, c + delta_col) 
-                                    for r, c in selection.cells]
-        
-        return selection
-
+        if axis == 0:
+            self.rows = [row + number if row > point else row \
+                            for row in self.rows]
+        elif axis == 1:
+            self.cols = [col + number if col > point else col \
+                            for col in self.cols]
+            
+        self.cells = build_tuple_list(self.cells, point, number, axis)
+                
+    
     def get_bbox(self):
         """Returns top left and bottom right of bounding box
         
