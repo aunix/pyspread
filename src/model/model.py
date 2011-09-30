@@ -655,6 +655,66 @@ class DataArray(object):
         
         self.shape = tuple(new_shape)
     
+    def _set_cell_attributes(self, value):
+        """Setter for cell_atributes"""
+        
+        while len(self.cell_attributes):
+            self.cell_attributes.pop()
+        self.cell_attributes.extend(value)
+    
+    def _adjust_cell_attributes(self, insertion_point, no_to_insert, axis):
+        """Adjusts cell attributes on insertion/deletion"""
+        
+        assert axis in [0, 1, 2]
+        
+        # Save cell_attributes for undo
+        old_cell_attributes = copy(self.cell_attributes)
+        
+        if axis < 2:
+            # Adjust selections
+            for selection, _, _ in self.cell_attributes:
+                selection.insert(insertion_point, no_to_insert, axis)
+                
+            self.cell_attributes._attr_cache.clear()
+            
+            # Adjust row heights and col widths
+            cell_sizes = self.col_widths if axis else self.row_heights
+            
+            new_sizes = {}
+            
+            for pos, tab in cell_sizes:
+                if pos > insertion_point:
+                    new_sizes[(pos+no_to_insert, tab)] = cell_sizes[(pos, tab)]
+                    cell_sizes[(pos, tab)] = None
+                else:
+                    new_sizes[(pos, tab)] = cell_sizes[(pos, tab)]
+            
+            cell_sizes.update(new_sizes)
+            
+        elif axis == 2:
+            # Adjust tabs
+            new_tabs = []
+            for _, old_tab, _ in self.cell_attributes:
+                new_tabs.append(old_tab + no_to_insert \
+                                if old_tab > insertion_point else old_tab)
+            
+            for i, new_tab in new_tabs:
+                self.cell_attributes[i][1] = new_tab
+                
+            self.cell_attributes._attr_cache.clear()
+            
+        else:
+            raise ValueError, "axis must be in [0, 1, 2]"
+        
+        # Make undoable
+        
+        undo_operation = (self._adjust_cell_attributes, 
+                          [insertion_point, -no_to_insert, axis])
+        redo_operation = (self._adjust_cell_attributes, 
+                          [insertion_point, no_to_insert, axis]) 
+        
+        self.unredo.append(undo_operation, redo_operation)
+    
     def insert(self, insertion_point, no_to_insert, axis):
         """Inserts no_to_insert rows/cols/tabs/... before insertion_point
         
@@ -690,6 +750,9 @@ class DataArray(object):
         
         for key in new_keys:
             self[key] = new_keys[key]
+            
+        self._adjust_cell_attributes(insertion_point, no_to_insert, axis)
+
         
     def delete(self, deletion_point, no_to_delete, axis):
         """Deletes no_to_delete rows/cols/tabs/... starting with deletion_point
@@ -718,7 +781,9 @@ class DataArray(object):
                 new_key[axis] -= no_to_delete
                 
                 self[tuple(new_key)] = self.pop(key)
-
+        
+        self._adjust_cell_attributes(deletion_point, -no_to_delete, axis)
+        
         self._adjust_shape(-no_to_delete, axis)
 
     # Element access via call
