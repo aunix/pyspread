@@ -825,8 +825,8 @@ class DataArray(object):
         
         # Make undoable
         
-        undo_operation = (self.set_col_width, [col, tab, old_height])
-        redo_operation = (self.set_col_width, [col, tab, height]) 
+        undo_operation = (self.set_col_width, [col, tab, old_width])
+        redo_operation = (self.set_col_width, [col, tab, width]) 
         
         self.unredo.append(undo_operation, redo_operation)
         

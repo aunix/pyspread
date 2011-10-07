@@ -318,18 +318,19 @@ class ClipboardActions(object):
     """Actions which affect the clipboard"""
     
     def cut(self, selection):
-        """Cuts selected cells and returns data in a tab separated string"""
+        """Cuts selected cells and returns data in a tab separated string
         
-        # Copy cells
-        data = self.copy(selection)
+        Parameters
+        ----------
         
-        # Delete cells
+        selection: Selection object
+        \tSelection of cells in current table that shall be copied
         
-        for key in self.grid:
-            if key in selection:
-                self.grid.pop(key)
+        """
         
-        return data
+        # Call copy with delete flag
+        
+        return self.copy(selection, delete=True)
     
     def _get_code(self, key):
         """Returns code for given key (one cell)
@@ -342,9 +343,12 @@ class ClipboardActions(object):
         
         """
         
-        return self.grid.code_array(key)
+        data = self.grid.code_array(key)
+        self.grid.code_array.result_cache.clear()
+        
+        return data
     
-    def copy(self, selection, getter=None):
+    def copy(self, selection, getter=None, delete=False):
         """Returns code from selection in a tab separated string
         
         Cells that are not in selection are included as empty.
@@ -356,6 +360,8 @@ class ClipboardActions(object):
         \tSelection of cells in current table that shall be copied
         getter: Function, defaults to _get_code
         \tGetter function for copy content
+        delete: Bool
+        \tDeletes all cells inside selection
         
         """
         
@@ -385,7 +391,18 @@ class ClipboardActions(object):
                 # if there is no selection
                 
                 if (__row, __col) in selection or not selection_bbox:
-                    content = getter((__row, __col, tab))                  
+                    content = getter((__row, __col, tab))
+                    
+                    # Delete cell if delete flag is set
+                    
+                    if delete:
+                        try:
+                            self.grid.code_array.pop((__row, __col, tab))
+                        
+                        except KeyError:
+                            pass
+                    
+                    # Store data
                     
                     if content is None:
                         data[-1].append(u"")

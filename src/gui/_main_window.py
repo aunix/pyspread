@@ -716,7 +716,9 @@ class MainWindowEventHandlers(object):
         """Clipboard cut event handler"""
         
         data = self.main_window.actions.cut(self.main_window.grid.selection)
-        self.clipboard.set_clipboard(data)
+        self.main_window.clipboard.set_clipboard(data)
+        
+        self.main_window.grid.ForceRefresh()
         
         event.Skip()
     
