@@ -38,6 +38,7 @@ from _events import *
 from _grid_table import GridTable
 from _grid_renderer import GridRenderer
 from _gui_interfaces import GuiInterfaces
+from _menubars import ContextMenu
 
 import lib.xrect as xrect
 from model.model import CodeArray
@@ -68,6 +69,9 @@ class Grid(wx.grid.Grid):
         # Grid renderer draws the grid
         self.grid_renderer = GridRenderer(self.code_array)
         self.SetDefaultRenderer(self.grid_renderer)
+        
+        # Context menu for quick access of important functions
+        self.contextmenu = ContextMenu(parent=self)
         
         # Handler classes contain event handler methods
         self.handlers = GridEventHandlers(self)
@@ -123,6 +127,10 @@ class Grid(wx.grid.Grid):
         self.GetGridWindow().Bind(wx.EVT_MOTION, handlers.OnMouseMotion)
         self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, handlers.OnMouseClick)
         self.Bind(wx.EVT_SCROLLWIN, handlers.OnScroll)
+        
+        # Context menu
+        
+        self.Bind(wx.grid.EVT_GRID_CELL_RIGHT_CLICK, handlers.OnContextMenu)
         
         # Cell code events
         
@@ -644,9 +652,7 @@ class GridEventHandlers(object):
     def OnContextMenu(self, event):
         """Context menu event handler"""
         
-        raise NotImplementedError
-        
-        #self.PopupMenu(self.contextmenu)
+        self.grid.PopupMenu(self.grid.contextmenu)
         
         event.Skip()
     
