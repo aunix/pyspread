@@ -39,7 +39,8 @@ import wx.lib.colourselect as csel
 
 from _events import *
 
-from config import FONT_SIZES, faces
+from config import config
+from sysvars import get_default_font
 from icons import icons
 
 from lib._interfaces import get_font_list, textfont_from_string
@@ -359,7 +360,7 @@ class AttributesToolbar(wx.ToolBar):
     def _create_font_size_combo(self):
         """Creates font size combo box"""
         
-        self.std_font_sizes = FONT_SIZES
+        self.std_font_sizes = config["font_default_sizes"]
         font_size = str(get_default_font().GetPointSize())
         self.font_size_combo = wx.ComboBox(self, -1, value=font_size,
             size=(60, -1), choices=map(unicode, self.std_font_sizes),
@@ -741,8 +742,9 @@ class AttributesToolbar(wx.ToolBar):
         
         try:
             size = int(event.GetString())
+            
         except Exception:
-            size = faces['size']
+            size = get_default_font().GetPointSize()
         
         post_command_event(self, FontSizeMsg, size=size)
     

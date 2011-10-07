@@ -57,6 +57,11 @@ def get_color(name):
     
     return wx.SystemSettings.GetColour(name).Get()
     
+def get_default_font():
+    """Returns default font"""
+    
+    return wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+    
 def get_font_string(name):
     """Returns string representation of named system font"""
     

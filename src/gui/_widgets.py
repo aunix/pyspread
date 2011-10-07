@@ -51,7 +51,6 @@ from wx.lib.intctrl import IntCtrl, EVT_INT
 
 from _events import *
 
-from config import faces
 from icons import icons
 
 class CollapsiblePane(wx.CollapsiblePane):
@@ -97,127 +96,10 @@ class PythonSTC(stc.StyledTextCtrl):
     Stolen from the wxPython demo.py
     """
 
-    fold_symbols = 2
-
-    """
-    Fold symbols
-    ------------
-    
-    The following styles are pre-defined:
-      "arrows"      Arrow pointing right for contracted folders,
-                    arrow pointing down for expanded
-      "plusminus"   Plus for contracted folders, minus for expanded
-      "circletree"  Like a flattened tree control using circular headers 
-                    and curved joins
-      "squaretree"  Like a flattened tree control using square headers
-    
-    """
-    
-    fold_symbol_styles = { \
-      "arrows": \
-      [ \
-        (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_ARROWDOWN, "black", "black"), \
-        (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_ARROW, "black", "black"), \
-        (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_EMPTY, "black", "black"), \
-        (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_EMPTY, "black", "black"), \
-        (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_EMPTY, "white", "black"), \
-        (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_EMPTY, "white", "black"), \
-        (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_EMPTY, "white", "black"), \
-      ], \
-      "plusminus": \
-      [ \
-        (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_MINUS, "white", "black"), \
-        (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_PLUS,  "white", "black"), \
-        (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_EMPTY, "white", "black"), \
-        (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_EMPTY, "white", "black"), \
-        (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_EMPTY, "white", "black"), \
-        (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_EMPTY, "white", "black"), \
-        (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_EMPTY, "white", "black"), \
-      ], \
-      "circletree":
-      [ \
-        (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_CIRCLEMINUS, "white", "#404040"), \
-        (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_CIRCLEPLUS, "white", "#404040"), \
-        (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, "white", "#404040"), \
-        (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_LCORNERCURVE,
-                                                        "white", "#404040"), \
-        (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_CIRCLEPLUSCONNECTED, 
-                                                        "white", "#404040"), \
-        (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_CIRCLEMINUSCONNECTED, 
-                                                        "white", "#404040"), \
-        (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNERCURVE, 
-                                                        "white", "#404040"), \
-      ], \
-      "squaretree": 
-      [ \
-        (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_BOXMINUS, "white", "#808080"), \
-        (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_BOXPLUS, "white", "#808080"), \
-        (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, "white", "#808080"), \
-        (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_LCORNER, "white", "#808080"), \
-        (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_BOXPLUSCONNECTED, 
-                                                          "white", "#808080"), \
-        (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_BOXMINUSCONNECTED, 
-                                                          "white", "#808080"), \
-        (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNER, 
-                                                          "white", "#808080"), \
-      ] \
-    }
-    
-    fold_symbol_style = fold_symbol_styles["circletree"]
-
-    """
-    Text styles
-    -----------
-    
-    The lexer defines what each style is used for, we just have to define
-    what each style looks like.  The Python style set is adapted from Scintilla
-    sample property files.
-    
-    """
-    
-    
-    text_styles = [ \
-      (stc.STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % faces), \
-      (stc.STC_STYLE_LINENUMBER, "back:#C0C0C0,face:%(helv)s,"
-                                 "size:%(size2)d" % faces), \
-      (stc.STC_STYLE_CONTROLCHAR, "face:%(other)s" % faces), \
-      (stc.STC_STYLE_BRACELIGHT, "fore:#FFFFFF,back:#0000FF,bold"), \
-      (stc.STC_STYLE_BRACEBAD, "fore:#000000,back:#FF0000,bold"), \
-      # Python styles
-      # Default 
-      (stc.STC_P_DEFAULT, "fore:#000000,face:%(helv)s,size:%(size)d" % faces), \
-      # Comments
-      (stc.STC_P_COMMENTLINE, "fore:#007F00,face:%(other)s,"
-                              "size:%(size)d" % faces), \
-      # Number
-      (stc.STC_P_NUMBER, "fore:#007F7F,size:%(size)d" % faces), \
-      # String
-      (stc.STC_P_STRING, "fore:#7F007F,face:%(helv)s,size:%(size)d" % faces), \
-      # Single quoted string
-      (stc.STC_P_CHARACTER, "fore:#7F007F,face:%(helv)s,size:%(size)d" % faces), \
-      # Keyword
-      (stc.STC_P_WORD, "fore:#00007F,bold,size:%(size)d" % faces), \
-      # Triple quotes
-      (stc.STC_P_TRIPLE, "fore:#7F0000,size:%(size)d" % faces), \
-      # Triple double quotes
-      (stc.STC_P_TRIPLEDOUBLE, "fore:#7F0000,size:%(size)d" % faces), \
-      # Class name definition
-      (stc.STC_P_CLASSNAME, "fore:#0000FF,bold,underline,size:%(size)d" % faces), \
-      # Function or method name definition
-      (stc.STC_P_DEFNAME, "fore:#007F7F,bold,size:%(size)d" % faces), \
-      # Operators
-      (stc.STC_P_OPERATOR, "bold,size:%(size)d" % faces), \
-      # Identifiers
-      (stc.STC_P_IDENTIFIER, "fore:#000000,face:%(helv)s,size:%(size)d" % faces), \
-      # Comment-blocks
-      (stc.STC_P_COMMENTBLOCK, "fore:#7F7F7F,size:%(size)d" % faces), \
-      # End of line where string is not closed
-      (stc.STC_P_STRINGEOL, "fore:#000000,face:%(mono)s,"
-                            "back:#E0C0E0,eol,size:%(size)d" % faces), \
-    ]
-
     def __init__(self, *args, **kwargs):
         stc.StyledTextCtrl.__init__(self, *args, **kwargs)
+        
+        self._style()
 
         self.CmdKeyAssign(ord('B'), stc.STC_SCMOD_CTRL, stc.STC_CMD_ZOOMIN)
         self.CmdKeyAssign(ord('N'), stc.STC_SCMOD_CTRL, stc.STC_CMD_ZOOMOUT)
@@ -250,7 +132,7 @@ class PythonSTC(stc.StyledTextCtrl):
         
         # Global default styles for all languages
         self.StyleSetSpec(stc.STC_STYLE_DEFAULT, \
-                          "face:%(helv)s,size:%(size)d" % faces)
+                          "face:%(helv)s,size:%(size)d" % self.faces)
         self.StyleClearAll()  # Reset all to be like the default
         
         # Import text style specs from config file
@@ -261,7 +143,147 @@ class PythonSTC(stc.StyledTextCtrl):
         
         self.SetMarginType(1, stc.STC_MARGIN_NUMBER)
         self.SetMarginWidth(1, 30)
-
+    
+    def _style(self):
+        """Set editor style"""
+        
+        self.fold_symbols = 2
+    
+        """
+        Fold symbols
+        ------------
+        
+        The following styles are pre-defined:
+          "arrows"      Arrow pointing right for contracted folders,
+                        arrow pointing down for expanded
+          "plusminus"   Plus for contracted folders, minus for expanded
+          "circletree"  Like a flattened tree control using circular headers 
+                        and curved joins
+          "squaretree"  Like a flattened tree control using square headers
+        
+        """
+        
+        self.faces = {'times': 'Times',
+                      'mono' : 'Courier',
+                      'helv' : wx.SystemSettings.GetFont( \
+                               wx.SYS_DEFAULT_GUI_FONT).GetFaceName(),
+                      'other': 'new century schoolbook',
+                      'size' : 10,
+                      'size2': 8,
+                     }
+        
+        white = "white"
+        black = "black"
+        gray1 = "#404040"
+        gray2 = "#808080"
+        
+        self.fold_symbol_styles = { \
+          "arrows": \
+          [ \
+            (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_ARROWDOWN, black, black),
+            (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_ARROW, black, black),
+            (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_EMPTY, black, black),
+            (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_EMPTY, black, black),
+            (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_EMPTY, white, black),
+            (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_EMPTY, white, black),
+            (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_EMPTY, white, black),
+          ], \
+          "plusminus": \
+          [ \
+            (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_MINUS, white, black),
+            (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_PLUS,  white, black),
+            (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_EMPTY, white, black),
+            (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_EMPTY, white, black),
+            (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_EMPTY, white, black),
+            (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_EMPTY, white, black),
+            (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_EMPTY, white, black),
+          ], \
+          "circletree":
+          [ \
+            (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_CIRCLEMINUS, 
+                                                            white, gray1),
+            (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_CIRCLEPLUS, white, gray1),
+            (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, white, gray1),
+            (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_LCORNERCURVE,
+                                                            white, gray1),
+            (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_CIRCLEPLUSCONNECTED, 
+                                                            white, gray1),
+            (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_CIRCLEMINUSCONNECTED, 
+                                                            white, gray1),
+            (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNERCURVE, 
+                                                            white, gray1),
+          ], \
+          "squaretree": 
+          [ \
+            (stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_BOXMINUS, white, gray2),
+            (stc.STC_MARKNUM_FOLDER, stc.STC_MARK_BOXPLUS, white, gray2),
+            (stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, white, gray2),
+            (stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_LCORNER, white, gray2),
+            (stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_BOXPLUSCONNECTED, 
+                                                            white, gray2),
+            (stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_BOXMINUSCONNECTED, 
+                                                            white, gray2),
+            (stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNER, white, gray2),
+          ] \
+        }
+        
+        self.fold_symbol_style = self.fold_symbol_styles["circletree"]
+    
+        """
+        Text styles
+        -----------
+        
+        The lexer defines what each style is used for, we just have to define
+        what each style looks like.  The Python style set is adapted from Scintilla
+        sample property files.
+        
+        """
+        
+        
+        self.text_styles = [ \
+          (stc.STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % self.faces), \
+          (stc.STC_STYLE_LINENUMBER, "back:#C0C0C0,face:%(helv)s,"
+                                     "size:%(size2)d" % self.faces), \
+          (stc.STC_STYLE_CONTROLCHAR, "face:%(other)s" % self.faces), \
+          (stc.STC_STYLE_BRACELIGHT, "fore:#FFFFFF,back:#0000FF,bold"), \
+          (stc.STC_STYLE_BRACEBAD, "fore:#000000,back:#FF0000,bold"), \
+          # Python styles
+          # Default 
+          (stc.STC_P_DEFAULT, "fore:#000000,face:%(helv)s,size:%(size)d" % \
+                                                                self.faces), \
+          # Comments
+          (stc.STC_P_COMMENTLINE, "fore:#007F00,face:%(other)s,"
+                                  "size:%(size)d" % self.faces), \
+          # Number
+          (stc.STC_P_NUMBER, "fore:#007F7F,size:%(size)d" % self.faces), \
+          # String
+          (stc.STC_P_STRING, "fore:#7F007F,face:%(helv)s,size:%(size)d" % \
+                                                                self.faces), \
+          # Single quoted string
+          (stc.STC_P_CHARACTER, "fore:#7F007F,face:%(helv)s,size:%(size)d" % \
+                                                                self.faces), \
+          # Keyword
+          (stc.STC_P_WORD, "fore:#00007F,bold,size:%(size)d" % self.faces), \
+          # Triple quotes
+          (stc.STC_P_TRIPLE, "fore:#7F0000,size:%(size)d" % self.faces), \
+          # Triple double quotes
+          (stc.STC_P_TRIPLEDOUBLE, "fore:#7F0000,size:%(size)d" % self.faces), \
+          # Class name definition
+          (stc.STC_P_CLASSNAME, "fore:#0000FF,bold,underline,size:%(size)d" % \
+                                                                self.faces), \
+          # Function or method name definition
+          (stc.STC_P_DEFNAME, "fore:#007F7F,bold,size:%(size)d" % self.faces), \
+          # Operators
+          (stc.STC_P_OPERATOR, "bold,size:%(size)d" % self.faces), \
+          # Identifiers
+          (stc.STC_P_IDENTIFIER, "fore:#000000,face:%(helv)s,size:%(size)d" % \
+                                                                self.faces), \
+          # Comment-blocks
+          (stc.STC_P_COMMENTBLOCK, "fore:#7F7F7F,size:%(size)d" % self.faces), \
+          # End of line where string is not closed
+          (stc.STC_P_STRINGEOL, "fore:#000000,face:%(mono)s,"
+                                "back:#E0C0E0,eol,size:%(size)d" % self.faces), \
+        ]
 
     def OnUpdateUI(self, evt):
         """Syntax highlighting while editing"""
@@ -518,6 +540,7 @@ class PenWidthComboBox(ImageComboBox):
 
 class FontChoiceCombobox(ImageComboBox):
     """Combo box for choosing fonts"""
+
     
     def OnDrawItem(self, dc, rect, item, flags):
         
@@ -528,7 +551,7 @@ class FontChoiceCombobox(ImageComboBox):
         __rect.Deflate(3, 5)
         
         font_string = self.GetString(item)
-        font = wx.Font(faces['size'], wx.DEFAULT, wx.NORMAL, wx.NORMAL, \
+        font = wx.Font(wx.DEFAULT, wx.DEFAULT, wx.NORMAL, wx.NORMAL, \
                        False, font_string)
         dc.SetFont(font)
         text_width, text_height = dc.GetTextExtent(font_string)

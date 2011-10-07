@@ -87,7 +87,8 @@ try:
 except ImportError:
     pass
 
-from config import config, faces
+from config import config
+from sysvars import get_default_font
 
 def sorted_keys(keys, startkey, reverse=False):
     """Generator that yields sorted keys starting with startkey
@@ -372,12 +373,6 @@ def make_repr(obj):
     """Returns the string represemntation of object"""
     
     return repr(obj)
-
-def get_default_font():
-    """Returns default font"""
-    
-    return wx.Font(faces['size'], wx.NORMAL, wx.NORMAL, 
-                                  wx.NORMAL, False, faces['helv'])
 
 def get_font_from_data(fontdata):
     """Returns wx.Font from fontdata string"""

@@ -87,6 +87,10 @@ class DefaultConfig(object):
         
         self.font = repr(get_font_string(wx.SYS_DEFAULT_GUI_FONT))
         
+        # Default cell font size
+        
+        self.font_default_sizes = "[6, 8, 10, 12, 14, 16, 18, 20, 24, 28, 32]"
+        
         # Zoom        
         
         self.minimum_zoom = "0.25"
@@ -169,57 +173,8 @@ class Config(object):
 
 
 config = Config()
-    
 
-"""
-StyledTextCtrl layout
-=====================
 
-Provides layout for the StyledTextCtrl widget that is used in the macro dialog
-
-Platform dependent layout is specified here.
-
-"""
-
-"""
-Font faces
-----------
-
-"""
-
-if wx.Platform == '__WXMSW__':
-    faces = { 'times': 'Times New Roman',
-              'mono' : 'Courier New',
-              'helv' : 'Arial',
-              'other': 'Comic Sans MS',
-              'size' : 10,
-              'size2': 8,
-             }
-elif wx.Platform == '__WXMAC__':
-    faces = { 'times': 'Times New Roman',
-              'mono' : 'Monaco',
-              'helv' : 'Arial',
-              'other': 'Comic Sans MS',
-              'size' : 10,
-              'size2': 8,
-             }
-else:
-    faces = { 'times': 'Times',
-              'mono' : 'Courier',
-              'helv' : wx.SystemSettings.GetFont( \
-                       wx.SYS_DEFAULT_GUI_FONT).GetFaceName(),
-              'other': 'new century schoolbook',
-              'size' : 10,
-              'size2': 8,
-             }
-
-"""
-Default cell font size
-----------------------
-
-"""
-
-FONT_SIZES = range(3, 14) + range(16, 32, 2) + range(36, 99, 4)
 
 
 

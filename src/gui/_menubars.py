@@ -36,7 +36,6 @@ Provides:
 
 import wx
 
-from config import FONT_SIZES
 from lib._interfaces import get_font_list
 
 from _events import *
