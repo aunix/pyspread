@@ -504,6 +504,7 @@ class GridEventHandlers(object):
     def __init__(self, grid):
         self.grid = grid
         self.interfaces = grid.interfaces
+        self.main_window = grid.main_window
     
     def OnMouseMotion(self, event):
         """Mouse motion event handler"""
@@ -741,6 +742,7 @@ class GridEventHandlers(object):
         findpos = self.OnFind(event)
         
         if findpos is not None:
+            
             old_code = self.grid.code_array(findpos)
             new_code = old_code.replace(find_string, replace_string)
         
@@ -842,7 +844,7 @@ class GridEventHandlers(object):
         _, no_cols = self._get_no_rowscols(self.grid.selection.get_bbox())
             
         cursor = self.grid.actions.cursor
-        
+
         self.grid.actions.delete_cols(cursor[1], no_cols)
         
         self.grid.GetTable().ResetView()

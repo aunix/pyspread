@@ -43,7 +43,7 @@ from _menubars import MainMenu
 from _toolbars import MainToolbar, FindToolbar, AttributesToolbar
 from _widgets import EntryLine, StatusBar, TableChoiceIntCtrl
 
-from lib._interfaces import PysInterface, Clipboard
+from lib._interfaces import Clipboard
 
 from _gui_interfaces import GuiInterfaces
 from gui.icons import icons
@@ -73,10 +73,6 @@ class MainWindow(wx.Frame):
         # --------------
         
         self._states()
-        
-        # Has the current file been changed since the last save?
-        self.changed_since_save = False
-        self.filepath = None
         
         # GUI elements
         # ------------
@@ -128,6 +124,10 @@ class MainWindow(wx.Frame):
         
     def _states(self):
         """Sets main window states"""
+        
+        # Has the current file been changed since the last save?
+        self.changed_since_save = False
+        self.filepath = None
         
         # Print data
         
@@ -279,6 +279,31 @@ class MainWindow(wx.Frame):
         return self.grid.code_array.safe_mode
 
     safe_mode = property(get_safe_mode)
+    
+    def set_changed_since_save(self, value):
+        """Sets _content_changed to True, inserts star in title bar"""
+        
+        self.__content_changed = value
+        
+        title = self.GetTitle()
+        
+        if value:
+            # Put * in front of title
+            if title[:2] != "* ":
+                new_title = "* " + title
+                post_command_event(self, TitleMsg, text=new_title)
+                
+        elif title[:2] == "* ":
+            # Remove * in front of title
+            new_title = title[2:]
+            post_command_event(self, TitleMsg, text=new_title)
+        
+    def get_changed_since_save(self):
+        """Returns _content_changed"""
+        
+        return self.__content_changed
+        
+    changed_since_save = property(get_changed_since_save, set_changed_since_save)
 
 # End of class MainWindow
 
@@ -512,8 +537,8 @@ class MainWindowEventHandlers(object):
         
         # Save the grid
         
-        post_command_event(self.main_window, GridActionSaveMsg, attr={ \
-            "filepath": self.main_window.filepath, "interface": PysInterface})
+        post_command_event(self.main_window, GridActionSaveMsg, 
+                           attr={"filepath": self.main_window.filepath})
         
         # Display file save in status bar
         

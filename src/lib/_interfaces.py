@@ -54,13 +54,10 @@ Provides
  * make_object
  * make_repr
  
- * PysInterface: PYS file operations
- * CsvInterfaces: Connects array datastructure with csv import module
  * Clipboard: Clipboard access
  * Commandline: Gets command line options and parameters
  * Digest: Converts any object to target type as goog as possible
- * UserString: Unicode wrapper class
- * Validator: Validator for text and digti textctrl
+ * Validator: Validator for text and digit TextCtrl
 
 """
 
@@ -423,102 +420,6 @@ def get_font_list():
     
     return font_list
 
-def repeated(ilist):
-    """Generator for simple compression of lists 
-    
-    Returns a list of 2-tuples, where the 1st value is the original value 
-    and the 2nd value is the number of repeated occasions
-    
-    Parameters
-    ----------
-    
-    ilist: List
-    \tList of elements that can be compared to each other
-    
-    """
-    
-    if len(ilist) == 0:
-        return
-    
-    counter = 1
-    for i, ele in enumerate(ilist[1:]):
-        try:
-            if ele == ilist[i]:
-                counter += 1
-            else:
-                yield (ilist[i], counter)
-                counter = 1
-        except KeyError:
-            yield (ele, counter)
-    try:
-        yield (ele, counter)
-    except UnboundLocalError:
-        yield (ilist[0], 1)
-
-class PysInterface(object):
-    """PYS file handling class
-    
-    Methods
-    -------
-    open: Opens PYS file
-    close: Closes PYS file
-    get_values: Gets the values in the grid
-    
-    """
-    
-    def __init__(self):
-        self.filename = None
-        self._pys_file = None
-        
-        self.column_styles = {}
-        self.row_styles = {}
-    
-    def open(self, filename):
-        """Opens PYS file"""
-        
-        self._pys_file = bz2.BZ2File(filename, "rb")
-        self.filename = filename
-        
-    def close(self):
-        """Closes PYS file"""
-        
-        self._pys_file.close()
-    
-    def save(self, dict_grid, filename=None):
-        """Saves the pickled object dict_grid to self.filename (bz2 pickle)"""
-        
-        if filename is None:
-            filename = self.filename
-        
-        outfile = bz2.BZ2File(filename, "wb")
-        pickle.dump(dict_grid, outfile, protocol=2)
-        outfile.close()
-    
-    def get_values(self):
-        """Returns a numpy object array with unicode cell content from PYS"""
-        
-        return SafeUnpickler.loads(self._pys_file.read())
-        
-    
-    def get_fonts(self):
-        """Compatibility to odf interface"""
-        
-        return {}
-    
-    def get_bgbrushes(self):
-        """Compatibility to odf interface"""
-        
-        return {}
-        
-    def get_textattributes(self):
-        """Compatibility to odf interface"""
-        
-        return {}
-        
-    def get_border_pens(self):
-        """Compatibility to odf interface"""
-        
-        return {}
 
 class Clipboard(object):
     """Clipboard access
