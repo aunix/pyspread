@@ -384,7 +384,7 @@ class TableRowActionsMixin(object):
         
         tab = self.grid.current_table
         
-        self.code_array.row_heights[(row, tab)] = height
+        self.code_array.set_row_height(row, tab, height)
         self.grid.SetRowSize(row, height)
 
     def insert_rows(self, row, no_rows=1):
@@ -401,12 +401,12 @@ class TableRowActionsMixin(object):
 class TableColumnActionsMixin(object):
     """Table column controller actions"""
 
-    def set_col_width(self, row, width):
+    def set_col_width(self, col, width):
         """Sets column width"""
         
         tab = self.grid.current_table
         
-        self.code_array.col_widths[(col, tab)] = width
+        self.code_array.set_col_width(col, tab, width)
         self.grid.SetColSize(col, width)
 
     def insert_cols(self, col, no_cols=1):

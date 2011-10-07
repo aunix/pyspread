@@ -879,7 +879,7 @@ class GridEventHandlers(object):
         
         rowsize = self.grid.GetRowSize(row) / self.grid.grid_renderer.zoom
         
-        self.grid.code_array.row_heights[(row, tab)] = rowsize
+        self.grid.code_array.set_row_height(row, tab, rowsize)
         
         event.Skip()
         
@@ -891,7 +891,7 @@ class GridEventHandlers(object):
         
         colsize = self.grid.GetColSize(col) / self.grid.grid_renderer.zoom
         
-        self.grid.code_array.col_widths[(col, tab)] = colsize 
+        self.grid.code_array.set_col_width(col, tab, colsize)
         
         event.Skip()
 

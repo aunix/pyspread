@@ -786,6 +786,50 @@ class DataArray(object):
         
         self._adjust_shape(-no_to_delete, axis)
 
+    def set_row_height(self, row, tab, height):
+        """Sets row height"""
+        
+        try:
+            old_height = self.row_heights[(row, tab)]
+            
+        except KeyError:
+            old_height = None
+        
+        if height is None:
+            self.row_heights.pop((row, tab))
+            
+        else:
+            self.row_heights[(row, tab)] = height
+        
+        # Make undoable
+        
+        undo_operation = (self.set_row_height, [row, tab, old_height])
+        redo_operation = (self.set_row_height, [row, tab, height]) 
+        
+        self.unredo.append(undo_operation, redo_operation)
+
+    def set_col_width(self, col, tab, width):
+        """Sets column width"""
+        
+        try:
+            old_width = self.col_widths[(col, tab)]
+            
+        except KeyError:
+            old_width = None
+        
+        if width is None:
+            self.col_widths.pop((row, tab))
+            
+        else:
+            self.col_widths[(col, tab)] = width
+        
+        # Make undoable
+        
+        undo_operation = (self.set_col_width, [col, tab, old_height])
+        redo_operation = (self.set_col_width, [col, tab, height]) 
+        
+        self.unredo.append(undo_operation, redo_operation)
+        
     # Element access via call
     
     __call__ = __getitem__

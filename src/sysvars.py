@@ -61,4 +61,3 @@ def get_font_string(name):
     """Returns string representation of named system font"""
     
     return wx.SystemSettings.GetFont(name).GetFaceName()
-    
