@@ -818,7 +818,7 @@ class DataArray(object):
             old_width = None
         
         if width is None:
-            self.col_widths.pop((row, tab))
+            self.col_widths.pop((col, tab))
             
         else:
             self.col_widths[(col, tab)] = width
