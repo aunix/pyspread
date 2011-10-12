@@ -98,7 +98,8 @@ class GridTable(wx.grid.PyGridTableBase):
     def SetValue(self, row, col, value, refresh=True):
         """Set the value of a cell"""
         
-        self.data_array[row, col, self.grid.current_table] = value
+        key = row, col, self.grid.current_table
+        self.grid.actions.set_code(key, value)
         
     def UpdateValues(self):
         """Update all displayed values"""

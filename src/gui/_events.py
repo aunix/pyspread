@@ -89,6 +89,8 @@ TableChoiceToggleMsg, EVT_COMMAND_TABLECHOICE_TOGGLE = new_command_event()
 
 ToolbarUpdateMsg, EVT_COMMAND_TOOLBAR_UPDATE = new_command_event()
 
+ContentChangedMsg, EVT_CONTENT_CHANGED = new_command_event()
+
 # Grid cell
 # =========
 

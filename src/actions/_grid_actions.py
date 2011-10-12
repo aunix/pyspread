@@ -149,7 +149,7 @@ class FileActions(object):
         self.code_array.unredo.reset()
         self.code_array.result_cache.clear()
 
-        
+    
     def open(self, event):
         """Opens a file that is specified in event.attr
         
@@ -380,7 +380,10 @@ class TableRowActionsMixin(object):
     """Table row controller actions"""
 
     def set_row_height(self, row, height):
-        """Sets row height"""
+        """Sets row height and marks grid as changed"""
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         tab = self.grid.current_table
         
@@ -388,12 +391,22 @@ class TableRowActionsMixin(object):
         self.grid.SetRowSize(row, height)
 
     def insert_rows(self, row, no_rows=1):
-        """Adds no_rows rows before row, appends if row > maxrows"""
+        """Adds no_rows rows before row, appends if row > maxrows 
+        
+        and marks grid as changed
+        
+        """
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         self.code_array.insert(row, no_rows, axis=0)
         
     def delete_rows(self, row, no_rows=1):
-        """Deletes no_rows rows"""
+        """Deletes no_rows rows and marks grid as changed"""
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         self.code_array.delete(row, no_rows, axis=0)
 
@@ -402,7 +415,10 @@ class TableColumnActionsMixin(object):
     """Table column controller actions"""
 
     def set_col_width(self, col, width):
-        """Sets column width"""
+        """Sets column width and marks grid as changed"""
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         tab = self.grid.current_table
         
@@ -410,12 +426,22 @@ class TableColumnActionsMixin(object):
         self.grid.SetColSize(col, width)
 
     def insert_cols(self, col, no_cols=1):
-        """Adds no_cols columns before col, appends if col > maxcols"""
+        """Adds no_cols columns before col, appends if col > maxcols 
+        
+        and marks grid as changed
+        
+        """
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         self.code_array.insert(col, no_cols, axis=1)
         
     def delete_cols(self, col, no_cols=1):
-        """Deletes no_cols column"""
+        """Deletes no_cols column and marks grid as changed"""
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         self.code_array.delete(col, no_cols, axis=1)
         
@@ -424,12 +450,22 @@ class TableTabActionsMixin(object):
     """Table tab controller actions"""
 
     def insert_tabs(self, tab, no_tabs=1):
-        """Adds no_tabs tabs before table, appends if tab > maxtabs"""
+        """Adds no_tabs tabs before table, appends if tab > maxtabs
+        
+        and marks grid as changed
+        
+        """
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         self.code_array.insert(tab, no_tabs, axis=2)
 
     def delete_tabs(self, tab, no_tabs=1):
-        """Deletes no_tabs tabs"""
+        """Deletes no_tabs tabs and marks grid as changed"""
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         self.code_array.delete(tab, no_tabs, axis=2)
 
@@ -489,6 +525,8 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
     def paste(self, tl_key, data):
         """Pastes data into grid table starting at top left cell tl_key
         
+        and marks grid as changed
+        
         Parameters
         ----------
         
@@ -498,6 +536,9 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
         \tThe outer iterable represents rows
         
         """
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         self.pasting = True
         
@@ -547,30 +588,30 @@ class TableActions(TableRowActionsMixin, TableColumnActionsMixin,
         self.pasting = False
 
     def change_grid_shape(self, shape):
-        """Grid shape change event handler"""
+        """Grid shape change event handler, marks content as changed"""
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         self.grid.code_array.shape = shape
-
-    
-class MacroActions(object):
-    """Macro controller actions"""
-        
-    def set_macros(selfself, macro_string):
-        """Sets macro string"""
-    
-        raise NotImplementedError
 
 
 class UnRedoActions(object):
     """Undo and redo operations"""
     
     def undo(self):
-        """Calls undo in model.code_array.unredo"""
+        """Calls undo in model.code_array.unredo, marks content as changed"""
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         self.code_array.unredo.undo()
         
     def redo(self):
-        """Calls redo in model.code_array.unredo"""
+        """Calls redo in model.code_array.unredo, marks content as changed"""
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         self.code_array.unredo.redo()
 
@@ -818,7 +859,10 @@ class SelectionActions(object):
                     self.select_cell(row, col, add_to_selected=True)
 
     def delete_selection(self):
-        """Deletes selected cells"""\
+        """Deletes selected cells, marks content as changed"""
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         selection = self.get_selection()
         
@@ -867,11 +911,38 @@ class FindActions(object):
         
         return findfunc(tuple(gridpos), find_string, flags)
         
-    def replace(self):
-        raise NotImplementedError
+    def replace(self, findpos, find_string, replace_string):
+        """Replaces occurrences of find_string with replace_string at findpos
+        
+        and marks content as changed
+        
+        Parameters
+        ----------
+        
+        findpos: 3-Tuple of Integer
+        \tPosition in grid that shall be replaced
+        find_string: String
+        \tString to be overwritten in the cell
+        replace_string: String
+        \tString to be used for replacement
 
+        """
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
+        
+        old_code = self.grid.code_array(findpos)
+        new_code = old_code.replace(find_string, replace_string)
+    
+        self.grid.code_array[findpos] = new_code
+        self.grid.actions.cursor = findpos
+        
+        statustext = "Replaced '" + old_code + "' with '" + new_code + \
+                     "' in cell " + unicode(list(findpos)) + "."
+                     
+        post_command_event(self.main_window, StatusBarMsg, text=statustext)
 
-class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions, 
+class AllGridActions(FileActions, TableActions, UnRedoActions, 
                      GridActions, SelectionActions, FindActions, CellActions):
     """All grid actions as a bundle"""
     
@@ -882,7 +953,6 @@ class AllGridActions(FileActions, TableActions, MacroActions, UnRedoActions,
         
         FileActions.__init__(self)
         TableActions.__init__(self)
-        MacroActions.__init__(self)
         UnRedoActions.__init__(self)
         GridActions.__init__(self)
         SelectionActions.__init__(self)

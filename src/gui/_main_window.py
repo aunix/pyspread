@@ -205,6 +205,9 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MOVE, handlers.OnMove)
         self.Bind(wx.EVT_SIZE, handlers.OnSize)
         
+        # Content changed event, adjusts title bar with star
+        self.Bind(EVT_CONTENT_CHANGED, handlers.OnContentChanged)
+        
         # Program state events
         
         self.Bind(EVT_COMMAND_TITLE, handlers.OnTitle)
@@ -279,31 +282,6 @@ class MainWindow(wx.Frame):
         return self.grid.code_array.safe_mode
 
     safe_mode = property(get_safe_mode)
-    
-    def set_changed_since_save(self, value):
-        """Sets _content_changed to True, inserts star in title bar"""
-        
-        self.__content_changed = value
-        
-        title = self.GetTitle()
-        
-        if value:
-            # Put * in front of title
-            if title[:2] != "* ":
-                new_title = "* " + title
-                post_command_event(self, TitleMsg, text=new_title)
-                
-        elif title[:2] == "* ":
-            # Remove * in front of title
-            new_title = title[2:]
-            post_command_event(self, TitleMsg, text=new_title)
-        
-    def get_changed_since_save(self):
-        """Returns _content_changed"""
-        
-        return self.__content_changed
-        
-    changed_since_save = property(get_changed_since_save, set_changed_since_save)
 
 # End of class MainWindow
 
@@ -330,6 +308,24 @@ class MainWindowEventHandlers(object):
         # Store window position in config
         
         config["window_size"] = repr(event.GetSize())
+    
+    def OnContentChanged(self, event):
+        """Titlebar star adjustment event handler"""
+        
+        self.main_window.changed_since_save = event.changed
+        
+        title = self.main_window.GetTitle()
+        
+        if event.changed:
+            # Put * in front of title
+            if title[:2] != "* ":
+                new_title = "* " + title
+                post_command_event(self.main_window, TitleMsg, text=new_title)
+                
+        elif title[:2] == "* ":
+            # Remove * in front of title
+            new_title = title[2:]
+            post_command_event(self.main_window, TitleMsg, text=new_title)
     
     def OnTitle(self, event):
         """Title change event handler"""

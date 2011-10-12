@@ -58,6 +58,7 @@ from lib._interfaces import Digest
 from gui._printout import PrintCanvas, Printout
 from gui._events import *
 
+
 class CsvInterface(object):
     """CSV interface class
     
@@ -214,6 +215,9 @@ class ExchangeActions(object):
         \tIndex for type of file, 0: csv, 1: tab-delimited text file
         
         """
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         if filterindex == 0:
             # CSV import option choice
@@ -438,13 +442,20 @@ class ClipboardActions(object):
         return self.copy(selection, getter=getter)
     
     def paste(self, key, data):
-        data_lines = data.split("\n")
+        """Pastes data into grid
         
-        row, col, tab = key
+        Parameters
+        ----------
         
-        for data_row, line in enumerate(data_lines):
-            for data_col, value in enumerate(line.split("\t")):
-                self.grid.code_array[row+data_row, col+data_col, tab] = value
+        key: 2-Tuple of Integer
+        \tTop left cell
+        data: String
+        \tTab separated string of paste data
+        """
+        
+        data_gen = (line.split("\t") for line in data.split("\n"))
+        
+        self.grid.actions.paste(key[:2], data_gen)
         
         self.main_window.grid.ForceRefresh()
 
@@ -457,12 +468,15 @@ class MacroActions(object):
         self.grid.code_array.macros = macros
         
     def execute_macros(self):
-        """Executes macros"""
+        """Executes macros and marks grid as changed"""
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         self.grid.code_array.execute_macros()
     
     def open_macros(self, filepath):
-        """Loads macros from file
+        """Loads macros from file and marks grid as changed
         
         Parameters
         ----------
@@ -479,7 +493,10 @@ class MacroActions(object):
             post_command_event(self.main_window, StatusBarMsg, text=statustext)
             
             return False
-            
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
+        
         macrocode = macro_infile.read()
         macro_infile.close()
         

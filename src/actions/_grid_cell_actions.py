@@ -40,9 +40,22 @@ Provides:
   
 """
 
+
 class CellActions(object):
     """Mixin class that supplies Cell code additions, changes and deletion"""
+
+    def set_code(self, key, code):
+        """Sets code of cell key, marks grid as changed"""
         
+        old_code = self.grid.code_array(key)
+        
+        if not (old_code is None and not code) and code != old_code:
+            # Mark content as changed
+            post_command_event(self.main_window, ContentChangedMsg, changed=True)
+            
+        # Set cell code
+        self.grid.code_array[key] = code
+
     def delete_cell(self,  key):
         """Deletes key cell"""
         
@@ -108,7 +121,7 @@ class CellActions(object):
         post_command_event(self.grid.main_window, EntryLineMsg, text=new_code)
     
     def _set_cell_attr(self, selection, table, attr):
-        """Sets cell attr for key cell
+        """Sets cell attr for key cell and mark grid content as changed
         
         Parameters
         ----------
@@ -123,6 +136,9 @@ class CellActions(object):
         \t"vertical_align", "justification", "frozen"]
         
         """
+        
+        # Mark content as changed
+        post_command_event(self.main_window, ContentChangedMsg, changed=True)
         
         if selection is not None:
             self.code_array.cell_attributes.undoable_append( \
@@ -326,4 +342,3 @@ class CellActions(object):
                 if skey in selection:
                     key = tuple(list(skey) + [tab])
                     attr_dict["frozen"] = self.grid.code_array._eval_cell(key)
-        

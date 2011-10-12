@@ -316,9 +316,9 @@ class GridCellEventHandlers(object):
     def OnCellText(self, event):
         """Text entry event handler"""
         
-        row, col, tab = self.grid.actions.cursor
+        key = self.grid.actions.cursor
         
-        self.grid.code_array[(row, col, tab)] = event.code
+        self.grid.actions.set_code(key, event.code)
         
         event.Skip()
     
@@ -742,16 +742,8 @@ class GridEventHandlers(object):
         findpos = self.OnFind(event)
         
         if findpos is not None:
+            self.grid.actions.replace(findpos, find_string, replace_string)
             
-            old_code = self.grid.code_array(findpos)
-            new_code = old_code.replace(find_string, replace_string)
-        
-            self.grid.code_array[findpos] = new_code
-            self.grid.actions.cursor = findpos
-        
-            statustext = "Replaced '" + old_code + "' with '" + new_code + \
-                         "' in cell " + unicode(list(findpos)) + "."
-        
         event.Skip()
         
         return findpos
