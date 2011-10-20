@@ -458,22 +458,6 @@ class GridCellEventHandlers(object):
         self.grid.ForceRefresh()
         
         event.Skip()
-        
-    # Cell edit event handlers
-    
-    def OnCellEditorShown(self, event):
-        """Cell editor shown event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
-        
-    def OnCellEditorHidden(self, event):
-        """Cell editor hidden event handler"""
-        
-        raise NotImplementedError
-        
-        event.Skip()
     
     # Cell selection event handlers
     

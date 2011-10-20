@@ -342,3 +342,5 @@ class CellActions(object):
                 if skey in selection:
                     key = tuple(list(skey) + [tab])
                     attr_dict["frozen"] = self.grid.code_array._eval_cell(key)
+        
+        cell_attributes._attr_cache.clear()
