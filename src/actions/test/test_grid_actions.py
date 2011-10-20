@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import os
 from sys import path
 
@@ -23,20 +26,45 @@ class TestFileActions(object):
         self.main_window = MainWindow(None, -1)
         self.grid = self.main_window.grid
         
+        # Filenames
+        # ---------
+        
+        # File with valid signature
+        self.filename_valid_sig = "test1.pys"
+        
+        # File without signature
+        self.filename_no_sig = "test2.pys"
+        
+        # File with invalid signature
+        self.filename_invalid_sig = "test3.pys"
+        
+        # File for grid size test
+        self.filename_gridsize = "test4.pys"
+        
+        # Empty file
+        self.filename_empty = "test5.pys"
+        
+        # File name that cannot be accessed
+        self.filename_not_permitted = "test6.pys"
+        
+        # File name without file
+        self.filename_wrong = "test-1.pys"
+        
+        # File for testing save
+        self.filename_save = "test_save.pys"
+        
     def test_validate_signature(self):
         """Tests signature validation"""
         
         # Test missing sig file
-        filename_no_sig = "test2.pys"
-        assert not self.grid.actions.validate_signature(filename_no_sig)
+        assert not self.grid.actions.validate_signature(self.filename_no_sig)
         
         # Test valid sig file
-        filename_valid_sig = "test1.pys"
-        assert self.grid.actions.validate_signature(filename_valid_sig)
+        assert self.grid.actions.validate_signature(self.filename_valid_sig)
         
         # Test invalid sig file
-        filename_invalid_sig = "test3.pys"
-        assert not self.grid.actions.validate_signature(filename_invalid_sig)
+        assert not \
+            self.grid.actions.validate_signature(self.filename_invalid_sig)
         
     def test_enter_safe_mode(self):
         """Tests safe mode entry"""
@@ -55,41 +83,40 @@ class TestFileActions(object):
     def test_approve(self):
         
         # Test if safe_mode is correctly set for invalid sig
-        filename_invalid_sig = "test3.pys"
-        
-        self.grid.actions.approve(filename_invalid_sig)
+        self.grid.actions.approve(self.filename_invalid_sig)
         
         assert self.grid.GetTable().data_array.safe_mode
         
         # Test if safe_mode is correctly set for valid sig
         
-        filename_valid_sig = "test1.pys"
-        
-        self.grid.actions.approve(filename_valid_sig)
+        self.grid.actions.approve(self.filename_valid_sig)
             
         assert not self.grid.GetTable().data_array.safe_mode
         
         # Test if safe_mode is correctly set for missing sig
-        filename_no_sig = "test2.pys"
-        
-        self.grid.actions.approve(filename_no_sig)
+        self.grid.actions.approve(self.filename_no_sig)
         
         assert self.grid.GetTable().data_array.safe_mode
         
         # Test if safe_mode is correctly set for io-error sig
         
-        filename_not_permitted = "test6.pys"
+        os.chmod(self.filename_not_permitted, 0200)
+        os.chmod(self.filename_not_permitted + ".sig", 0200)
         
-        os.chmod(filename_not_permitted, 0200)
-        os.chmod(filename_not_permitted + ".sig", 0200)
-        
-        self.grid.actions.approve(filename_not_permitted)
+        self.grid.actions.approve(self.filename_not_permitted)
         
         assert self.grid.GetTable().data_array.safe_mode
         
-        os.chmod(filename_not_permitted, 0644)
-        os.chmod(filename_not_permitted + ".sig", 0644)
+        os.chmod(self.filename_not_permitted, 0644)
+        os.chmod(self.filename_not_permitted + ".sig", 0644)
+    
+    def test_get_file_version(self):
+        """Tests infile version string."""
         
+        infile = bz2.BZ2File(self.filename_valid_sig)
+        assert self.grid.actions._get_file_version(infile) == "0.1.3"
+        infile.close()
+    
     def test_open(self):
         """Tests open functionality"""
 
@@ -98,59 +125,43 @@ class TestFileActions(object):
         event = Event()
         
         # Test missing file
-
-        filename_wrong = "test-1.pys"
-
-        event.attr["filepath"] = filename_wrong
+        event.attr["filepath"] = self.filename_wrong
         
         assert not self.grid.actions.open(event)
         
         # Test unaccessible file
-        
-        filename_not_permitted = "test6.pys"
-        os.chmod(filename_not_permitted, 0200)
-        
-        event.attr["filepath"] = filename_not_permitted
+        os.chmod(self.filename_not_permitted, 0200)
+        event.attr["filepath"] = self.filename_not_permitted
         assert not self.grid.actions.open(event)
         
-        os.chmod(filename_not_permitted, 0644)
+        os.chmod(self.filename_not_permitted, 0644)
         
         # Test empty file
-        filename_empty = "test5.pys"
-        
-        event.attr["filepath"] = filename_empty
+        event.attr["filepath"] = self.filename_empty
         assert not self.grid.actions.open(event)
         
         assert self.grid.GetTable().data_array.safe_mode # sig is also empty
         
         # Test invalid sig files
-        filename_invalid_sig = "test3.pys"
-        
-        event.attr["filepath"] = filename_invalid_sig
+        event.attr["filepath"] = self.filename_invalid_sig
         self.grid.actions.open(event)
         
         assert self.grid.GetTable().data_array.safe_mode
         
         # Test file with sig
-        filename_valid_sig = "test1.pys"
-        
-        event.attr["filepath"] = filename_valid_sig
+        event.attr["filepath"] = self.filename_valid_sig
         self.grid.actions.open(event)
             
         assert not self.grid.GetTable().data_array.safe_mode
         
         # Test file without sig
-        filename_no_sig = "test2.pys"
-        
-        event.attr["filepath"] = filename_no_sig
+        event.attr["filepath"] = self.filename_no_sig
         self.grid.actions.open(event)
         
         assert self.grid.GetTable().data_array.safe_mode
         
         # Test grid size for valid file
-        filename_gridsize = "test4.pys"
-        
-        event.attr["filepath"] = filename_gridsize
+        event.attr["filepath"] = self.filename_gridsize
         self.grid.actions.open(event)
         
         assert not self.grid.GetTable().data_array.safe_mode
@@ -168,14 +179,12 @@ class TestFileActions(object):
         event = Event()
         
         # Test normal save
-        
-        filename_save = "test_save.pys"
-
-        event.attr["filepath"] = filename_save
+        event.attr["filepath"] = self.filename_save
         
         self.grid.actions.save(event)
         
-        savefile = open(filename_save)
+        savefile = open(self.filename_save)
+        
         assert savefile
         savefile.close()
         
@@ -185,13 +194,13 @@ class TestFileActions(object):
         
         # Test io error
         
-        os.chmod(filename_save, 0200)
+        os.chmod(self.filename_save, 0200)
         try:
             self.grid.actions.save(event)
             raise IOError, "No error raised even though target not writable"
         except IOError:
             pass
-        os.chmod(filename_save, 0644)
+        os.chmod(self.filename_save, 0644)
         
         # Test invalid file name
         
@@ -204,12 +213,12 @@ class TestFileActions(object):
         
         # Test sig creation is happening
         
-        sigfile = open(filename_save + ".sig")
+        sigfile = open(self.filename_save + ".sig")
         assert sigfile
         sigfile.close()
         
-        os.remove(filename_save)
-        os.remove(filename_save + ".sig")
+        os.remove(self.filename_save)
+        os.remove(self.filename_save + ".sig")
 
     def test_sign_file(self):
         """Tests signing functionality"""
@@ -226,12 +235,75 @@ class TestFileActions(object):
         
         pass
 
-class TestMacroActions(object):
-    pass
+class TestTableRowActionsMixins(object):
+    def test_set_row_height(self):
+        pass
+        
+    def test_insert_rows(self):
+        pass
+        
+    def test_delete_rows(self):
+        pass
+        
+
+class TestTableColumnActionsMixin(object):
+    def test_set_col_width(self):
+        pass
+        
+    def test_insert_cols(self):
+        pass
+        
+    def test_delete_cols(self):
+        pass
+        
+    
+class TestTableTabActionsMixin(object):
+    def test_insert_tabs(self):
+        pass
+        
+    def test_delete_tabs(self):
+        pass
+
+class TestTableActions(object):
+    def setup_method(self, method):
+        self.main_window = MainWindow(None, -1)
+        self.grid = self.main_window.grid
+        
+    def test_paste(self):
+        """Tests paste into grid"""
+        
+        # Test 1D paste of strings
+        tl_cell = 0, 0, 0
+        data = [map(str, [1, 2, 3, 4]), [""] * 4]
+        
+        self.grid.actions.paste(tl_cell, data)
+        
+        assert self.grid.code_array[tl_cell] == 1
+        assert self.grid.code_array(tl_cell) == '1'
+        assert self.grid.code_array[0, 1, 0] == 2
+        assert self.grid.code_array[0, 2, 0] == 3
+        assert self.grid.code_array[0, 3, 0] == 4
+        
+        # Test row overflow
+        ##TODO
+        
+        # Test col overflow
+        ##TODO
+    
+    def test_on_key(self):
+        pass
+        
+    def test_change_grid_shape(self):
+        pass
 
 
 class TestUnRedoActions(object):
-    pass
+    def test_undo(self):
+        pass
+        
+    def test_redo(self):
+        pass
+        
 
 
 class TestGridActions(object):
@@ -259,76 +331,44 @@ class TestGridActions(object):
             self.event.code_array = code_array
             self.grid.actions.new(self.event)
             assert self.grid.GetTable().data_array.shape == dim
-    
-class TestSelection(object):
-    """Selection class test class"""
-    
-    def setup_method(self, method):
-        self.SelectionCls = actions._grid_actions.Selection
+            
+    def test_get_visible_area(self):
+        pass
+        
+    def test_switch_to_table(self):
+        pass
+        
+    def test_get_cursor(self):
+        pass
+        
+    def test_set_cursor(self):
+        pass
+        
 
-    def test_contains(self):
-        """Tests __contains__ functionality of selection class"""
-        
-        # Test block selection
-        
-        selection = self.SelectionCls([(4, 5)], [(100, 200)], [], [], [])
-        cells_in_selection = ((i, j) for i in xrange(4, 100, 5) 
-                                     for j in xrange(5, 200, 5))
-        
-        for cell in cells_in_selection:
-            assert cell in selection
-        
-        cells_not_in_selection = \
-            [(0, 0), (0, 1), (1, 0), (1, 1), (4, 4), (3, 5),
-             (100, 201), (101, 200), (101, 201), (10**10, 10**10),
-             [0, 0]]
-        
-        for cell in cells_not_in_selection:
-            assert cell not in selection
-        
-        # Test row selection
-        
-        # Test column selection
-        
-        # Test cell selection
-    
-    def test_get_bbox(self):
-        """Tests bounding boxes of selection class"""
-        
-        sel_tl, sel_br = [(4, 5)], [(100, 200)]
-        
-        selection = self.SelectionCls(sel_tl, sel_br, [], [], [])
-        bbox_tl, bbox_br = selection.get_bbox() 
-        assert bbox_tl == sel_tl[0]
-        assert bbox_br == sel_br[0]
-    
-    
 class TestSelectionActions(object):
-    pass
+    """Selection actions test class"""
+    
+    def test_get_selection(self):
+        pass
+        
+    def test_select_cell(self):
+        pass
+        
+    def test_select_slice(self):
+        pass
+        
+    def test_delete_selection(self):
+        pass
     
     
-class TestTableActions(object):
-    def setup_method(self, method):
-        self.main_window = MainWindow(None, -1)
-        self.grid = self.main_window.grid
+class TestFindActions(object):
+    """FindActions test class"""
+    
+    def test_find(self):
+        pass
         
-    def test_paste(self):
-        """Tests paste into grid"""
-        
-        # Test 1D paste of strings
-        tl_cell = 0, 0, 0
-        data = [map(str, [1, 2, 3, 4]), [""] * 4]
-        
-        self.grid.actions.paste(tl_cell, data)
-        
-        assert self.grid.code_array[tl_cell] == 1
-        assert self.grid.code_array(tl_cell) == '1'
-        assert self.grid.code_array[0, 1, 0] == 2
-        assert self.grid.code_array[0, 2, 0] == 3
-        assert self.grid.code_array[0, 3, 0] == 4
-        
-        # Test row overflow
-        ##TODO
-        
-        # Test col overflow
-        ##TODO
+    def test_replace(self):
+        pass
+
+    
+    

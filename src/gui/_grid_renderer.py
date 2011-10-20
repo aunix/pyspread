@@ -40,7 +40,7 @@ import wx.grid
 import lib.xrect as xrect
 
 from lib._interfaces import get_pen_from_data, \
-                            get_font_from_data, hex_to_rgb
+                            get_font_from_data
 
 from config import config
 

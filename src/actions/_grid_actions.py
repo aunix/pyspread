@@ -121,6 +121,7 @@ class FileActions(object):
             break
         for line2 in infile:
             break
+        
         if line1.strip() != "[Pyspread save file version]":
             errortext = "File format unsupported. " + filepath + \
                 " seems not to be a pyspread save file version 0.1."

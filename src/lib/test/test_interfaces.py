@@ -66,18 +66,7 @@ def test_string_match():
 class Test(object):
     """Test of free functions"""
     
-#    def test_sniff(self):
-#        """csv import sniffer"""
-#  
-#        dialect, header = _interfaces.sniff("test/BUG2037662.csv")
-#        assert not header
-#        assert dialect.delimiter == ','
-#        assert dialect.doublequote == 0
-#        assert dialect.quoting == 0
-#        assert dialect.quotechar == '"'
-#        assert dialect.lineterminator == "\r\n"
-#        assert dialect.skipinitialspace == 0
-    
+   
     def test_sorted_keys(self):
         keys = [(1, 0, 0), (2, 0, 0), (0, 1, 0), (0, 99, 0), (0, 0, 0), 
                 (0, 0, 99), (1, 2, 3)]
@@ -87,28 +76,45 @@ class Test(object):
         sk = list(_interfaces.sorted_keys(keys, (0, 3, 0), reverse=True))
         assert sk == [(0, 1, 0), (2, 0, 0), (1, 0, 0), (0, 0, 0), (0, 0, 99), 
               (1, 2, 3), (0, 99, 0)]
+
+    def test_sniff(self):
+        """csv import sniffer"""
+  
+        dialect, header = _interfaces.sniff("test/BUG2037662.csv")
+        assert not header
+        assert dialect.delimiter == ','
+        assert dialect.doublequote == 0
+        assert dialect.quoting == 0
+        assert dialect.quotechar == '"'
+        assert dialect.lineterminator == "\r\n"
+        assert dialect.skipinitialspace == 0
     
-    def test_fill_numpyarray(self):
+    def test_fill_wxgrid(self):
         """Fill the target with values from an array"""
         
-        src_it = [(1, (1, 2), [1, 2], "1", 345, 1.0), \
-                  ("67857", ['a'], 435, "1", 34534, 1.0)]
-
-        digest_types = [types.IntType, types.ObjectType, types.StringType, \
-                        types.IntType, types.ObjectType, types.FloatType]
-        
-        target = numpy.zeros((10, 7, 4), dtype="O")
-        
-        key = (0, 1, 0)
-        
-        _interfaces.fill_numpyarray(target, src_it, digest_types, key)
-        
-        expected_res = numpy.array( \
-               [[1, (1, 2), '[1, 2]', 1, 345, 1.0],
-               [67857, ['a'], '435', 1, 34534, 1.0]], dtype=object)
-        
-        for resele, expele in zip(target[:2, 1:, 0].flat, expected_res.flat):
-            assert resele == repr(expele)
+        pass
+    
+#    def test_fill_numpyarray(self):
+#        """Fill the target with values from an array"""
+#        
+#        src_it = [(1, (1, 2), [1, 2], "1", 345, 1.0), \
+#                  ("67857", ['a'], 435, "1", 34534, 1.0)]
+#
+#        digest_types = [types.IntType, types.ObjectType, types.StringType, \
+#                        types.IntType, types.ObjectType, types.FloatType]
+#        
+#        target = numpy.zeros((10, 7, 4), dtype="O")
+#        
+#        key = (0, 1, 0)
+#        
+#        _interfaces.fill_numpyarray(target, src_it, digest_types, key)
+#        
+#        expected_res = numpy.array( \
+#               [[1, (1, 2), '[1, 2]', 1, 345, 1.0],
+#               [67857, ['a'], '435', 1, 34534, 1.0]], dtype=object)
+#        
+#        for resele, expele in zip(target[:2, 1:, 0].flat, expected_res.flat):
+#            assert resele == repr(expele)
     
     def test_repeated(self):
         """Tests repeated functon that compresses lists for recurring elements"""
