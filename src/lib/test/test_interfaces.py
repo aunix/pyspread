@@ -36,32 +36,6 @@ import vartypes as v
 
 gmpy.rand('seed', 2)
 
-def test_string_match():
-    """Test of string_match function"""
-    
-    test_strings = ["", "Hello", " Hello", "Hello ", " Hello ", "Hello\n",
-                    "THelloT", " HelloT", "THello ", "hello", "HELLO", "sd"]
-                    
-    search_string = "Hello"
-    
-    # Normal search
-    flags = []
-    results = [None, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, None]
-    for test_string, result in zip(test_strings, results):
-        assert _interfaces.string_match(test_string, search_string, flags) \
-               == result
-    
-    flags = ["MATCH_CASE"]
-    results = [None, 0, 1, 0, 1, 0, 1, 1, 1, None, None, None]
-    for test_string, result in zip(test_strings, results):
-        assert _interfaces.string_match(test_string, search_string, flags) \
-               == result
-    
-    flags = ["WHOLE_WORD"]
-    results = [None, 0, 1, 0, 1, 0, None, None, None, 0, 0, None]
-    for test_string, result in zip(test_strings, results):
-        assert _interfaces.string_match(test_string, search_string, flags) \
-               == result
 
 class Test(object):
     """Test of free functions"""
@@ -93,85 +67,58 @@ class Test(object):
         """Fill the target with values from an array"""
         
         pass
-    
-#    def test_fill_numpyarray(self):
-#        """Fill the target with values from an array"""
-#        
-#        src_it = [(1, (1, 2), [1, 2], "1", 345, 1.0), \
-#                  ("67857", ['a'], 435, "1", 34534, 1.0)]
-#
-#        digest_types = [types.IntType, types.ObjectType, types.StringType, \
-#                        types.IntType, types.ObjectType, types.FloatType]
-#        
-#        target = numpy.zeros((10, 7, 4), dtype="O")
-#        
-#        key = (0, 1, 0)
-#        
-#        _interfaces.fill_numpyarray(target, src_it, digest_types, key)
-#        
-#        expected_res = numpy.array( \
-#               [[1, (1, 2), '[1, 2]', 1, 345, 1.0],
-#               [67857, ['a'], '435', 1, 34534, 1.0]], dtype=object)
-#        
-#        for resele, expele in zip(target[:2, 1:, 0].flat, expected_res.flat):
-#            assert resele == repr(expele)
-    
-    def test_repeated(self):
-        """Tests repeated functon that compresses lists for recurring elements"""
 
-        tests = [ \
-            [[], []],
-            [[1], [(1, 1)]],
-            [[1, 2], [(1, 1), (2, 1)]],
-            [[1, 1, 2], [(1, 2), (2, 1)]],
-            [[1, 2, 2], [(1, 1), (2, 2)]],
-            [[12] * 1200, [(12, 1200)]],
-            ]
+    def test_is_pyme_present(self):
+        pass
+        
+    def test_genkey(self):
+        pass
+        
+    def test_sign(self):
+        pass
+        
+    def test_verify(self):
+        pass
+        
+    def test_get_font_from_data(self):
+        pass
+        
+    def test_get_pen_from_data(self):
+        pass
+        
+    def test_get_font_list(self):
+        pass
+        
 
-        for testlist, testresult in tests:
-            assert list(_interfaces.repeated(testlist)) == testresult
-
-
-#class TestCsvInterfaces(object):
-#    """Unit test for CsvInterfaces"""
-#    
-#    def setup_method(self, method):
-#        """Creates a CsvImport class from a csv file"""
-#        csvfilenames = ["test/BUG2037662.csv", "test/not_there.csv"]
-#        
-#        self.csvfiles = []
-#        
-#        for filename in csvfilenames:
-#            try:
-#                dialect, header = _interfaces.sniff(filename)
-#            except IOError:
-#                assert filename == "test/not_there.csv"
-#            finally:
-#                csvfile = _interfaces.CsvInterfaces(filename, dialect, \
-#                    types.StringType, header)
-#                self.csvfiles.append(csvfile)
-#        
-#    def test_open_csv(self):
-#        """Test open all files with all different flags."""
-#        
-#        flags = []
-#        
-#        for csvfile in self.csvfiles:
-#            pass
-#    
-#    def test_close_csv(self):
-#        """Test for ."""
-#        
-#        pass
-#    
-#    def test_fill_target(self):
-#        """Test for ."""
-#        
-#        pass
+def test_string_match():
+    """Test of string_match function"""
     
+    test_strings = ["", "Hello", " Hello", "Hello ", " Hello ", "Hello\n",
+                    "THelloT", " HelloT", "THello ", "hello", "HELLO", "sd"]
+                    
+    search_string = "Hello"
     
+    # Normal search
+    flags = []
+    results = [None, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, None]
+    for test_string, result in zip(test_strings, results):
+        assert _interfaces.string_match(test_string, search_string, flags) \
+               == result
+    
+    flags = ["MATCH_CASE"]
+    results = [None, 0, 1, 0, 1, 0, 1, 1, 1, None, None, None]
+    for test_string, result in zip(test_strings, results):
+        assert _interfaces.string_match(test_string, search_string, flags) \
+               == result
+    
+    flags = ["WHOLE_WORD"]
+    results = [None, 0, 1, 0, 1, 0, None, None, None, 0, 0, None]
+    for test_string, result in zip(test_strings, results):
+        assert _interfaces.string_match(test_string, search_string, flags) \
+               == result
+
 class TestClipboard(object):
-    """Unit test for Clipboard"""
+    """Unit test class for Clipboard"""
 
     def setup_method(self, method):
         """???"""
@@ -193,14 +140,9 @@ class TestClipboard(object):
         
         pass
     
-    def test_grid_paste(self):
-        """Test for ."""
-        
-        pass
-    
     
 class TestCommandline(object):
-    """Unit test for Commandline"""
+    """Unit test class for Commandline"""
     
     def setup_method(self, method):
         """???"""
@@ -216,4 +158,4 @@ class TestCommandline(object):
         """Test for ."""
         
         pass
-        
+    

@@ -60,7 +60,12 @@ class TestCellAttributes(object):
         """Creates empty CellAttributes"""
         
         self.cell_attr = CellAttributes()
+    
+    def test_undoable_append(self):
+        """Test undoable_append"""
         
+        pass
+    
     def test_getitem(self):
         """Test __getitem__"""
         
@@ -72,6 +77,46 @@ class TestCellAttributes(object):
         
         assert self.cell_attr[32, 53]["testattr"] == 2
         assert self.cell_attr[2, 2]["testattr"] == 3
+
+class TestParserMixin(object):
+    """Unit test for ParserMixin"""
+    
+    def test_parse_to_shape(self):
+        pass
+
+    def test_parse_to_grid(self):
+        pass
+
+    def test_parse_to_attribute(self):
+        pass
+
+    def test_parse_to_height(self):
+        pass
+
+    def test_parse_to_width(self):
+        pass
+
+    def test_parse_to_macro(self):
+        pass
+
+class TestStringGeneratorMixin(object):
+    """Unit test for StringGeneratorMixin"""
+    
+    def test_grid_to_strings(self):
+        pass
+
+    def test_attributes_to_strings(self):
+        pass
+
+    def test_heights_to_strings(self):
+        pass
+
+    def test_widths_to_strings(self):
+        pass
+
+    def test_macros_to_strings(self):
+        pass
+
 
 class TestDictGrid(object):
     """Unit test for DictGrid"""
@@ -94,7 +139,22 @@ class TestDataArray(object):
         """Creates empty DataArray"""
         
         self.data_array = DataArray((100, 100, 100))
-        
+    
+    def test_row_heights(self):
+        pass
+
+    def test_col_widths(self):
+        pass
+
+    def test_cell_attributes(self):
+        pass
+
+    def test_keys(self):
+        pass
+
+    def test_pop(self):
+        pass
+
     def test_get_shape(self):
         """Test shape attribute"""
         
@@ -112,18 +172,6 @@ class TestDataArray(object):
         
         assert "dict_grid" in self.data_array.__getstate__()
 
-    def test_is_slice_like(self):
-        """Test shape attribute"""
-        
-        assert self.data_array._is_slice_like(slice(None, 4, 34))
-        assert not self.data_array._is_slice_like(-2)
-        
-    def test_is_string_like(self):
-        """Test shape attribute"""
-        
-        assert self.data_array._is_string_like("Test")
-        assert not self.data_array._is_string_like(["Test"])
-        
     def test_getitem(self):
         """Test shape attribute"""
         
@@ -171,6 +219,13 @@ class TestDataArray(object):
         assert self.data_array[1, 3, 4] == "42"
         print self.data_array.shape
         assert self.data_array.shape == (99, 100, 100)
+        
+    def test_set_row_height(self):
+        pass
+
+    def test_set_col_width(self):
+        pass
+
 
 class TestCodeArray(object):
     """Unit test for CodeArray"""

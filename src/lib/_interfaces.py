@@ -531,21 +531,6 @@ class Digest(object):
             
             return slice(obj, obj + 1, None)
         
-        def make_boolean(obj):
-            """Makes a boolean from comparable types"""
-            
-            return bool(obj)
-        
-        def make_int(obj):
-            """Makes an integer from comparable types"""
-        
-            return int(obj)
-        
-        def make_float(obj):
-            """Makes a float from comparable types"""
-        
-            return float(obj)
-        
         def make_date(obj):
             """Makes a date from comparable types"""
             
@@ -569,53 +554,16 @@ class Digest(object):
             """Returns the object"""
             
             return obj
-        
-        def make_repr(obj):
-            """Returns the string represemntation of object"""
-            
-            return repr(obj)
-        
-        def get_font_from_data(fontdata):
-            """Returns wx.Font from fontdata string"""
-            
-            textfont = get_default_font()
-            
-            if fontdata != "":
-                nativefontinfo = wx.NativeFontInfo()
-                nativefontinfo.FromString(fontdata)
-                textfont.SetNativeFontInfo(nativefontinfo)
-            
-            return textfont
-        
-        def hex_to_rgb(value):
-            """Hex conversion for wx.Color RGB"""
-            
-            color = wx.Colour()
-            color.SetRGB(value)
-            return color.Get(includeAlpha=True)
-        
-        def rgb_to_hex(rgb):
-            return '#%02x%02x%02x' % rgb
-        
-        def get_pen_from_data(pendata):
-            """Returns wx.Pen from pendata attribute list"""
-        
-            pen_color = wx.Colour()
-            pen_color.SetRGB(pendata[0])
-            pen = wx.Pen(pen_color, *pendata[1:])
-            pen.SetJoin(wx.JOIN_MITER)
-            
-            return pen
 
         self.typehandlers = { \
             None: make_repr, \
             types.StringType: make_string, \
             types.UnicodeType: make_unicode, \
             types.SliceType: make_slice, \
-            types.BooleanType: make_boolean, \
+            types.BooleanType: bool, \
             types.ObjectType: make_object, \
-            types.IntType: make_int, \
-            types.FloatType: make_float, \
+            types.IntType: int, \
+            types.FloatType: float, \
             types.CodeType: make_object, \
             datetime.date: make_date, \
             datetime.datetime: make_datetime, \

@@ -71,7 +71,10 @@ class TestSelection(object):
         # Test column selection
         
         # Test cell selection
-        
+    
+    def test_insert(self):
+        pass
+    
     def test_get_bbox(self):
         """Test bounding box creation"""
         
