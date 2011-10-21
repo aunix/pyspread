@@ -76,13 +76,17 @@ class ModalDialogInterfaceMixin(object):
         msg = "There are unsaved changes.\nDo you want to save?"
         
         dlg = GMD.GenericMessageDialog(self.main_window, msg,
-            "Unsaved changes", wx.YES_NO | wx.ICON_QUESTION)
+            "Unsaved changes", wx.YES_NO | wx.ICON_QUESTION | wx.CANCEL)
         
-        save_choice = dlg.ShowModal() == wx.ID_YES
+        save_choice = dlg.ShowModal()
         
         dlg.Destroy()
         
-        return save_choice
+        if save_choice == wx.ID_YES:
+            return True
+        
+        elif save_choice == wx.ID_NO:
+            return False
     
     def get_filepath_findex_from_user(self, wildcard, message, style):
         """Opens a file dialog and returns filepath and filterindex

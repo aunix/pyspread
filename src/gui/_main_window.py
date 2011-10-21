@@ -360,7 +360,14 @@ class MainWindowEventHandlers(object):
         # If changes have taken place save of old grid
         
         if self.main_window.changed_since_save:
-            if self.interfaces.get_save_request_from_user():
+            save_choice = self.interfaces.get_save_request_from_user()
+            
+            if save_choice is None:
+                # Cancelled close operation
+                return
+                
+            elif save_choice:
+                # User wants to save content
                 post_command_event(self.main_window, SaveMsg)
         
         # Uninit the AUI stuff
@@ -448,7 +455,14 @@ class MainWindowEventHandlers(object):
         # If changes have taken place save of old grid
         
         if self.main_window.changed_since_save:
-            if self.interfaces.get_save_request_from_user():
+            save_choice = self.interfaces.get_save_request_from_user()
+            
+            if save_choice is None:
+                # Cancelled close operation
+                return
+                
+            elif save_choice:
+                # User wants to save content
                 post_command_event(self.main_window, SaveMsg)
         
         # Get grid dimensions
@@ -486,7 +500,14 @@ class MainWindowEventHandlers(object):
         # If changes have taken place save of old grid
         
         if self.main_window.changed_since_save:
-            if self.interfaces.get_save_request_from_user():
+            save_choice = self.interfaces.get_save_request_from_user()
+            
+            if save_choice is None:
+                # Cancelled close operation
+                return
+                
+            elif save_choice:
+                # User wants to save content
                 post_command_event(self.main_window, SaveMsg)
         
         # Get filepath from user

@@ -334,7 +334,8 @@ class CellActions(object):
         cell_attributes = self.grid.code_array.cell_attributes
         
         for attr_selection, tab, attr_dict in cell_attributes:
-            if tab == self.cursor[2] and attr_dict["frozen"]:
+            if tab == self.cursor[2] and \
+               "frozen" in attr_dict and attr_dict["frozen"]:
                 # Only single cells are allowed for freezing
                 skey = attr_selection.cells[0]
                 if skey in selection:

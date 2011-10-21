@@ -217,7 +217,7 @@ class FileActions(object):
         
         try:
             for cycle, line in enumerate(infile):
-                stripped_line = line.strip()
+                stripped_line = line.decode("utf-8").strip()
                 if stripped_line:
                     # There is content in this line
                     if stripped_line in section_readers:
@@ -354,7 +354,7 @@ class FileActions(object):
         for generator, options in zip(output_generators, abort_options_list):
             for cycle, line in enumerate(generator):
                 try:
-                    outfile.write(line)
+                    outfile.write(line.encode("utf-8"))
                     
                 except IOError:
                     post_command_event(self.main_window, StatusBarMsg, 
@@ -371,6 +371,9 @@ class FileActions(object):
         outfile.close()
         
         self.saving = False
+        
+        # Mark content as unchanged
+        post_command_event(self.main_window, ContentChangedMsg, changed=False)
         
         # Sign so that the new file may be retrieved without safe mode
         

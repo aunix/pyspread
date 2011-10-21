@@ -191,7 +191,11 @@ class GridRenderer(wx.grid.PyGridCellRenderer):
     def draw_text_label(self, dc, res, rect, grid, key):
         """Draws text label of cell"""
         
-        res_text = unicode(res)
+        try:
+            res_text = unicode(res)
+        except UnicodeDecodeError:
+            res_text = unicode(res, encoding="utf-8")
+        
         
         if not res_text:
             return
