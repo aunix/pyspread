@@ -552,6 +552,7 @@ class FontChoiceCombobox(ImageComboBox):
         font_string = self.GetString(item)
         font = wx.Font(wx.DEFAULT, wx.DEFAULT, wx.NORMAL, wx.NORMAL, \
                        False, font_string)
+        font.SetPointSize(font.GetPointSize()-2)
         dc.SetFont(font)
         text_width, text_height = dc.GetTextExtent(font_string)
         text_x = __rect.x
