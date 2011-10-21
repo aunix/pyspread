@@ -251,7 +251,10 @@ class StringGeneratorMixin(object):
         yield u"[grid]\n"
         
         for key in self:
-            yield u"\t".join([repr(ele) for ele in key] + [self[key]]) + "\n"
+            key_str = u"\t".join(repr(ele) for ele in key)
+            code_str = unicode(self[key])
+            
+            yield key_str + u"\t" + code_str + u"\n"
     
 
 
