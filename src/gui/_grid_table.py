@@ -87,7 +87,7 @@ class GridTable(wx.grid.PyGridTableBase):
         if table is None:
             table = self.grid.current_table
         
-        return self.data_array[row, col, table]
+        return self.data_array((row, col, table))
         
         if value is None:
             return u""
